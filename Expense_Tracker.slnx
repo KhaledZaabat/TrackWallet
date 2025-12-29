@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="Expense_Tracker.App/Expense_Tracker.App.csproj" />
+  <Project Path="Expense_Tracker.Application/Expense_Tracker.Application.csproj" />
+  <Project Path="Expense_Tracker.Contracts/Expense_Tracker.Contracts.csproj" />
+  <Project Path="Expense_Tracker.Domain/Expense_Tracker.Domain.csproj" />
+  <Project Path="Expense_Tracker.Infrastructure/Expense_Tracker.Infrastructure.csproj" />
+</Solution>
