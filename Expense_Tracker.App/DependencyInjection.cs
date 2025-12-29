@@ -39,6 +39,7 @@ public static class ServiceRegistration
         services
             .AddAssemblyScanningConfiguration()
             .AddInfrastructure(configuration)
+            .RegisterOtpSettings()
             .AddAssemblyScanningConfiguration()
             .AddIdentityConfiguration()
             .AddJwtConfiguration(configuration)
@@ -392,6 +393,18 @@ public static class ServiceRegistration
         return services;
     }
 
+    private static IServiceCollection RegisterOtpSettings(this IServiceCollection services)
+    {
+        services
+    .AddOptions<OtpSettings>()
+    .BindConfiguration(OtpSettings.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
+        services.AddSingleton(sp =>
+              sp.GetRequiredService<IOptions<OtpSettings>>().Value);
+        return services;
+
+    }
 
 }

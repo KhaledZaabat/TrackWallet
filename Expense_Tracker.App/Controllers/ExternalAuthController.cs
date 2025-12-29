@@ -29,7 +29,7 @@ public sealed class ExternalAuthController(
     [HttpPost("login/google/mobile")]
     [EndpointName("LoginWithGoogleMobile")]
     [EndpointSummary("Google login for mobile clients.")]
-    [EndpointDescription("Accepts a Google ID token from mobile and returns Makayen JWT + refresh token.")]
+    [EndpointDescription("Accepts a Google ID token from mobile and returns Expense_Tracker JWT + refresh token.")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

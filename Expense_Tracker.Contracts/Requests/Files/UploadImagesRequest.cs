@@ -1,0 +1,5 @@
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Expense_Tracker.Contracts.Requests.Files;
+
+public record UploadImagesRequest(string EntityType, Guid EntityId, IFormFileCollection Images);

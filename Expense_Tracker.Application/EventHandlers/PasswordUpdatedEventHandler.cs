@@ -3,7 +3,7 @@ using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
 using MediatR;
 
-namespace Makayen.Application.Common.Events.UserCreated;
+namespace Expense_Tracker.Application.Common.Events.UserCreated;
 
 public sealed class PasswordUpdatedEventHandler
     : INotificationHandler<PasswordUpdatedEvent>

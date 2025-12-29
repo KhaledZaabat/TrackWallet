@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Expense_Tracker.Domain.Common;
+﻿using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.Common.Identity;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Microsoft.AspNetCore.Identity;
 using System.Net.Mail;
 
 namespace Expense_Tracker.Infrastructure.Idenitity;
@@ -35,7 +35,7 @@ public sealed class ApplicationUser : IdentityUser<Guid>, ISoftDeletable
 
     private ApplicationUser() { } // EF Core
 
-    public static Result<ApplicationUser> Create(string email, string fullName)
+    public static Result<ApplicationUser> Create(string email, string UserName)
     {
         // Email null or empty
         if (string.IsNullOrWhiteSpace(email))
@@ -46,7 +46,7 @@ public sealed class ApplicationUser : IdentityUser<Guid>, ISoftDeletable
         }
 
         // Full name null or empty
-        if (string.IsNullOrWhiteSpace(fullName))
+        if (string.IsNullOrWhiteSpace(UserName))
         {
             return Result.Failure<ApplicationUser>(
                 IdentityUserError.Validation("Full name cannot be empty.")
@@ -73,8 +73,8 @@ public sealed class ApplicationUser : IdentityUser<Guid>, ISoftDeletable
             Email = email,
             NormalizedEmail = email.ToUpperInvariant(),
 
-            UserName = fullName,
-            NormalizedUserName = fullName.ToUpperInvariant(),
+            UserName = UserName,
+            NormalizedUserName = UserName.ToUpperInvariant(),
 
             EmailConfirmed = true
         };

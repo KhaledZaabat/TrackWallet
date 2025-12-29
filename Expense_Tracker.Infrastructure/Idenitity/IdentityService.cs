@@ -1,8 +1,8 @@
-﻿using Expense_Tracker.Application.Dtos;
+﻿using Expense_Tracker.Application.Constans;
+using Expense_Tracker.Application.Dtos;
 using Expense_Tracker.Application.Helpers;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using Makayen.Application.Constans;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 
@@ -21,6 +21,9 @@ public class IdentityService(
         var user = await userManager.FindByIdAsync(userId.ToString());
         return user != null && await userManager.IsInRoleAsync(user, role);
     }
+
+
+
 
 
     public async Task<Result<AuthenticatedUser>> AuthenticateByEmailAsync(string email, string password)
@@ -73,19 +76,24 @@ public class IdentityService(
     }
 
     public async Task<Result<IdentityRegistrationResult>> CreateIdentityByEmailAsync(
-      string email, string FullName, string Role, CancellationToken cancellationToken)
+        string email,
+        string password,
+        string userName,
+        CancellationToken cancellationToken)
     {
         var existingUser = await userManager.FindByEmailAsync(email);
         if (existingUser is not null)
             return Result.Failure<IdentityRegistrationResult>(IdentityUserError.DuplicateEmail());
 
+        Result<ApplicationUser> identityUserResult = ApplicationUser.Create(email, userName);
 
+        if (identityUserResult.IsFailure)
+            return Result.Failure<IdentityRegistrationResult>(identityUserResult.TryGetError());
 
-        Result<ApplicationUser> identityUserResult = ApplicationUser.Create(email, FullName);
-
-        if (identityUserResult.IsFailure) return Result.Failure<IdentityRegistrationResult>(identityUserResult.TryGetError());
         ApplicationUser identityUser = identityUserResult.TryGetValue();
-        var createIdentity = await userManager.CreateAsync(identityUser);
+
+        // Create with password
+        var createIdentity = await userManager.CreateAsync(identityUser, password);
 
         if (!createIdentity.Succeeded)
         {
@@ -93,12 +101,10 @@ public class IdentityService(
             return Result.Failure<IdentityRegistrationResult>(IdentityUserError.CreationFailed(errors));
         }
 
-        await userManager.AddToRoleAsync(identityUser, Role);
-        return Result.Success((identityUser, Role).Adapt<IdentityRegistrationResult>());
+        IdentityRegistrationResult registrationResult = new IdentityRegistrationResult(identityUser.Id.ToString());
 
+        return Result.Success(registrationResult);
     }
-
-
 
 
 

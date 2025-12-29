@@ -17,7 +17,7 @@ public interface IIdentityService : IScopedService
     Task<Result<string>> GetFullNameAsync(Guid userId);
 
 
-    Task<Result<IdentityRegistrationResult>> CreateIdentityByEmailAsync(string email, string FullName, string Role, CancellationToken cancellationToken);
+    Task<Result<IdentityRegistrationResult>> CreateIdentityByEmailAsync(string email, string password, string userName, CancellationToken cancellationToken);
     public Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string NewPassword);
 
 

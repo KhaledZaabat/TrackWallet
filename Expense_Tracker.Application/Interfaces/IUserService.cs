@@ -1,5 +1,5 @@
-﻿//using Makayen.Domain.Common.ResultPattern.Result;
-//using Makayen.Domain.Users;
+﻿//using Expense_Tracker.Domain.Common.ResultPattern.Result;
+//using Expense_Tracker.Domain.Users;
 
 //namespace Expense_Tracker.Application.Interfaces;
 

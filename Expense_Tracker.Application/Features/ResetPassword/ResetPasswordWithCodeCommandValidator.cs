@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Makayen.Application.Constans;
+using Expense_Tracker.Application.Constans;
 
 namespace Expense_Tracker.Application.Features.ResetPassword
 {

@@ -3,7 +3,7 @@
 public sealed class EmailSettings
 {
     public string Username { get; set; } = default!;
-    public string DisplayName { get; set; } = "QuizFlow";
+    public string DisplayName { get; set; } = "Expnese Tracker";
     public string Password { get; set; } = default!;
 
     public string Host { get; set; } = default!;

@@ -3,6 +3,7 @@ using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.ForgotPassword;
 using Expense_Tracker.Application.Features.Login;
 using Expense_Tracker.Application.Features.Refresh;
+using Expense_Tracker.Application.Features.Register;
 using Expense_Tracker.Application.Features.ResetPassword;
 using Expense_Tracker.Contracts.Reponses.Identity;
 using Expense_Tracker.Contracts.Requests.Identity;
@@ -60,44 +61,46 @@ public sealed class IdentityController(ISender sender) : ControllerBase
 
 
 
-
     /// <summary>
-    /// Registers a new user using an email address and password.
+    /// Registers a new user using email credentials.
     /// </summary>
-    /// <param name="request">The user registration request containing email, name, and password details.</param>
-    /// <param name="ct">A cancellation token to cancel the request.</param>
+    /// <remarks>
+    /// This endpoint creates a new user account using the provided email and password.
+    /// If successful, an OTP (One-Time Password) is sent to the user's email address
+    /// for account verification.
+    /// </remarks>
+    /// <param name="request">
+    /// The registration payload containing user credentials and profile information.
+    /// </param>
+    /// <param name="ct">Cancellation token.</param>
     /// <returns>
-    /// An <see cref="IActionResult"/> indicating the success or failure of registration.  
-    /// The response does not contain JWT tokens.  
-    /// A confirmation email is sent to the user to verify their account.
+    /// Returns 200 OK if registration succeeds.
     /// </returns>
-    /// <response code="200">
-    /// Registration succeeded. An Otp code has been sent to the provided email address.
-    /// </response>
-    /// <response code="400">Validation failure or invalid input data (e.g., malformed email, weak password).</response>
-    /// <response code="409">A user with the same email already exists.</response>
-    /// <response code="500">Internal server error while processing registration.</response>
-    [HttpPost("register/email")]
+    [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Registers a user by email and sends a confirmation link.")]
-    [EndpointDescription("Creates a new user account using email credentials and sends a verification email.")]
-    [EndpointName("RegisterByEmail")]
-    public async Task<IActionResult> RegisterByEmail([FromBody] RegisterRequest request, CancellationToken ct)
+    [EndpointSummary("Register user by email")]
+    [EndpointDescription("Creates a new user account using email credentials and sends a verification OTP.")]
+    [EndpointName("Register")]
+    public async Task<IActionResult> Register(
+        [FromBody] RegisterRequest request,
+        CancellationToken ct)
     {
         var command = new RegisterCommand(
             request.Email,
-            request.FirstName,
-            request.LastName,
-            request.Password);
+            request.Password,
+            request.UserName,
+            request.FullName,
+            request.BirthDate,
+            request.IsMale,
+            request.ProfileImage
+        );
 
         Result result = await sender.Send(command, ct);
         return result.ToActionResult(HttpContext);
     }
-
-
 
 
 

@@ -3,7 +3,6 @@ using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Features.UpdatePassword;
 using Expense_Tracker.Application.Features.UsersFeatures.Queries.GetUsers;
-using Expense_Tracker.Contracts.Requests;
 using Expense_Tracker.Contracts.Requests.Users;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.Users.Abstraction;

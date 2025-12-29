@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Makayen.Application.Constans;
+namespace Expense_Tracker.Application.Constans;
 
 public static class ValidationPatterns
 {

@@ -5,10 +5,9 @@ namespace Expense_Tracker.Application.Constants;
 public static class DefaultRoles
 {
 
-    public const string Admin = "Admin";
-    public const string Instructor = "Instructor";
-    public const string Student = "Student";
-    public const string SuperAdmin = "SuperAdmin";
+    public const string Parent = "Parent";
+    public const string Child = "Child";
+
 
 
     public static IReadOnlyList<string> GetAll()

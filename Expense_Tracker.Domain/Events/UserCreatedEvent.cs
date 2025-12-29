@@ -1,5 +1,5 @@
 ﻿using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Users.Abstraction;
+using Expense_Tracker.Domain.Users;
 
 namespace Expense_Tracker.Domain.Events;
 

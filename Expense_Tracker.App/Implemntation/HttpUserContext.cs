@@ -25,5 +25,3 @@ public class HttpUserContext(IHttpContextAccessor accessor) : IUserContext
         }
     }
 }
-
-

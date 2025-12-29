@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Expense_Tracker.Application.Dtos;
+﻿using Expense_Tracker.Application.Dtos;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Infrastructure.Common.Errors;
 using Expense_Tracker.Infrastructure.Idenitity;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
 namespace Expense_Tracker.Infrastructure.Services;
