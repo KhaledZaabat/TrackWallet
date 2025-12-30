@@ -1,5 +1,7 @@
 using Expense_Tracker.App;
 using Expense_Tracker.Application.Interfaces;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Hangfire;
 using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +33,10 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "TrackWallet API V1");
     options.DocumentTitle = "TrackWallet API - Swagger UI";
 });
-
+FirebaseApp.Create(new AppOptions
+{
+    Credential = GoogleCredential.GetApplicationDefault()
+});
 
 
 // Scalar
