@@ -178,7 +178,7 @@ public static class ServiceRegistration
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "ExpenseTracker API",
+                Title = "TrackWallet API",
                 Version = "v1"
             });
 

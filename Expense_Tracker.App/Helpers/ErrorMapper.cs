@@ -31,6 +31,10 @@ public static class ErrorMapper
                 if (ReferenceEquals(domain, DomainErrorCode.Forbidden))
                     return StatusCodes.Status403Forbidden;
 
+                if (ReferenceEquals(domain, DomainErrorCode.Unauthorized))
+                    return StatusCodes.Status401Unauthorized;
+
+
                 return StatusCodes.Status500InternalServerError;
 
 

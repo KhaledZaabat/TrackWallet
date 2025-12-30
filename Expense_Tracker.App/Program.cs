@@ -28,7 +28,7 @@ app.UseSwagger();
 
 app.UseSwaggerUI(options =>
 {
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "QuizFlow API V1");
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "TrackWallet API V1");
     options.DocumentTitle = "TrackWallet API - Swagger UI";
 });
 

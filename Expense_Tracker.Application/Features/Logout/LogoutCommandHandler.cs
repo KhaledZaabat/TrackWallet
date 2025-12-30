@@ -13,7 +13,7 @@ public sealed class LogoutCommandHandler(IRefreshTokenService refreshTokens, IUs
         Guid? userId = userContext.UserId;
 
         if (userId is null)
-            return Result.Failure(UserError.NotFound());
+            return Result.Failure(UserError.Unauthorized());
 
 
         await userDeviceRepository.UnbindDeviceAsync(request.FcmToken, ct);

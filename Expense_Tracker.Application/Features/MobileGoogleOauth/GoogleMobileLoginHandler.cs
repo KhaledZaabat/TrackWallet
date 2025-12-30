@@ -6,6 +6,7 @@ using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Expense_Tracker.Application.Features.External_Providers.Commands.MobileGoogleOauth;
 
@@ -13,7 +14,8 @@ public sealed class GoogleMobileLoginHandler(
     IExternalAuthService externalAuth,
     IAppDbContext db,
     ITokenProvider tokenProvider,
-    IUserDeviceRepository userDeviceRepository
+    IUserDeviceRepository userDeviceRepository,
+    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder
 ) : IRequestHandler<GoogleMobileLoginCommand, Result<AuthResponse>>
 {
     public async Task<Result<AuthResponse>> Handle(
@@ -65,13 +67,23 @@ public sealed class GoogleMobileLoginHandler(
 
         AuthDto authTokens = jwtResult.TryGetValue();
 
+        Guid? profileFileId = await db.Users
+            .Where(u => u.Id == external.IdentityId)
+            .Select(u => u.ProfileImageFileId)
+            .FirstOrDefaultAsync(ct);
 
+        string? profileImageUrl = fileUrlBuilder.GetUrl(profileFileId);
 
-        await userDeviceRepository.UpsertAsync(external.IdentityId,
-                                              request.FcmToken,
-                                              platform: Domain.PushNotifications.Enums.PushPlatform.Android,
-                                              ct);
+        AuthResponse authResponse = (authTokens, profileImageUrl).Adapt<AuthResponse>();
 
-        return Result.Success(authTokens.Adapt<AuthResponse>());
+        await userDeviceRepository.UpsertAsync(
+            external.IdentityId,
+            request.FcmToken,
+            platform: Domain.PushNotifications.Enums.PushPlatform.Android,
+            ct);
+
+        await db.SaveChangesAsync(ct);
+
+        return Result.Success(authResponse);
     }
 }

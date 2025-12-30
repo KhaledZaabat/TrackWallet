@@ -50,6 +50,8 @@ public sealed class LoginCommandHandler(
                                         request.FcmToken,
                                         platform: Domain.PushNotifications.Enums.PushPlatform.Android,
                                         cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
         return Result.Success(authResponse);
     }
 }

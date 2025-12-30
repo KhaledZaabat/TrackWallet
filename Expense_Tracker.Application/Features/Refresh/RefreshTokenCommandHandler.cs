@@ -9,7 +9,8 @@ namespace Expense_Tracker.Application.Features.Refresh;
 public sealed class RefreshTokenCommandHandler(
     IRefreshTokenService refreshTokenService,
     ITokenProvider tokenProvider,
-      IUserDeviceRepository userDeviceRepository
+     IUserDeviceRepository userDeviceRepository,
+     IAppDbContext db
 ) : IRequestHandler<RefreshTokenCommand, Result<AuthResponse>>
 
 
@@ -35,6 +36,8 @@ public sealed class RefreshTokenCommandHandler(
                                   request.FcmToken,
                                   platform: Domain.PushNotifications.Enums.PushPlatform.Android,
                                   cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
         return Result.Success<AuthResponse>(response);
     }
 }

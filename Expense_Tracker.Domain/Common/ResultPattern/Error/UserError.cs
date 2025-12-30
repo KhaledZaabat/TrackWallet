@@ -27,6 +27,8 @@ public sealed record UserError(DomainErrorCode DomainErrorCode, string Type, str
 
     public static UserError Forbidden(string description = "Access denied") =>
       new(DomainErrorCode.Forbidden, "User.Forbidden", description);
+    public static UserError Unauthorized(string description = "User is not authorized") =>
+    new(DomainErrorCode.Unauthorized, "User.Unauthorized", description);
 
 
 }
