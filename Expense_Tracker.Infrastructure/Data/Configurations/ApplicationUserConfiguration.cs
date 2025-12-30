@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Expense_Tracker.Infrastructure.Idenitity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Expense_Tracker.Infrastructure.Idenitity;
 
 namespace Expense_Tracker.Infrastructure.Data.Configurations;
 
@@ -12,9 +12,6 @@ public sealed class ApplicationUserConfiguration
         // Identity table
         builder.ToTable("AspNetUsers");
 
-        // -----------------------------
-        // Soft delete
-        // -----------------------------
 
         builder.Property(u => u.IsDeleted)
             .IsRequired();
@@ -25,7 +22,6 @@ public sealed class ApplicationUserConfiguration
         builder.Property(u => u.DeletedOn)
             .IsRequired(false);
 
-        //  Critical: prevent deleted users from login / queries
         builder.HasQueryFilter(u => !u.IsDeleted);
 
         // -----------------------------
@@ -37,10 +33,12 @@ public sealed class ApplicationUserConfiguration
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-      
+
 
         builder.HasIndex(u => u.Email);
         builder.HasIndex(u => u.NormalizedEmail).IsUnique();
         builder.HasIndex(u => u.NormalizedUserName).IsUnique();
     }
 }
+
+

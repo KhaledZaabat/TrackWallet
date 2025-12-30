@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Expense_Tracker.Domain.Common.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Expense_Tracker.Domain.Common.Identity;
 
 namespace Expense_Tracker.Infrastructure.Data.Configurations;
 
@@ -34,5 +34,7 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
 
         builder.HasIndex(x => x.Token).IsUnique();
         builder.HasIndex(x => new { x.UserId, x.DeviceId });
+        builder.HasIndex(x => new { x.ExpiresAt, x.RevokedAt });
+        builder.HasIndex(x => x.ExpiresAt);
     }
 }

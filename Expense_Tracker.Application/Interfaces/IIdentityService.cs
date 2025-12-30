@@ -11,7 +11,7 @@ public interface IIdentityService : IScopedService
 
     Task<Result<AuthenticatedUser>> AuthenticateByEmailAsync(string email, string password);
 
-
+    public Task<Result<Guid>> ConfirmUserAsync(string email, CancellationToken ct);
     Task<Result<AuthenticatedUser>> GetUserByIdAsync(Guid userId);
 
     Task<Result<string>> GetFullNameAsync(Guid userId);
@@ -21,13 +21,12 @@ public interface IIdentityService : IScopedService
     public Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string NewPassword);
 
 
-    Task<Result<AuthenticatedUser>> FindUserByEmailAsync(string email);
+    Task<Result<AuthenticatedUser>> FindUserByEmailAsync(string email, bool requireConfirmedEmail = true);
 
-    public Task<Result> ResetPasswordWithCodeAsync(Guid userId, string code, string newPassword, CancellationToken cancellationToken);
     public Task<Result> IsUserConfirmedAsync(string emailOrPhone, CancellationToken ct);
     public Task<Result> IsUserNotConfirmedAsync(string emailOrPhone, CancellationToken ct);
 
-    public Task<Result<string>> GeneratePasswordResetCodeAsync(Guid userId, CancellationToken ct);
+    public Task<Result> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken);
 
 
 }

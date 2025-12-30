@@ -4,7 +4,7 @@ namespace Expense_Tracker.Application.Events;
 
 public sealed record PasswordUpdatedEvent(
     string Email,
-    string FullName,
+    string UserName,
     string IpAddress,
     DateTime Timestamp
 ) : ApplicationEvent;

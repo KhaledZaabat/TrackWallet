@@ -30,7 +30,7 @@ public sealed class RegisterCommandHandler(
         var identity = identityResult.TryGetValue();
         Guid userId = Guid.Parse(identity.IdentityUserId);
 
-        // Step 2: Begin Transaction
+        // Step 2: Begin TransactionFolder
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         try
         {

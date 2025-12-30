@@ -1,3 +1,3 @@
 ﻿namespace Expense_Tracker.Contracts.Requests.Identity;
 
-public sealed record ResendConfirmationEmailRequest(string Email);
+public sealed record ResendConfirmationRequest(string Email);

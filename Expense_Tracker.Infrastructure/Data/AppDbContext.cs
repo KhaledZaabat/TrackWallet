@@ -1,103 +1,101 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Expense_Tracker.Domain.AcademicYearFolder;
-using Expense_Tracker.Domain.AcademicYearFolder.CoursesFolder;
+﻿using Expense_Tracker.Domain.CategoryFolder;
 using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.Common.Identity;
-using Expense_Tracker.Domain.GroupFolder;
-using Expense_Tracker.Domain.QuizesFolder;
-using Expense_Tracker.Domain.QuizesFolder.Abstraction;
-using Expense_Tracker.Domain.QuizesFolder.QuestionsFolder;
-using Expense_Tracker.Domain.QuizesFolder.QuizGroupFolder;
-using Expense_Tracker.Domain.QuizesFolder.QuizOptionFolder;
-using Expense_Tracker.Domain.Users.Abstraction;
+using Expense_Tracker.Domain.FamilyFolder;
+using Expense_Tracker.Domain.FamilyUser;
+using Expense_Tracker.Domain.Files;
+using Expense_Tracker.Domain.Invitation;
+using Expense_Tracker.Domain.PushNotifications;
+using Expense_Tracker.Domain.TransactionFolder;
+using Expense_Tracker.Domain.Users;
 using Expense_Tracker.Domain.Users.Abstraction.NotificationPreferencesFolder;
-using Expense_Tracker.Domain.Users.AdminFolder;
-using Expense_Tracker.Domain.Users.InstructorsFolders;
-using Expense_Tracker.Domain.Users.StudentsFolder;
 using Expense_Tracker.Infrastructure.Idenitity;
+using MediatR;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Infrastructure.Data;
 
 public class AppDbContext
-    (DbContextOptions<AppDbContext> options, IPublisher mediator) : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IAppDbContext
+    (DbContextOptions<AppDbContext> options, IPublisher mediator)
+    : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IAppDbContext
 {
-
     public bool DisableCreationAudit { get; set; } = false;
     public bool DisableUpdateAudit { get; set; } = false;
     public bool DisableSoftDeleting { get; set; } = false;
+    public bool DisableDomainEvents { get; set; } = false;
 
-
-
-
+    #region Identity
     public DbSet<ApplicationUser> IdentityUsers => Set<ApplicationUser>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    #endregion
 
-    // ----------------------------
-    // Users
-    // ----------------------------
+    #region Users
     public DbSet<User> Users => Set<User>();
+    #endregion
 
-    public DbSet<Student> Students => Set<Student>();
-    public DbSet<Instructor> Instructors => Set<Instructor>();
-    public DbSet<Admin> Admins => Set<Admin>();
-
-    // ----------------------------
-    // Settings
-    // ----------------------------
+    #region Notification Preferences
     public DbSet<NotificationPreferences> NotificationPreferences => Set<NotificationPreferences>();
+    #endregion
 
-    // ----------------------------
-    // Academic Structure
-    // ----------------------------
-    public DbSet<AcademicYear> AcademicYears => Set<AcademicYear>();
-    public DbSet<Course> Courses => Set<Course>();
+    #region Files
+    public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
+    #endregion
 
-    // ----------------------------
-    // Groups
-    // ----------------------------
-    public DbSet<Group> Groups => Set<Group>();
-    public DbSet<InstructorCourse> InstructorCourses => Set<InstructorCourse>();
-    public DbSet<GroupInstructor> GroupInstructors => Set<GroupInstructor>();
-    public DbSet<GroupStudent> GroupStudents => Set<GroupStudent>();
+    #region Push Notifications
+    public DbSet<DomainNotification> Notifications => Set<DomainNotification>();
+    public DbSet<UserDevice> UserDevices => Set<UserDevice>();
+    #endregion
 
-    // ----------------------------
-    // Quiz System
-    // ----------------------------
-    public DbSet<Quiz> Quizzes => Set<Quiz>();
-    public DbSet<QuizQuestion> QuizQuestions => Set<QuizQuestion>();
-    public DbSet<MultipleChoiceQuestion> MultipleChoiceQuestions => Set<MultipleChoiceQuestion>();
-    public DbSet<ShortAnswerQuestion> ShortAnswerQuestions => Set<ShortAnswerQuestion>();
-    public DbSet<QuestionOption> QuestionOptions => Set<QuestionOption>();
-    public DbSet<QuizGroup> QuizGroups => Set<QuizGroup>();
+    #region Family
+    public DbSet<Family> Families => Set<Family>();
+    public DbSet<FamilyUser> FamilyUsers => Set<FamilyUser>();
+    public DbSet<FamilyBudgetHistory> FamilyBudgetHistories => Set<FamilyBudgetHistory>();
+    #endregion
+
+    #region Invitations
+    public DbSet<Invitation> Invitations => Set<Invitation>();
+    #endregion
 
 
+    #region Categories
+
+    public DbSet<Category> Categories => Set<Category>();
+    #endregion
+    #region Transactions
+    public DbSet<Transaction> Transactions => Set<Transaction>();
+    #endregion
 
     // ----------------------------
     // SaveChanges + Domain Events
     // ----------------------------
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await DispatchDomainEventsAsync(cancellationToken);
-        return await base.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task DispatchDomainEventsAsync(CancellationToken cancellationToken)
-    {
-        var domainEntities = ChangeTracker.Entries()
-            .Where(x => x.Entity is AggregateRoot root && root.DomainEvents.Any())
-            .Select(x => (AggregateRoot)x.Entity)
+        List<AggregateRoot> domainEntities = ChangeTracker.Entries()
+            .Where(e => e.Entity is AggregateRoot root && root.DomainEvents.Count > 0)
+            .Select(e => (AggregateRoot)e.Entity)
             .ToList();
 
-        var events = domainEntities
-            .SelectMany(x => x.DomainEvents)
+        List<DomainEvent> domainEvents = domainEntities
+            .SelectMany(e => e.DomainEvents)
             .ToList();
 
-        foreach (var domainEvent in events)
-            await mediator.Publish(domainEvent, cancellationToken);
+        int result = await base.SaveChangesAsync(cancellationToken);
 
-        domainEntities.ForEach(e => e.ClearDomainEvents());
+        if (!DisableDomainEvents && domainEvents.Count > 0)
+        {
+            foreach (DomainEvent domainEvent in domainEvents)
+            {
+                await mediator.Publish(domainEvent, cancellationToken);
+            }
+
+            foreach (AggregateRoot entity in domainEntities)
+            {
+                entity.ClearDomainEvents();
+            }
+        }
+
+        return result;
     }
 
     // ----------------------------
@@ -110,7 +108,4 @@ public class AppDbContext
         // Automatically load all configurations in assembly
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
-
-
-
 }

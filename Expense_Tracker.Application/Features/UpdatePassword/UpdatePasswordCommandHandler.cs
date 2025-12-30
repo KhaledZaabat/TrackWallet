@@ -1,9 +1,9 @@
-﻿using MediatR;
-using Expense_Tracker.Application.Dtos;
+﻿using Expense_Tracker.Application.Dtos;
 using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.Common.ResultPattern.Error;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using MediatR;
 
 namespace Expense_Tracker.Application.Features.UpdatePassword;
 
@@ -37,7 +37,7 @@ public sealed class UpdatePasswordCommandHandler(IIdentityService _identityServi
         await _publisher.Publish(
            new PasswordUpdatedEvent(
                Email: user.Email!,
-               FullName: user.FullName!,
+               UserName: user.UserName!,
                IpAddress: request.UserIpAddress,
                Timestamp: DateTime.UtcNow),
            cancellationToken

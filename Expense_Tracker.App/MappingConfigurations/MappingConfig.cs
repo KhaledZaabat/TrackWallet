@@ -11,28 +11,40 @@ public class MappingConfig : IRegister
     {
 
 
+
+
+        config.NewConfig<(AuthDto dto, string url), AuthResponse>()
+             .Map(des => des.UserId, src => src.dto.UserId)
+           .Map(des => des.FullName, src => src.dto.FullName)
+           .Map(des => des.Email, src => src.dto.Email)
+           .Map(des => des.JwtToken, src => src.dto.JwtToken)
+           .Map(des => des.RefreshToken, src => src.dto.RefreshToken)
+          .Map(des => des.ProfileImageUrl, src => src.url);
+
+        config.NewConfig<AuthDto, AuthResponse>()
+                  .Map(des => des.UserId, src => src.UserId)
+                .Map(des => des.FullName, src => src.FullName)
+                .Map(des => des.Email, src => src.Email)
+                .Map(des => des.JwtToken, src => src.JwtToken)
+                .Map(des => des.RefreshToken, src => src.RefreshToken);
+
+        // ===============================
+        // ApplicationUser -> AuthenticatedUser
+        // ===============================
+        config.NewConfig<ApplicationUser, AuthenticatedUser>()
+          .Map(dest => dest.Id, src => src.Id)
+          .Map(dest => dest.Email, src => src.Email!)
+          .Map(dest => dest.UserName, src => src.UserName!)
+          .Ignore(dest => dest.Role);
+
+        // ===============================
+        // (ApplicationUser, Role) -> AuthenticatedUser
+        // ===============================
         config.NewConfig<(ApplicationUser user, string? role), AuthenticatedUser>()
-           .Map(des => des.Email, src => src.user.Email)
-           .Map(des => des.Id, src => src.user.Id)
-           .Map(des => des.FullName, src => src.user.UserName)
-           .Map(des => des.Role, src => src.role);
-
-
-        config.NewConfig<(ApplicationUser user, string role), IdentityRegistrationResult>()
-           .Map(des => des.IdentityUserId, src => src.user.Id)
-           .Map(des => des.FullName, src => src.user.UserName)
-           .Map(des => des.Email, src => src.user.Email)
-           .Map(des => des.Role, src => src.role);
-
-        config.NewConfig<AuthenticatedUser, AuthResponse>()
-             .Map(des => des.UserId, src => src.Id)
-           .Map(des => des.FullName, src => src.FullName)
-           .Map(des => des.Email, src => src.Email)
-           .Map(des => des.Role, src => src.Role);
-
-
-
-
-
+            .Map(dest => dest.Id, src => src.user.Id)
+            .Map(dest => dest.Email, src => src.user.Email!)
+            .Map(dest => dest.UserName, src => src.user.UserName!)
+            .Map(dest => dest.Role, src => src.role);
     }
+
 }

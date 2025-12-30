@@ -9,4 +9,4 @@ public sealed record RegisterRequest(
     string FullName,
     DateOnly BirthDate,
     bool IsMale,
-    IFormFile ProfileImage);
+    IFormFile? ProfileImage);

@@ -3,7 +3,7 @@ using Expense_Tracker.Domain.Common.ResultPattern.Error;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.Events;
 using Expense_Tracker.Domain.Files;
-using Expense_Tracker.Domain.Users.Abstraction;
+using Expense_Tracker.Domain.TransactionFolder;
 using System.Net.Mail;
 
 namespace Expense_Tracker.Domain.Users;
@@ -17,10 +17,10 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
     public string UserName { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
 
-    public DateOnly BirthDate { get; private set; }
-    public bool IsMale { get; private set; }
+    public DateOnly? BirthDate { get; private set; }
+    public bool? IsMale { get; private set; }
 
-    public Role Role { get; private set; } = Role.Child;
+    public ICollection<DomainNotification> Notifications { get; private set; } = new List<DomainNotification>();
 
     // Audit properties
     public DateTimeOffset CreatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;
@@ -32,6 +32,9 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
     public bool IsDeleted { get; private set; }
     public Guid? DeletedById { get; private set; } = Guid.Empty;
     public DateTimeOffset? DeletedOn { get; private set; }
+
+    public ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
+
 
     // Explicit interface implementations for IAuditable
     DateTimeOffset ICreatable.CreatedAtUtc
@@ -85,8 +88,8 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         string fullName,
         string userName,
         string email,
-        DateOnly birthDate,
-        bool isMale) : base(id)
+        DateOnly? birthDate,
+        bool? isMale) : base(id)
     {
         FullName = fullName;
         UserName = userName;
@@ -103,8 +106,8 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         string fullName,
         string userName,
         string email,
-        DateOnly birthDate,
-        bool isMale,
+        DateOnly? birthDate = null,
+        bool? isMale = null,
         bool fireEvent = true)
     {
         if (id == Guid.Empty)
@@ -131,7 +134,7 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
             return Result.Failure<User>(UserError.InvalidSubmission("Invalid email format."));
         }
 
-        if (birthDate >= DateOnly.FromDateTime(DateTime.Today))
+        if (birthDate is not null && birthDate >= DateOnly.FromDateTime(DateTime.Today))
             return Result.Failure<User>(UserError.InvalidSubmission("Birth date must be in the past."));
 
         var user = new User(
@@ -222,11 +225,7 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         return Result.Success();
     }
 
-    public Result UpdateRole(Role role)
-    {
-        Role = role;
-        return Result.Success();
-    }
+
 
     public Result SoftDelete(Guid deletedBy)
     {
@@ -244,11 +243,6 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         Email = $"deleted_{Id}@deleted.local";
         return Result.Success();
     }
-    public Result UpgradeToParent()
-    {
-        Role = Role.Parent;
-        return Result.Success();
 
-    }
 
 }

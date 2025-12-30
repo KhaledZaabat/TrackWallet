@@ -35,10 +35,10 @@ public sealed class ApplicationUser : IdentityUser<Guid>, ISoftDeletable
 
     private ApplicationUser() { } // EF Core
 
-    public static Result<ApplicationUser> Create(string email, string UserName)
+    public static Result<ApplicationUser> Create(string Email, string UserName)
     {
         // Email null or empty
-        if (string.IsNullOrWhiteSpace(email))
+        if (string.IsNullOrWhiteSpace(Email))
         {
             return Result.Failure<ApplicationUser>(
                 IdentityUserError.Validation("Email cannot be empty.")
@@ -56,7 +56,7 @@ public sealed class ApplicationUser : IdentityUser<Guid>, ISoftDeletable
         // Email format validation
         try
         {
-            _ = new MailAddress(email);
+            _ = new MailAddress(Email);
         }
         catch
         {
@@ -70,13 +70,12 @@ public sealed class ApplicationUser : IdentityUser<Guid>, ISoftDeletable
             Id = Guid.CreateVersion7(),
 
 
-            Email = email,
-            NormalizedEmail = email.ToUpperInvariant(),
+            Email = Email,
+            NormalizedEmail = Email.ToUpperInvariant(),
 
             UserName = UserName,
             NormalizedUserName = UserName.ToUpperInvariant(),
 
-            EmailConfirmed = true
         };
 
 

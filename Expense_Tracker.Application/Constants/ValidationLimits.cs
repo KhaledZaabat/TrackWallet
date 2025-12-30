@@ -13,6 +13,7 @@ public static class ValidationLimits
     public const int PhoneNumberMaxLength = 15;  // E.164 standard (+1234567890...)
 
     //  Device / Guest
+    public const int DeviceIdMaxLength = 100;    // For device identifiers or guest tracking
 
     //  Tokens
     public const int AccessTokenMaxLength = 4096;    // Safe upper bound for long JWTs

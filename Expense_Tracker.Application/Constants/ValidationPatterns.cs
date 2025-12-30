@@ -7,6 +7,7 @@ public static class ValidationPatterns
     // Email pattern (RFC 5322 simplified)
     public const string Email = @"^[^\s@]+@[^\s@]+\.[^\s@]+$";
 
+    public const string Otp = "^[0-9]+$";
 
 
 

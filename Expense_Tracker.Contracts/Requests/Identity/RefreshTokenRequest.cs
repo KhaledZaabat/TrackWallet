@@ -2,5 +2,5 @@
 
 public sealed record RefreshTokenRequest(
     string RefreshToken,
-    string ExpiredAccessToken,
-    string DeviceId);
+    string DeviceId,
+    string FcmToken);

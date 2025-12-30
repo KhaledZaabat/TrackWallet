@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Domain.Files;
+﻿using Expense_Tracker.Application.Features.FilesFolder.Settings;
 
 namespace Files.Contracts.Common;
 

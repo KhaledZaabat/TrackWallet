@@ -1,6 +1,6 @@
-﻿using Hangfire;
+﻿using Expense_Tracker.Application.Interfaces;
+using Hangfire;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Expense_Tracker.Application.Interfaces;
 
 namespace Expense_Tracker.Infrastructure.Services;
 

@@ -1,14 +1,18 @@
-﻿using MediatR;
-using Expense_Tracker.Application.Interfaces;
+﻿using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Identity;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Mapster;
+using MediatR;
 
 namespace Expense_Tracker.Application.Features.Refresh;
 
 public sealed class RefreshTokenCommandHandler(
     IRefreshTokenService refreshTokenService,
-    ITokenProvider tokenProvider
+    ITokenProvider tokenProvider,
+      IUserDeviceRepository userDeviceRepository
 ) : IRequestHandler<RefreshTokenCommand, Result<AuthResponse>>
+
+
 {
     public async Task<Result<AuthResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
@@ -23,9 +27,14 @@ public sealed class RefreshTokenCommandHandler(
 
         var user = userResult.TryGetValue();
 
-        Result<AuthResponse> tokenResult = await tokenProvider.GenerateJwtTokenAsync(user, request.DeviceId, cancellationToken);
+        Result<AuthDto> tokenResult = await tokenProvider.GenerateJwtTokenAsync(user, request.DeviceId, cancellationToken);
+        AuthResponse response = tokenResult.TryGetValue().Adapt<AuthResponse>();
 
-
-        return tokenResult;
+        Guid userId = Guid.Parse(response.UserId);
+        await userDeviceRepository.UpsertAsync(userId,
+                                  request.FcmToken,
+                                  platform: Domain.PushNotifications.Enums.PushPlatform.Android,
+                                  cancellationToken);
+        return Result.Success<AuthResponse>(response);
     }
 }

@@ -1,8 +1,8 @@
+using Expense_Tracker.App;
+using Expense_Tracker.Application.Interfaces;
 using Hangfire;
 using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Mvc;
-using Expense_Tracker.App;
-using Expense_Tracker.Application.Interfaces;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
 
@@ -29,7 +29,7 @@ app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "QuizFlow API V1");
-    options.DocumentTitle = "QuizFlow API - Swagger UI";
+    options.DocumentTitle = "TrackWallet API - Swagger UI";
 });
 
 
@@ -37,7 +37,7 @@ app.UseSwaggerUI(options =>
 // Scalar
 app.MapScalarApiReference(options =>
 {
-    options.Title = "QuizFlow API V1";
+    options.Title = "TrackWallet API V1";
     options.OpenApiRoutePattern = "/swagger/{documentName}/swagger.json";
 });
 
@@ -60,7 +60,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseRouting();
-app.UseCors("AllowFrontend");
+//app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
