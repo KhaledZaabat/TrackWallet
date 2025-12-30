@@ -1,4 +1,5 @@
-﻿using Expense_Tracker.App.Filters;
+﻿using Asp.Versioning;
+using Expense_Tracker.App.Filters;
 using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.Transactions.Commands.CreateTransaction;
 using Expense_Tracker.Application.Features.Transactions.Queries.GetFamilyTransactions;
@@ -14,6 +15,8 @@ namespace Expense_Tracker.App.Controllers;
 [ApiController]
 [Route("api/transactions")]
 [Authorize]
+[ApiVersion("1.0")]
+
 public class FamilyTransactionsController(ISender sender, IFamilyContext familyContext, IUserContext userContext) : ControllerBase
 {
 

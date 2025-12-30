@@ -1,4 +1,5 @@
-﻿using Expense_Tracker.App.Helpers;
+﻿using Asp.Versioning;
+using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.Family.Commands.CreateFamily;
 using Expense_Tracker.Application.Features.Family.Commands.SelectFamily;
 using Expense_Tracker.Application.Features.Family.Queries.GetUserFamilies;
@@ -15,6 +16,8 @@ namespace Expense_Tracker.App.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/families")]
+[ApiVersion("1.0")]
+
 public class FamiliesController(ISender sender, IUserContext userContext
 ) : ControllerBase
 {

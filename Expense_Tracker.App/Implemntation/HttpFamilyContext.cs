@@ -5,7 +5,7 @@ using System.Security.Claims;
 
 namespace Expense_Tracker.App.Implemntation;
 
-public sealed class HttpFamilyContext(IHttpContextAccessor accessor) : IFamilyContext, IScopedService
+public sealed class HttpFamilyContext(IHttpContextAccessor accessor) : IFamilyContext
 {
     public Guid? FamilyId
     {
@@ -56,7 +56,7 @@ public sealed class HttpFamilyContext(IHttpContextAccessor accessor) : IFamilyCo
             return null;
 
         return new FamilyContextDto(
-            FamilyId: FamilyId.Value.ToString(),
+            FamilyId: FamilyId.Value,
             FamilyName: FamilyName ?? string.Empty,
             IsParent: IsParent
         );

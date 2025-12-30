@@ -16,10 +16,9 @@ public sealed class GetUserFamiliesQueryHandler(
         GetUserFamiliesQuery request,
         CancellationToken cancellationToken)
     {
-
         Guid userId = request.userId;
 
-        // 2. Get all families where the user is a member with all related data
+        // Get all families where the user is a member with all related data
         var familiesData = await db.FamilyUsers
             .AsNoTracking()
             .Where(fu => fu.UserId == userId && !fu.Family.IsDeleted)
@@ -29,8 +28,9 @@ public sealed class GetUserFamiliesQueryHandler(
                 FamilyName = fu.Family.Name,
                 CurrentBudget = fu.Family.CurrentBudget,
                 FamilyBio = fu.Family.FamilyBio,
-                Members = fu.Family.FamilyUsers
-                    .Where(member => !member.User.IsDeleted)
+
+                Members = db.FamilyUsers
+                    .Where(member => member.FamilyId == fu.Family.Id && !member.User.IsDeleted)
                     .Select(member => new
                     {
                         UserId = member.UserId,
@@ -42,14 +42,13 @@ public sealed class GetUserFamiliesQueryHandler(
             })
             .ToListAsync(cancellationToken);
 
-        // 3. Map to response DTOs with profile image URLs
+        // Map to response DTOs with profile image URLs
         var familyResponses = familiesData.Select(family =>
         {
             // Map each member to FamilyMemberProfile with profile image URL
             var memberProfiles = family.Members.Select(member =>
             {
                 string? profileImageUrl = fileUrlBuilder.GetUrl(member.ProfileImageFileId);
-
                 return new FamilyMemberProfile(
                     UserId: member.UserId,
                     FullName: member.FullName,
@@ -68,7 +67,7 @@ public sealed class GetUserFamiliesQueryHandler(
             );
         }).ToList();
 
-        // 4. Return successful result with all families
+        // Return successful result with all families
         return Result.Success(familyResponses);
     }
 }

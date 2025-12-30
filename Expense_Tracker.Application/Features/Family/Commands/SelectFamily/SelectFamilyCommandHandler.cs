@@ -36,26 +36,27 @@ public sealed class SelectFamilyCommandHandler(
         AuthenticatedUser authenticatedUser = userResult.TryGetValue();
 
         // 2. Verify user is member of the family and get family context
-        var familyMembership = await db.FamilyUsers
+        FamilyContextDto? familyContext = await db.FamilyUsers
             .AsNoTracking()
             .Where(fu => fu.UserId == request.UserId && fu.FamilyId == request.FamilyId)
-            .Select(fu => new
-            {
+            .Select(fu => new FamilyContextDto(
+
                 fu.FamilyId,
                 fu.Family.Name,
                 fu.IsParent
-            })
+            ))
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (familyMembership is null)
+        if (familyContext is null)
             return Result.Failure<SelectFamilyResponse>(
                 DomainError.NotFound(nameof(Family)));
 
         // 3. Generate JWT tokens with family context
         Result<AuthDto> tokenResult =
-            await tokenProvider.GenerateJwtTokenAsync(
+            await tokenProvider.GenerateJwtTokenWithFamilyAsync(
                 authenticatedUser,
                 request.DeviceId,
+                familyContext,
                 cancellationToken);
 
         if (tokenResult.IsFailure)
@@ -93,12 +94,7 @@ public sealed class SelectFamilyCommandHandler(
 
         CursorPagedResponse<TransactionItem> transactionsPage = transactionsResult.TryGetValue();
 
-        // 7. Build family context
-        FamilyContextDto familyContext = new(
-            FamilyId: familyMembership.FamilyId.ToString(),
-            FamilyName: familyMembership.Name,
-            IsParent: familyMembership.IsParent
-        );
+
 
         // 8. Build response
         SelectFamilyResponse response = new(

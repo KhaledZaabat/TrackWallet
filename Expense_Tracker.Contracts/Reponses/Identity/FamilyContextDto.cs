@@ -1,7 +1,7 @@
 ﻿namespace Expense_Tracker.Contracts.Reponses.Identity;
 
 public sealed record FamilyContextDto(
-    string FamilyId,
+    Guid FamilyId,
     string FamilyName,
     bool IsParent
 );

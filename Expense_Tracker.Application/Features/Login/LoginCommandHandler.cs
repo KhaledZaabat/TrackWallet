@@ -63,11 +63,11 @@ public sealed class LoginCommandHandler(
         if (familiesResult.IsFailure)
             return Result.Failure<AuthResponse>(familiesResult.TryGetError());
 
-        List<FamilyResponse> families = familiesResult.TryGetValue();
-        FamilyResponse? primaryFamily = families.FirstOrDefault();
+        List<FamilyResponse>? families = familiesResult.TryGetValue();
+
 
         // 5. Map to AuthResponse
-        AuthResponse authResponse = (authDto, profileImageUrl, primaryFamily).Adapt<AuthResponse>();
+        AuthResponse authResponse = (authDto, profileImageUrl, families).Adapt<AuthResponse>();
 
         // 6. Upsert user device for push notifications
         await userDeviceRepository.UpsertAsync(

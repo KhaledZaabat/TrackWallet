@@ -8,7 +8,7 @@ public sealed record AuthResponse(
     string FullName,
     TokenResponse JwtToken,
     TokenResponse RefreshToken,
-    FamilyResponse? FamilyResponse,
+    List<FamilyResponse>? Families = null,
     string? ProfileImageUrl = null
    );
 

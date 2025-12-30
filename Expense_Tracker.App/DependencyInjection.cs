@@ -57,7 +57,8 @@ public static class ServiceRegistration
             .ConfigureMappings()
             .ConfigureProblems()
             .AddUserContext()
-            .AddUrlBuilders();
+            .AddUrlBuilders()
+            .AddFamilyContext();
 
 
 
@@ -397,6 +398,15 @@ public static class ServiceRegistration
 
         return services;
     }
+
+    private static IServiceCollection AddFamilyContext(this IServiceCollection services)
+    {
+        services.AddScoped<IFamilyContext, HttpFamilyContext>();
+
+
+        return services;
+    }
+
 
     private static IServiceCollection RegisterOtpSettings(this IServiceCollection services)
     {

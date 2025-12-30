@@ -15,14 +15,14 @@ public class MappingConfig : IRegister
         // (AuthDto, ProfileImageUrl, FamilyResponse) -> AuthResponse
         // Main mapping used in LoginCommandHandler
         // ===============================
-        config.NewConfig<(AuthDto dto, string? url, FamilyResponse? family), AuthResponse>()
+        config.NewConfig<(AuthDto dto, string? url, List<FamilyResponse>? families), AuthResponse>()
             .Map(dest => dest.UserId, src => src.dto.UserId)
             .Map(dest => dest.FullName, src => src.dto.FullName)
             .Map(dest => dest.Email, src => src.dto.Email)
             .Map(dest => dest.JwtToken, src => src.dto.JwtToken)
             .Map(dest => dest.RefreshToken, src => src.dto.RefreshToken)
             .Map(dest => dest.ProfileImageUrl, src => src.url)
-            .Map(dest => dest.FamilyResponse, src => src.family);
+            .Map(dest => dest.Families, src => src.families);
 
         // ===============================
         // (AuthDto, ProfileImageUrl) -> AuthResponse
@@ -34,8 +34,7 @@ public class MappingConfig : IRegister
             .Map(dest => dest.Email, src => src.dto.Email)
             .Map(dest => dest.JwtToken, src => src.dto.JwtToken)
             .Map(dest => dest.RefreshToken, src => src.dto.RefreshToken)
-            .Map(dest => dest.ProfileImageUrl, src => src.url)
-            .Map(dest => dest.FamilyResponse, src => (FamilyResponse?)null);
+            .Map(dest => dest.ProfileImageUrl, src => src.url);
 
         // ===============================
         // AuthDto -> AuthResponse
@@ -47,8 +46,7 @@ public class MappingConfig : IRegister
             .Map(dest => dest.Email, src => src.Email)
             .Map(dest => dest.JwtToken, src => src.JwtToken)
             .Map(dest => dest.RefreshToken, src => src.RefreshToken)
-            .Map(dest => dest.ProfileImageUrl, src => (string?)null)
-            .Map(dest => dest.FamilyResponse, src => (FamilyResponse?)null);
+            .Map(dest => dest.ProfileImageUrl, src => (string?)null);
 
         // ===============================
         // ApplicationUser -> AuthenticatedUser

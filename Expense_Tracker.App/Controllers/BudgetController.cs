@@ -1,4 +1,5 @@
-﻿using Expense_Tracker.App.Helpers;
+﻿using Asp.Versioning;
+using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.FamiliyHistoryBudget.Queries;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Family;
@@ -12,6 +13,8 @@ namespace Expense_Tracker.App.Controllers;
 [ApiController]
 [Route("api/budget")]
 [Authorize]
+[ApiVersion("1.0")]
+
 public sealed class BudgetController(ISender sender, IFamilyContext familyContext) : ControllerBase
 {
     /// <summary>

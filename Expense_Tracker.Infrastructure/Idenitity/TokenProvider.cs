@@ -160,7 +160,7 @@ public sealed class TokenProvider(
         // Add family context claims if provided
         if (familyContext is not null)
         {
-            claims.Add(new Claim(CustomClaimTypes.FamilyId, familyContext.FamilyId));
+            claims.Add(new Claim(CustomClaimTypes.FamilyId, familyContext.FamilyId.ToString()));
             claims.Add(new Claim(CustomClaimTypes.FamilyName, familyContext.FamilyName));
             claims.Add(new Claim(CustomClaimTypes.IsParent, familyContext.IsParent.ToString().ToLower()));
         }
@@ -181,9 +181,9 @@ public sealed class TokenProvider(
             return null;
 
         bool isParent = bool.TryParse(isParentClaim, out var parsed) && parsed;
-
+        Guid familyIdguid = Guid.Parse(familyId);
         return new FamilyContextDto(
-            familyId,
+            familyIdguid,
             familyName ?? string.Empty,
             isParent);
     }
