@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Application.Constants;
+﻿using Expense_Tracker.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -8,10 +8,12 @@ namespace Expense_Tracker.App.Filters;
 /// Requires that the user has selected a family (has family claims in JWT)
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-public class RequireFamilyAttribute : Attribute, IAuthorizationFilter
+public class RequireFamilyAttribute() : Attribute, IAuthorizationFilter
 {
     public void OnAuthorization(AuthorizationFilterContext context)
     {
+        var familyContext = context.HttpContext.RequestServices.GetRequiredService<IFamilyContext>();
+
         var user = context.HttpContext.User;
 
         if (!user.Identity?.IsAuthenticated ?? true)
@@ -20,9 +22,9 @@ public class RequireFamilyAttribute : Attribute, IAuthorizationFilter
             return;
         }
 
-        var familyId = user.FindFirst(CustomClaimTypes.FamilyId)?.Value;
+        Guid? familyId = familyContext.FamilyId;
 
-        if (string.IsNullOrWhiteSpace(familyId))
+        if (familyId is null)
         {
             context.Result = new ObjectResult(new
             {

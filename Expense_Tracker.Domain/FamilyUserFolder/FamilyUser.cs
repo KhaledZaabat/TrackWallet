@@ -3,7 +3,7 @@ using Expense_Tracker.Domain.Common.ResultPattern.Error;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.FamilyFolder;
 
-namespace Expense_Tracker.Domain.FamilyUser;
+namespace Expense_Tracker.Domain.FamilyUserFolder;
 
 
 public sealed class FamilyUser : Entity

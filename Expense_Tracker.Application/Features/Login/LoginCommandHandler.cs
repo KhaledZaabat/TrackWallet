@@ -1,5 +1,7 @@
 ﻿using Expense_Tracker.Application.Dtos;
+using Expense_Tracker.Application.Features.Family.Queries.GetUserFamilies;
 using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Contracts.Reponses.Family;
 using Expense_Tracker.Contracts.Reponses.Identity;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Mapster;
@@ -14,13 +16,15 @@ public sealed class LoginCommandHandler(
     ITokenProvider tokenProvider,
     IAppDbContext db,
     [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
-    IUserDeviceRepository userDeviceRepository
+    IUserDeviceRepository userDeviceRepository,
+    ISender sender
 ) : IRequestHandler<LoginCommand, Result<AuthResponse>>
 {
     public async Task<Result<AuthResponse>> Handle(
         LoginCommand request,
         CancellationToken cancellationToken)
     {
+        // 1. Authenticate user
         Result<AuthenticatedUser> authResult =
             await identityService.AuthenticateByEmailAsync(
                 request.Email,
@@ -31,6 +35,7 @@ public sealed class LoginCommandHandler(
 
         AuthenticatedUser authenticatedUser = authResult.TryGetValue();
 
+        // 2. Generate JWT tokens
         Result<AuthDto> tokenResult =
             await tokenProvider.GenerateJwtTokenAsync(
                 authenticatedUser,
@@ -39,17 +44,38 @@ public sealed class LoginCommandHandler(
 
         if (tokenResult.IsFailure)
             return Result.Failure<AuthResponse>(tokenResult.TryGetError());
-        AuthDto authDto = tokenResult.TryGetValue();
-        Guid? profileFileId = await db.Users.Where(u => u.Id == authenticatedUser.Id).Select(u => u.ProfileImageFileId).FirstOrDefaultAsync();
-        string? ProfileImageUrl = fileUrlBuilder.GetUrl(profileFileId);
-        AuthResponse authResponse = (authDto, ProfileImageUrl).Adapt<AuthResponse>();
 
+        AuthDto authDto = tokenResult.TryGetValue();
         Guid userId = Guid.Parse(authDto.UserId);
 
-        await userDeviceRepository.UpsertAsync(userId,
-                                        request.FcmToken,
-                                        platform: Domain.PushNotifications.Enums.PushPlatform.Android,
-                                        cancellationToken);
+        // 3. Get user profile image
+        Guid? profileFileId = await db.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.ProfileImageFileId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        string? profileImageUrl = fileUrlBuilder.GetUrl(profileFileId);
+
+        // 4. Get user's first family (or null if no families)
+        Result<List<FamilyResponse>> familiesResult =
+            await sender.Send(new GetUserFamiliesQuery(userId), cancellationToken);
+
+        if (familiesResult.IsFailure)
+            return Result.Failure<AuthResponse>(familiesResult.TryGetError());
+
+        List<FamilyResponse> families = familiesResult.TryGetValue();
+        FamilyResponse? primaryFamily = families.FirstOrDefault();
+
+        // 5. Map to AuthResponse
+        AuthResponse authResponse = (authDto, profileImageUrl, primaryFamily).Adapt<AuthResponse>();
+
+        // 6. Upsert user device for push notifications
+        await userDeviceRepository.UpsertAsync(
+            userId,
+            request.FcmToken,
+            platform: Domain.PushNotifications.Enums.PushPlatform.Android,
+            cancellationToken);
+
         await db.SaveChangesAsync(cancellationToken);
 
         return Result.Success(authResponse);

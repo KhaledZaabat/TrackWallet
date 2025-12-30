@@ -1,7 +1,7 @@
 ﻿
 using Expense_Tracker.Domain.CategoryFolder;
 using Expense_Tracker.Domain.FamilyFolder;
-using Expense_Tracker.Domain.FamilyUser;
+using Expense_Tracker.Domain.FamilyUserFolder;
 using Expense_Tracker.Domain.Files;
 using Expense_Tracker.Domain.Invitation;
 using Expense_Tracker.Domain.PushNotifications;

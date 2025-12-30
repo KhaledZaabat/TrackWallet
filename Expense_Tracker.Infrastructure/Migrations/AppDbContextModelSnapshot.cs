@@ -181,6 +181,9 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("DeletedOn")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("FamilyBio")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -206,7 +209,7 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.ToTable("Families", (string)null);
                 });
 
-            modelBuilder.Entity("Expense_Tracker.Domain.FamilyUser.FamilyBudgetHistory", b =>
+            modelBuilder.Entity("Expense_Tracker.Domain.FamilyUserFolder.FamilyBudgetHistory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -231,13 +234,16 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.ToTable("FamilyBudgetHistories", (string)null);
                 });
 
-            modelBuilder.Entity("Expense_Tracker.Domain.FamilyUser.FamilyUser", b =>
+            modelBuilder.Entity("Expense_Tracker.Domain.FamilyUserFolder.FamilyUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("FamilyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("FamilyId1")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("InvitedById")
@@ -255,6 +261,8 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("FamilyId");
+
+                    b.HasIndex("FamilyId1");
 
                     b.HasIndex("InvitedById");
 
@@ -809,7 +817,7 @@ namespace Expense_Tracker.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Expense_Tracker.Domain.FamilyUser.FamilyBudgetHistory", b =>
+            modelBuilder.Entity("Expense_Tracker.Domain.FamilyUserFolder.FamilyBudgetHistory", b =>
                 {
                     b.HasOne("Expense_Tracker.Domain.FamilyFolder.Family", "Family")
                         .WithMany()
@@ -820,13 +828,17 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.Navigation("Family");
                 });
 
-            modelBuilder.Entity("Expense_Tracker.Domain.FamilyUser.FamilyUser", b =>
+            modelBuilder.Entity("Expense_Tracker.Domain.FamilyUserFolder.FamilyUser", b =>
                 {
                     b.HasOne("Expense_Tracker.Domain.FamilyFolder.Family", "Family")
                         .WithMany()
                         .HasForeignKey("FamilyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Expense_Tracker.Domain.FamilyFolder.Family", null)
+                        .WithMany("FamilyUsers")
+                        .HasForeignKey("FamilyId1");
 
                     b.HasOne("Expense_Tracker.Domain.Users.User", null)
                         .WithMany()
@@ -966,6 +978,8 @@ namespace Expense_Tracker.Infrastructure.Migrations
 
             modelBuilder.Entity("Expense_Tracker.Domain.FamilyFolder.Family", b =>
                 {
+                    b.Navigation("FamilyUsers");
+
                     b.Navigation("Transactions");
                 });
 

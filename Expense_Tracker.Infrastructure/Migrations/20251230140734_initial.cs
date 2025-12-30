@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Expense_Tracker.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -77,6 +77,7 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     CurrentBudget = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    FamilyBio = table.Column<string>(type: "text", nullable: true),
                     CreatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
                     LastModifiedUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -311,7 +312,8 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     IsParent = table.Column<bool>(type: "boolean", nullable: false),
                     InvitedById = table.Column<Guid>(type: "uuid", nullable: false),
-                    JoinedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    JoinedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    FamilyId1 = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -322,6 +324,11 @@ namespace Expense_Tracker.Infrastructure.Migrations
                         principalTable: "Families",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FamilyUsers_Families_FamilyId1",
+                        column: x => x.FamilyId1,
+                        principalTable: "Families",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_FamilyUsers_Users_InvitedById",
                         column: x => x.InvitedById,
@@ -563,6 +570,11 @@ namespace Expense_Tracker.Infrastructure.Migrations
                 table: "FamilyUsers",
                 columns: new[] { "FamilyId", "UserId" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FamilyUsers_FamilyId1",
+                table: "FamilyUsers",
+                column: "FamilyId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FamilyUsers_InvitedById",

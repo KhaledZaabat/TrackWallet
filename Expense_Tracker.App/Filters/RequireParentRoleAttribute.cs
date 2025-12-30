@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Application.Constants;
+﻿using Expense_Tracker.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -8,10 +8,12 @@ namespace Expense_Tracker.App.Filters;
 /// Requires that the user is a parent in the selected family
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-public class RequireParentRoleAttribute : Attribute, IAuthorizationFilter
+public class RequireParentRoleAttribute() : Attribute, IAuthorizationFilter
 {
     public void OnAuthorization(AuthorizationFilterContext context)
     {
+        var familyContext = context.HttpContext.RequestServices.GetRequiredService<IFamilyContext>();
+
         var user = context.HttpContext.User;
 
         if (!user.Identity?.IsAuthenticated ?? true)
@@ -20,10 +22,10 @@ public class RequireParentRoleAttribute : Attribute, IAuthorizationFilter
             return;
         }
 
-        var familyId = user.FindFirst(CustomClaimTypes.FamilyId)?.Value;
-        var isParentClaim = user.FindFirst(CustomClaimTypes.IsParent)?.Value;
+        var familyId = familyContext.FamilyId;
+        var isParent = familyContext.IsParent;
 
-        if (string.IsNullOrWhiteSpace(familyId))
+        if (familyId is null)
         {
             context.Result = new ObjectResult(new
             {
@@ -36,7 +38,7 @@ public class RequireParentRoleAttribute : Attribute, IAuthorizationFilter
             return;
         }
 
-        bool isParent = bool.TryParse(isParentClaim, out var parsed) && parsed;
+
 
         if (!isParent)
         {

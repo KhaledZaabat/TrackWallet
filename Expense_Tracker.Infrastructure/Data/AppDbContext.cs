@@ -2,7 +2,7 @@
 using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.Common.Identity;
 using Expense_Tracker.Domain.FamilyFolder;
-using Expense_Tracker.Domain.FamilyUser;
+using Expense_Tracker.Domain.FamilyUserFolder;
 using Expense_Tracker.Domain.Files;
 using Expense_Tracker.Domain.Invitation;
 using Expense_Tracker.Domain.PushNotifications;

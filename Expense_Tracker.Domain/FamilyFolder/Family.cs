@@ -1,7 +1,9 @@
 ﻿using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.Common.ResultPattern.Error;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.FamilyUserFolder;
 using Expense_Tracker.Domain.TransactionFolder;
+using Expense_Tracker.Domain.TransactionFolder.Erros;
 
 namespace Expense_Tracker.Domain.FamilyFolder;
 
@@ -10,6 +12,7 @@ public sealed class Family : AggregateRoot, IAuditable
     public string Name { get; private set; } = string.Empty;
     public decimal CurrentBudget { get; private set; }
 
+    public string? FamilyBio { get; private set; } = string.Empty;
     // Audit properties
     public DateTimeOffset CreatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;
     public Guid CreatedBy { get; private set; } = Guid.Empty;
@@ -21,6 +24,7 @@ public sealed class Family : AggregateRoot, IAuditable
     public Guid? DeletedById { get; private set; }
     public DateTimeOffset? DeletedOn { get; private set; }
     public ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
+    public ICollection<FamilyUser> FamilyUsers { get; private set; } = new List<FamilyUser>();
 
 
     // Explicit interface implementations for IAuditable
@@ -52,13 +56,14 @@ public sealed class Family : AggregateRoot, IAuditable
     // EF Core constructor
     private Family() { }
 
-    private Family(Guid id, string name, decimal currentBudget) : base(id)
+    private Family(Guid id, string name, decimal currentBudget, string? familyBio) : base(id)
     {
         Name = name;
         CurrentBudget = currentBudget;
+        FamilyBio = familyBio;
     }
 
-    public static Result<Family> Create(string name, decimal currentBudget, Guid createdBy)
+    public static Result<Family> Create(string name, decimal currentBudget, Guid createdBy, string? familyBio = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure<Family>(
@@ -72,7 +77,7 @@ public sealed class Family : AggregateRoot, IAuditable
             return Result.Failure<Family>(
                 DomainError.InvalidState(nameof(Family), "Current budget cannot be negative."));
 
-        var family = new Family(Guid.CreateVersion7(), name.Trim(), currentBudget);
+        var family = new Family(Guid.CreateVersion7(), name.Trim(), currentBudget, familyBio);
         family.CreatedBy = createdBy;
 
         return Result.Success(family);
@@ -95,8 +100,10 @@ public sealed class Family : AggregateRoot, IAuditable
     public Result ApplyTransaction(decimal amount, bool isExpense)
     {
         if (amount <= 0)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Family), "TransactionFolder amount must be greater than zero."));
+            return Result.Failure(TransactionError.InvalidAmount(amount));
+
+        if (isExpense && amount > CurrentBudget)
+            return Result.Failure(TransactionError.BudgetNotEnough(CurrentBudget, amount));
 
         if (isExpense)
         {
@@ -148,6 +155,11 @@ public sealed class Family : AggregateRoot, IAuditable
         DeletedById = deletedBy;
         DeletedOn = DateTimeOffset.UtcNow;
 
+        return Result.Success();
+    }
+    public Result UpdateBio(string? bio)
+    {
+        FamilyBio = bio;
         return Result.Success();
     }
 }

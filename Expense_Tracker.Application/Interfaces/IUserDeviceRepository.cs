@@ -24,10 +24,3 @@ public interface IUserDeviceRepository
         string token,
         CancellationToken cancellationToken);
 }
-
-
-
-
-
-
-

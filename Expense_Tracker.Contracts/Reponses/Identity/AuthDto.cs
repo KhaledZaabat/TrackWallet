@@ -11,13 +11,3 @@ public sealed record AuthDto(
 
    );
 
-
-
-
-
-public sealed record FamilyContextDto(
-    string FamilyId,
-    string FamilyName,
-    bool IsParent
-);
-

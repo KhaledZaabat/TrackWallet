@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Domain.FamilyUser;
+﻿using Expense_Tracker.Domain.FamilyUserFolder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

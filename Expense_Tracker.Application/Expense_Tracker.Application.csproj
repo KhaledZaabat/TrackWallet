@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Expense_Tracker.Domain\Expense_Tracker.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\FamiliyHistoryBudget\Commands\" />
+  </ItemGroup>
+
 </Project>
