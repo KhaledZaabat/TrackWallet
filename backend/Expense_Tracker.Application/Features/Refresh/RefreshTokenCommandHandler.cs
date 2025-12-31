@@ -3,6 +3,7 @@ using Expense_Tracker.Contracts.Reponses.Identity;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Mapster;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Application.Features.Refresh;
 
@@ -11,7 +12,8 @@ public sealed class RefreshTokenCommandHandler(
     ITokenProvider tokenProvider,
      IUserDeviceRepository userDeviceRepository,
      IAppDbContext db,
-     IFamilyContext familyContext
+     IFamilyContext familyContext,
+     IUserContext userContext
 ) : IRequestHandler<RefreshTokenCommand, Result<AuthResponse>>
 
 
@@ -29,15 +31,19 @@ public sealed class RefreshTokenCommandHandler(
 
         var user = userResult.TryGetValue();
 
-        FamilyContextDto? familyContextDto = (familyContext.FamilyId != null) ? db.Families
-      .Where(f => f.Id == familyContext.FamilyId)
-      .Select(f => new FamilyContextDto(
-          FamilyId: f.Id,
-          FamilyName: f.Name,
-          IsParent: familyContext.IsParent,
-          CurrentBudget: f.CurrentBudget
-      ))
-      .FirstOrDefault() : null;
+        FamilyContextDto? familyContextDto =
+          familyContext.FamilyId is null
+              ? null
+              : await db.FamilyUsers
+                  .Where(fu =>
+                      fu.FamilyId == familyContext.FamilyId.Value &&
+                      fu.UserId == userContext.UserId!.Value)
+                  .Select(fu => new FamilyContextDto(
+                      FamilyId: fu.Family.Id,
+                      FamilyName: fu.Family.Name,
+                      IsParent: fu.IsParent,
+                      CurrentBudget: fu.Family.CurrentBudget
+                  )).FirstOrDefaultAsync(cancellationToken);
         Result<AuthDto> tokenResult = await tokenProvider.GenerateJwtTokenWithFamilyAsync(user, request.DeviceId, familyContextDto, cancellationToken);
         AuthResponse response = tokenResult.TryGetValue().Adapt<AuthResponse>();
 

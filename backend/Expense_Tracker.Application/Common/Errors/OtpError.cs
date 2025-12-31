@@ -24,3 +24,17 @@ public sealed record OtpError(ApplicationErrorCode ApplicationErrorCode, string 
 
 
 }
+
+
+public sealed record InvitationError(ApplicationErrorCode ApplicationErrorCode, string Type, string Description)
+    : Error(ApplicationErrorCode, Type, Description)
+{
+
+
+    public static InvitationError Forbidden(string description = "You are not allowed to accept this user ") =>
+        new(ApplicationErrorCode.Forbidden,
+            "Invitation.Forbidden",
+            description);
+
+
+}

@@ -18,36 +18,49 @@ namespace Expense_Tracker.App.Controllers;
 [Route("api/families")]
 [ApiVersion("1.0")]
 
-public class FamiliesController(ISender sender, IUserContext userContext
-) : ControllerBase
+public class FamiliesController(ISender sender, IUserContext userContext) : ControllerBase
 {
+    /// <summary>
+    /// Retrieves all families associated with the authenticated user.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of <see cref="FamilyResponse"/> representing user's families.</returns>
+    /// <response code="200">Families retrieved successfully.</response>
+    /// <response code="401">User is not authenticated.</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<FamilyResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [EndpointSummary("Gets all user families.")]
+    [EndpointDescription("Returns a list of all families that the authenticated user is a member of.")]
+    [EndpointName("GetUserFamilies")]
     public async Task<ActionResult<List<FamilyResponse>>> GetUserFamilies(CancellationToken cancellationToken)
     {
         if (!userContext.UserId.HasValue)
             return Unauthorized("User Is not Authorized");
+
         var query = new GetUserFamiliesQuery(userContext.UserId.Value);
-
         Result<List<FamilyResponse>> result = await sender.Send(query, cancellationToken);
-
-
         return result.ToActionResult(HttpContext);
     }
 
     /// <summary>
-    /// Select a family and get full context including transactions and budget history
+    /// Selects a family and retrieves complete family context with dashboard data.
     /// </summary>
-    /// <param name="request">Family selection request</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Complete family context with auth tokens</returns>
+    /// <param name="request">Family selection request containing the family ID and device ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="SelectFamilyResponse"/> containing full family context, dashboard data, budget history, recent transactions, and refreshed auth tokens.</returns>
+    /// <response code="200">Family selected successfully; returns complete context, dashboard data, and new JWT/refresh tokens.</response>
+    /// <response code="400">Invalid request or validation failure.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="404">Specified family not found or user is not a member.</response>
     [HttpPost("select")]
     [ProducesResponseType(typeof(SelectFamilyResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [EndpointSummary("Selects a family and loads full context.")]
+    [EndpointDescription("Sets the active family for the user session and returns comprehensive family context including user information, family details, budget history, recent transactions, and refreshed authentication tokens (JWT and refresh token).")]
+    [EndpointName("SelectFamily")]
     public async Task<ActionResult<SelectFamilyResponse>> SelectFamily(
         [FromBody] SelectFamilyRequest request,
         CancellationToken cancellationToken)
@@ -55,7 +68,6 @@ public class FamiliesController(ISender sender, IUserContext userContext
         if (!userContext.UserId.HasValue)
             return Unauthorized("User Is not Authorized");
 
-        // Create command
         var command = new SelectFamilyCommand(
             UserId: userContext.UserId.Value,
             FamilyId: request.FamilyId,
@@ -66,14 +78,22 @@ public class FamiliesController(ISender sender, IUserContext userContext
         return result.ToActionResult(HttpContext);
     }
 
-
     /// <summary>
-    /// Create a new family (creator becomes parent automatically)
+    /// Creates a new family with the authenticated user as the parent.
     /// </summary>
+    /// <param name="request">Family creation request containing name, initial budget, and bio.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="CreateFamilyResponse"/> containing the newly created family details.</returns>
+    /// <response code="201">Family created successfully.</response>
+    /// <response code="400">Invalid request or validation failure.</response>
+    /// <response code="401">User is not authenticated.</response>
     [HttpPost]
     [ProducesResponseType(typeof(CreateFamilyResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [EndpointSummary("Creates a new family.")]
+    [EndpointDescription("Establishes a new family unit with the authenticated user automatically assigned as the parent role. Initializes the family with a name, budget, and optional bio.")]
+    [EndpointName("CreateFamily")]
     public async Task<ActionResult<CreateFamilyResponse>> CreateFamily(
         [FromBody] CreateFamilyRequest request,
         CancellationToken cancellationToken)
@@ -81,7 +101,6 @@ public class FamiliesController(ISender sender, IUserContext userContext
         if (!userContext.UserId.HasValue)
             return Unauthorized("User is not authorized");
 
-        // Create command
         var command = new CreateFamilyCommand(
             UserId: userContext.UserId.Value,
             Name: request.Name,
@@ -89,16 +108,7 @@ public class FamiliesController(ISender sender, IUserContext userContext
             FamilyBio: request.FamilyBio
         );
 
-        // Execute command
         Result<CreateFamilyResponse> result = await sender.Send(command, cancellationToken);
-
-        //  if (result.IsFailure)
         return result.ToActionResult(HttpContext);
-
-        //return CreatedAtAction(
-        //    nameof(GetUserFamilies),
-        //    new { },
-        //    result.TryGetValue()
-        //);
     }
 }

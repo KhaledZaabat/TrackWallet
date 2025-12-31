@@ -121,9 +121,6 @@ public sealed class Invitation : AggregateRoot
 
     public Result Cancel(Guid requesterId)
     {
-        if (requesterId != InviterUserId)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Invitation), "Only the inviter can cancel this invitation."));
 
         if (Status != InvitationStatus.Pending)
             return Result.Failure(

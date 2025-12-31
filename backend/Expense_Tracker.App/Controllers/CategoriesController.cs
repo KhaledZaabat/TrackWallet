@@ -17,11 +17,18 @@ namespace Expense_Tracker.App.Controllers;
 public class CategoriesController(ISender sender) : ControllerBase
 {
     /// <summary>
-    /// Get all available categories
+    /// Retrieves all available transactions categories.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of <see cref="CategoryResponse"/> representing all categories.</returns>
+    /// <response code="200">Categories retrieved successfully.</response>
+    /// <response code="401">User is not authenticated or family context is missing.</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<CategoryResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [EndpointSummary("Gets all  categories for transactions .")]
+    [EndpointDescription("Returns a complete list of budget categories available for the authenticated user's family.")]
+    [EndpointName("GetCategories")]
     [RequireFamily]
     public async Task<ActionResult<List<CategoryResponse>>> GetCategories(
         CancellationToken cancellationToken)

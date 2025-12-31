@@ -13,7 +13,6 @@ public class RequireFamilyAttribute() : Attribute, IAuthorizationFilter
     public void OnAuthorization(AuthorizationFilterContext context)
     {
         var familyContext = context.HttpContext.RequestServices.GetRequiredService<IFamilyContext>();
-
         var user = context.HttpContext.User;
 
         if (!user.Identity?.IsAuthenticated ?? true)
@@ -23,16 +22,23 @@ public class RequireFamilyAttribute() : Attribute, IAuthorizationFilter
         }
 
         Guid? familyId = familyContext.FamilyId;
-
         if (familyId is null)
         {
-            context.Result = new ObjectResult(new
+            var problemDetails = new ProblemDetails
             {
-                error = "NO_FAMILY_SELECTED",
-                message = "Please select a family first."
-            })
+                Status = StatusCodes.Status403Forbidden,
+                Title = "Authorization.NoFamilySelected",
+                Detail = "Please select a family first.",
+                Instance = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}"
+            };
+
+            problemDetails.Extensions["ErrorCode"] = "NO_FAMILY_SELECTED";
+            problemDetails.Extensions["ErrorType"] = "Authorization.NoFamilySelected";
+
+            context.Result = new ObjectResult(problemDetails)
             {
-                StatusCode = 403
+                StatusCode = StatusCodes.Status403Forbidden,
+                ContentTypes = { "application/problem+json" }
             };
         }
     }
