@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "trackwallet-959b3",
+  "private_key_id": "b1c3316f1395c1ea8f4656d17122b72f68ecebba",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCowz5k+waYVZ3q\nsVkkWal2EofV5pVs0vsXSahm1iY/T/g3Kiv2G5uES2afQWt6Y9IETD98q5Cm4MkQ\nPpg4n/vFFIhEyVUKC5fdbofbXm8UrfxEWEJefIiDr4WIuATDJYsLjOjozyrNlMFE\nzfq61epdYXYLVS/7eSxovCYtCXQlqpm5+qPOHDWdNfC0C6mKUTzFQbF4nVd5HVnf\ng2k8/GMd9jIo82DxvC7sWyGakB57HS4cz3k2ipYSf6iBrRifRC+7bA3rPGDqq4RB\nZn51m7IizNE8S4vtN3RFkT1oF/5YUQ4TntXVinpyIvopM5A3EtcDt1XKYS8JNiFE\nqqr6SMFlAgMBAAECggEAHCVD2K+M8AcHaUbeqRNTEeARS3lDXnzpZ37fWRdKFbEO\nopSj9E2yaCPzH4hXlnfjZNgaln4+h7ZhkhX+aSM1aC7+cwpo5l38m+99NPbQ69AA\njJ1zpDJ8ygmR6bVXBfzS7cA4b+ttJhAzE3iO4m4ewigo+cbhU71nzKfkbgpvloBR\njW0X/p294viO5cjHujvRjzndkCQAlb6cyoHjJGFyPWiyk0Vh/saV4PJ5glSJQVpq\npucJensuChbFO7Vz937bXvoStWLmfMF12cUuKKtWfnuOPJkG/ZQo/QfzIYnl2VOI\nyT1J5j3ox+P9Yn4rVa/YaJz5EOaf8LfRamnAoeFzGQKBgQDpHavnBwzQXA7I16yo\nS3b6KXq6GIZfu6sVFEH+n2sPpcwcbJYFUO6yRnJXCrR+bDQotsIOGzrEKqLz9+FG\nfTf0ogpvpZ2htBPye3LfBls0ieDUlrjx/deDtk2jzbfkk4SdRF9Z4yFdXpXPgM1r\nQKBgoFiEEGFkQk9RlX7qD6TJ1wKBgQC5VFc6yyRGpiMhV2/JSmMAWOXpUnfquTPQ\nUI5vex+3ReEaX8GG0G3RKi/vmKnXGh0QbD44bumAXkN+8CIdP3I8Xikh3j7cc6Fk\nclvN9Ciqtj6mH4YOj7F7JExbIC7t5P6bg0QYUlnFk8qAdsFaUiOfXZOGl6uMNZk8\nNyFgbWz/IwKBgBHmHVTXzbwR1XDGXpNtd+0tUicHywl+t1we+hI621WQPWPRUpOF\n60306sKUJ9etJzQZFD1RCeoV+/0Pg1SOOMWny3VXGgtYcE+l+uP08PvPuluYVwr9\nmpaaYMu69+utB/mrTkbwkZdBs+8CzML3a1j/9svtFg1EqiJxgBUorlZxAoGAKZyp\nVVclVwOYobTbMawVHI/ZV5EfwcFBxAVCZf+UOHdlOqHDdzy3W56IUtjJUbXYTsav\nFca5gQwpRYgvcLe9M5bEz4jyPldsJnyS5mRq+SGgYXZ0iDJ1XDvjNRa90sZ28H4B\nvSBIbddoQX3onhoRS4gcRr0pVHr4ZA/Q27DWJ1cCgYAFLw1xFanRC4XjpilEbGci\njVb8V9tLv13aHWzx+5lILCZol0MvXWDiszCwBgucdBgh7eo3JhPFf93HawJqNMir\nBEwGDmgVwjqK/aj/woIaqztmc9oVg6ghPKsezxZVhLcevYWpzktuJsdJS5ocjYCH\nVMo2kfcdHjrN+1x5HOmMqg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@trackwallet-959b3.iam.gserviceaccount.com",
+  "client_id": "110508879003299242328",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40trackwallet-959b3.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
