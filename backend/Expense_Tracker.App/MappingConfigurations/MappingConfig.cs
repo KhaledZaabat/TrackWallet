@@ -78,7 +78,7 @@ public class MappingConfig : IRegister
         TypeAdapterConfig<Category, CategoryResponse>
            .NewConfig()
            .Map(dest => dest.CategoryId, src => src.Id)
-           .Map(dest => dest.Name, src => src.Name);
+           .Map(dest => dest.Name, src => src.Type);
 
         TypeAdapterConfig<Transaction, TransactionResponse>
            .NewConfig()

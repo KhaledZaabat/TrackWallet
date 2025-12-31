@@ -91,7 +91,7 @@ public sealed class CreateTransactionCommandHandler(
                 CreatedAtUtc: t.CreatedAtUtc,
                 Category: new CategoryResponse(
                     CategoryId: t.Category!.Id,
-                    Name: t.Category.Name
+                    Name: t.Category.Type
                 ),
                 Creator: new CreatorResponse(
                     UserId: t.CreatedBy!.Id,
