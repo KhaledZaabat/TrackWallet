@@ -1,10 +1,13 @@
 ﻿using Asp.Versioning;
 using Expense_Tracker.App.Filters;
 using Expense_Tracker.App.Helpers;
+using Expense_Tracker.Application.Features.DeleteTransaction;
 using Expense_Tracker.Application.Features.Transactions.Commands.CreateTransaction;
 using Expense_Tracker.Application.Features.Transactions.Queries.GetFamilyTransactions;
+using Expense_Tracker.Application.Features.UpdateTransaction;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Transaction;
+using Expense_Tracker.Contracts.Requests.Transacations;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -89,5 +92,64 @@ public class FamilyTransactionsController(ISender sender, IFamilyContext familyC
         return result.ToActionResult(HttpContext);
 
     }
+
+
+    [HttpPut("{transactionId:guid}")]
+    [ProducesResponseType(typeof(TransactionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequireFamily]
+    [Authorize]
+    public async Task<ActionResult<TransactionResponse>> UpdateTransaction(
+    [FromRoute] Guid transactionId,
+    [FromBody] UpdateTransactionRequest request,
+    CancellationToken cancellationToken)
+    {
+        Guid familyId = familyContext.FamilyId!.Value;
+
+        var command = new UpdateTransactionCommand(
+            TransactionId: transactionId,
+            UserId: userContext.UserId!.Value,
+            FamilyId: familyId,
+            Type: request.Type,
+            Amount: request.Amount,
+            TransactedOn: request.TransactedOn,
+            Title: request.Title,
+            Notes: request.Notes,
+            CategoryId: request.CategoryId
+        );
+
+        Result<TransactionResponse> result = await sender.Send(command, cancellationToken);
+        return result.ToActionResult(HttpContext);
+    }
+
+    [HttpDelete("{transactionId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequireFamily]
+    [Authorize]
+    public async Task<IActionResult> DeleteTransaction(
+        [FromRoute] Guid transactionId,
+        CancellationToken cancellationToken)
+    {
+        Guid familyId = familyContext.FamilyId!.Value;
+
+        var command = new DeleteTransactionCommand(
+            TransactionId: transactionId,
+            UserId: userContext.UserId!.Value,
+            FamilyId: familyId
+        );
+
+        Result result = await sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+            return result.ToActionResult(HttpContext);
+
+        return NoContent();
+    }
+
 
 }

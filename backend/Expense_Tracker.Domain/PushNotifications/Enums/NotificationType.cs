@@ -2,5 +2,15 @@
 
 public enum NotificationType
 {
-    nkmkAnis
+
+
+
+    // Invitation related
+    FamilyInvitation,
+    InvitationAccepted,
+    InvitationDeclined,
+    InvitationCancelled,
+
+
+
 }

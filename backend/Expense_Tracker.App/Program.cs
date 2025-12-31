@@ -1,5 +1,6 @@
 using Expense_Tracker.App;
 using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Application.Jobs;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Hangfire;
@@ -33,9 +34,13 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "TrackWallet API V1");
     options.DocumentTitle = "TrackWallet API - Swagger UI";
 });
+
+
+
 FirebaseApp.Create(new AppOptions
 {
     Credential = GoogleCredential.GetApplicationDefault()
+
 });
 
 
@@ -62,6 +67,13 @@ using (var scope = app.Services.CreateScope())
 {
     var initializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
     await initializer.SeedAsync();
+
+    RecurringJob.AddOrUpdate<RecordFamilyBudgetsJob>(
+    "record-family-budgets-daily",
+    job => job.ExecuteAsync(CancellationToken.None),
+    Cron.Daily(0, 0),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc }
+);
 }
 
 app.UseRouting();

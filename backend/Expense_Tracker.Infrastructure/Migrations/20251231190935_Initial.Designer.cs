@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Expense_Tracker.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251230140734_initial")]
-    partial class initial
+    [Migration("20251231190935_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -567,6 +567,9 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("LastModifiedUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("NotificationPreferencesId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("ProfileImageFileId")
                         .HasColumnType("uuid");
 
@@ -581,6 +584,8 @@ namespace Expense_Tracker.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("IsDeleted");
+
+                    b.HasIndex("NotificationPreferencesId");
 
                     b.HasIndex("ProfileImageFileId");
 
@@ -920,10 +925,18 @@ namespace Expense_Tracker.Infrastructure.Migrations
 
             modelBuilder.Entity("Expense_Tracker.Domain.Users.User", b =>
                 {
+                    b.HasOne("Expense_Tracker.Domain.Users.Abstraction.NotificationPreferencesFolder.NotificationPreferences", "NotificationPreferences")
+                        .WithMany()
+                        .HasForeignKey("NotificationPreferencesId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Expense_Tracker.Domain.Files.UploadedFile", "ProfileImage")
                         .WithMany()
                         .HasForeignKey("ProfileImageFileId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("NotificationPreferences");
 
                     b.Navigation("ProfileImage");
                 });

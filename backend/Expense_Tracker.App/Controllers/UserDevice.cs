@@ -6,7 +6,6 @@ using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Asp.Versioning;
 
 namespace Expense_Tracker.App.Controllers;
 

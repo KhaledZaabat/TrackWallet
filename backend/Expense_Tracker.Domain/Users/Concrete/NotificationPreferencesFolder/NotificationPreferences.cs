@@ -11,7 +11,6 @@ public sealed class NotificationPreferences : Entity
     private NotificationPreferences() { }
 
     private NotificationPreferences(
-
         bool email,
         bool push)
     {
@@ -19,17 +18,14 @@ public sealed class NotificationPreferences : Entity
         PushNotifications = push;
     }
 
-
     private NotificationPreferences(
         Guid Id,
         bool email,
         bool push
-
        ) : base(Id)
     {
         EmailNotifications = email;
         PushNotifications = push;
-
     }
 
     public static Result<NotificationPreferences> Create(
@@ -49,15 +45,34 @@ public sealed class NotificationPreferences : Entity
             new NotificationPreferences(email, push));
     }
 
-
-
-
     public static NotificationPreferences Default()
         => new(DefaultNotificationId,
             email: true,
             push: false);
 
-
     public static readonly Guid DefaultNotificationId =
         Guid.Parse("018f3f0d-9c2c-7ab1-96da-4b821eac09ff");
+
+    // Update methods
+    public Result SetEmailNotifications(bool enabled)
+    {
+        if (!enabled && !PushNotifications)
+            return Result.Failure(
+                NotificationPreferencesError.InvalidState(
+                    "At least one notification type must be enabled."));
+
+        EmailNotifications = enabled;
+        return Result.Success();
+    }
+
+    public Result SetPushNotifications(bool enabled)
+    {
+        if (!enabled && !EmailNotifications)
+            return Result.Failure(
+                NotificationPreferencesError.InvalidState(
+                    "At least one notification type must be enabled."));
+
+        PushNotifications = enabled;
+        return Result.Success();
+    }
 }

@@ -24,6 +24,7 @@ public class FamiliesController(ISender sender, IUserContext userContext
     [HttpGet]
     [ProducesResponseType(typeof(List<FamilyResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+
     public async Task<ActionResult<List<FamilyResponse>>> GetUserFamilies(CancellationToken cancellationToken)
     {
         if (!userContext.UserId.HasValue)
@@ -73,7 +74,6 @@ public class FamiliesController(ISender sender, IUserContext userContext
     [ProducesResponseType(typeof(CreateFamilyResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [Authorize]
     public async Task<ActionResult<CreateFamilyResponse>> CreateFamily(
         [FromBody] CreateFamilyRequest request,
         CancellationToken cancellationToken)

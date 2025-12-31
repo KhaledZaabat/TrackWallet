@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Expense_Tracker.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -284,6 +284,7 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     BirthDate = table.Column<DateOnly>(type: "date", nullable: true),
                     IsMale = table.Column<bool>(type: "boolean", nullable: true),
+                    NotificationPreferencesId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
                     LastModifiedUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -295,6 +296,12 @@ namespace Expense_Tracker.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_NotificationPreferences_NotificationPreferencesId",
+                        column: x => x.NotificationPreferencesId,
+                        principalTable: "NotificationPreferences",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Users_UploadedFiles_ProfileImageFileId",
                         column: x => x.ProfileImageFileId,
@@ -739,6 +746,11 @@ namespace Expense_Tracker.Infrastructure.Migrations
                 column: "IsDeleted");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Users_NotificationPreferencesId",
+                table: "Users",
+                column: "NotificationPreferencesId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_ProfileImageFileId",
                 table: "Users",
                 column: "ProfileImageFileId");
@@ -778,9 +790,6 @@ namespace Expense_Tracker.Infrastructure.Migrations
                 name: "Invitations");
 
             migrationBuilder.DropTable(
-                name: "NotificationPreferences");
-
-            migrationBuilder.DropTable(
                 name: "Notifications");
 
             migrationBuilder.DropTable(
@@ -806,6 +815,9 @@ namespace Expense_Tracker.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "NotificationPreferences");
 
             migrationBuilder.DropTable(
                 name: "UploadedFiles");

@@ -4,6 +4,7 @@ using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.Events;
 using Expense_Tracker.Domain.Files;
 using Expense_Tracker.Domain.TransactionFolder;
+using Expense_Tracker.Domain.Users.Abstraction.NotificationPreferencesFolder;
 using System.Net.Mail;
 
 namespace Expense_Tracker.Domain.Users;
@@ -21,7 +22,8 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
     public bool? IsMale { get; private set; }
 
     public ICollection<DomainNotification> Notifications { get; private set; } = new List<DomainNotification>();
-
+    public Guid NotificationPreferencesId { get; private set; } = NotificationPreferences.DefaultNotificationId;
+    public NotificationPreferences NotificationPreferences { get; private set; }
     // Audit properties
     public DateTimeOffset CreatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;
     public Guid CreatedBy { get; private set; } = Guid.Empty;
@@ -34,6 +36,7 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
     public DateTimeOffset? DeletedOn { get; private set; }
 
     public ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
+
 
 
     // Explicit interface implementations for IAuditable
@@ -244,5 +247,11 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         return Result.Success();
     }
 
+    public Result UpdateNotificationPreferences(Guid npId)
+    {
 
+
+        NotificationPreferencesId = npId;
+        return Result.Success();
+    }
 }

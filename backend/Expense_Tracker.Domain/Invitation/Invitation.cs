@@ -1,12 +1,13 @@
 ﻿using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.Common.ResultPattern.Error;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.Events;
 using Expense_Tracker.Domain.FamilyFolder;
 using Expense_Tracker.Domain.Invitation.Enums;
 
 namespace Expense_Tracker.Domain.Invitation;
 
-public sealed class Invitation : Entity
+public sealed class Invitation : AggregateRoot
 {
     public Guid InviteeUserId { get; private set; }
     public Guid InviterUserId { get; private set; }
@@ -26,7 +27,8 @@ public sealed class Invitation : Entity
         Guid inviteeUserId,
         Guid inviterUserId,
         Guid familyId,
-        bool isParent) : base(id)
+        bool isParent
+       ) : base(id)
     {
         InviteeUserId = inviteeUserId;
         InviterUserId = inviterUserId;
@@ -34,13 +36,16 @@ public sealed class Invitation : Entity
         IsParent = isParent;
         SentAtUtc = DateTimeOffset.UtcNow;
         Status = InvitationStatus.Pending;
+
+
     }
 
     public static Result<Invitation> Create(
         Guid inviteeUserId,
         Guid inviterUserId,
         Guid familyId,
-        bool isParent)
+        bool isParent,
+        bool fireEvent = true)
     {
         if (inviteeUserId == Guid.Empty)
             return Result.Failure<Invitation>(
@@ -63,7 +68,11 @@ public sealed class Invitation : Entity
             inviteeUserId,
             inviterUserId,
             familyId,
-            isParent);
+            isParent
+           );
+        if (fireEvent)
+            invitation.AddDomainEvent(
+         new InvitationCreatedEvent(invitation));
 
         return Result.Success(invitation);
     }
@@ -82,7 +91,11 @@ public sealed class Invitation : Entity
             return Result.Failure(
                 DomainError.InvalidState(nameof(Invitation), "Invitation was cancelled and cannot be accepted."));
 
+
+
         Status = InvitationStatus.Accepted;
+        AddDomainEvent(new InvitationAcceptedEvent(this));
+
         return Result.Success();
     }
 
@@ -101,6 +114,8 @@ public sealed class Invitation : Entity
                 DomainError.InvalidState(nameof(Invitation), "Invitation was cancelled."));
 
         Status = InvitationStatus.Declined;
+        AddDomainEvent(new InvitationDeclinedEvent(this));
+
         return Result.Success();
     }
 
@@ -115,6 +130,8 @@ public sealed class Invitation : Entity
                 DomainError.InvalidState(nameof(Invitation), "Only pending invitations can be cancelled."));
 
         Status = InvitationStatus.Cancelled;
+        AddDomainEvent(new InvitationCancelledEvent(this));
+
         return Result.Success();
     }
 }

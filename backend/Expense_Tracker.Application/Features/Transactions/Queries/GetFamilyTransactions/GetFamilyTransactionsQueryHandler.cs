@@ -49,8 +49,8 @@ public sealed class GetFamilyTransactionsQueryHandler(
                 CreatedAtUtc: t.CreatedAtUtc,
                 Category: new CategoryResponse(
                     CategoryId: t.Category!.Id,
-                    Name: t.Category.Name,
-                    Icon: t.Category.IconName
+                    Name: t.Category.Name
+
                 ),
                 Creator: new CreatorResponse(
                     UserId: t.CreatedBy!.Id,

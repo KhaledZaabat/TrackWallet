@@ -10,7 +10,8 @@ public sealed class RefreshTokenCommandHandler(
     IRefreshTokenService refreshTokenService,
     ITokenProvider tokenProvider,
      IUserDeviceRepository userDeviceRepository,
-     IAppDbContext db
+     IAppDbContext db,
+     IFamilyContext familyContext
 ) : IRequestHandler<RefreshTokenCommand, Result<AuthResponse>>
 
 
@@ -28,7 +29,16 @@ public sealed class RefreshTokenCommandHandler(
 
         var user = userResult.TryGetValue();
 
-        Result<AuthDto> tokenResult = await tokenProvider.GenerateJwtTokenAsync(user, request.DeviceId, cancellationToken);
+        FamilyContextDto? familyContextDto = (familyContext.FamilyId != null) ? db.Families
+      .Where(f => f.Id == familyContext.FamilyId)
+      .Select(f => new FamilyContextDto(
+          FamilyId: f.Id,
+          FamilyName: f.Name,
+          IsParent: familyContext.IsParent,
+          CurrentBudget: f.CurrentBudget
+      ))
+      .FirstOrDefault() : null;
+        Result<AuthDto> tokenResult = await tokenProvider.GenerateJwtTokenWithFamilyAsync(user, request.DeviceId, familyContextDto, cancellationToken);
         AuthResponse response = tokenResult.TryGetValue().Adapt<AuthResponse>();
 
         Guid userId = Guid.Parse(response.UserId);

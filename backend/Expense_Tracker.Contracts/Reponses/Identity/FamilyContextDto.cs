@@ -3,6 +3,7 @@
 public sealed record FamilyContextDto(
     Guid FamilyId,
     string FamilyName,
-    bool IsParent
+    bool IsParent,
+    decimal? CurrentBudget = null
 );
 

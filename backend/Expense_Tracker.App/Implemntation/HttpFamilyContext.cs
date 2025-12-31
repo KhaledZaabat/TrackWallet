@@ -1,6 +1,5 @@
 ﻿using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Contracts.Reponses.Identity;
 using System.Security.Claims;
 
 namespace Expense_Tracker.App.Implemntation;
@@ -25,15 +24,6 @@ public sealed class HttpFamilyContext(IHttpContextAccessor accessor) : IFamilyCo
         }
     }
 
-    public string? FamilyName
-    {
-        get
-        {
-            return accessor.HttpContext?
-                .User?
-                .FindFirstValue(CustomClaimTypes.FamilyName);
-        }
-    }
 
     public bool IsParent
     {
@@ -50,17 +40,6 @@ public sealed class HttpFamilyContext(IHttpContextAccessor accessor) : IFamilyCo
         }
     }
 
-    public FamilyContextDto? GetFamilyContext()
-    {
-        if (FamilyId is null)
-            return null;
-
-        return new FamilyContextDto(
-            FamilyId: FamilyId.Value,
-            FamilyName: FamilyName ?? string.Empty,
-            IsParent: IsParent
-        );
-    }
 
     public bool HasFamilyContext => FamilyId.HasValue;
 }

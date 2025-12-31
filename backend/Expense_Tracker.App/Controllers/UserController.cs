@@ -1,6 +1,8 @@
 ﻿using Asp.Versioning;
 using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.UpdatePassword;
+using Expense_Tracker.Application.Features.Userr.GetProfile;
+using Expense_Tracker.Application.Features.Userr.UpdateProfile;
 using Expense_Tracker.Contracts.Requests.Identity;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using MediatR;
@@ -65,54 +67,39 @@ public sealed class UserController(ISender sender) : ControllerBase
         return result.ToActionResult(HttpContext);
     }
 
-    ///// <summary>
-    ///// Retrieves all non-deleted users in the system.
-    ///// </summary>
-    ///// <remarks>
-    ///// <para>
-    ///// This endpoint is restricted to <b>administrators only</b>.
-    ///// </para>
-    ///// <para>
-    ///// The result includes users that are:
-    ///// <list type="bullet">
-    /////   <item>
-    /////     <description>Not soft-deleted (<c>IsDeleted = false</c>)</description>
-    /////   </item>
-    /////   <item>
-    /////     <description>Either active or inactive</description>
-    /////   </item>
-    ///// </list>
-    ///// </para>
-    ///// <para>
-    ///// Intended use cases:
-    ///// <list type="bullet">
-    /////   <item><description>Administrative dashboards</description></item>
-    /////   <item><description>User management and moderation</description></item>
-    /////   <item><description>Audit and compliance views</description></item>
-    ///// </list>
-    ///// </para>
-    ///// </remarks>
-    ///// <param name="ct">Cancellation token.</param>
-    ///// <param name="role">Get Users based on role .</param>
+    [HttpGet("profile")]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<UserProfileResponse>> GetProfile(CancellationToken ct)
+    {
+        var query = new GetProfileQuery();
+        Result<UserProfileResponse> result = await sender.Send(query, ct);
 
-    ///// <response code="200">Users retrieved successfully.</response>
-    ///// <response code="401">The caller is not authenticated.</response>
-    ///// <response code="403">The caller does not have administrator privileges.</response>
-    //[HttpGet]
 
-    //[EndpointName("GetAllUsers")]
-    //[EndpointSummary("Get all users")]
-    //[EndpointDescription("Returns all non-deleted users, including both active and inactive accounts.")]
-    //[ProducesResponseType(typeof(IReadOnlyList<UserListItemDto>), StatusCodes.Status200OK)]
-    //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    //public async Task<ActionResult<IReadOnlyList<UserListItemDto>>> GetAll([FromQuery] Role? role,
-    //    CancellationToken ct)
-    //{
-    //    Result<IReadOnlyList<UserListItemDto>> result =
-    //        await sender.Send(new GetUsersQuery(role), ct);
 
-    //    return result.ToActionResult(HttpContext);
-    //}
+        return result.ToActionResult(HttpContext);
+    }
 
+    [HttpPut("profile")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateProfile(
+        [FromForm] UpdateProfileCommand command,
+        CancellationToken ct)
+    {
+        Result result = await sender.Send(command, ct);
+
+
+
+        return result.ToActionResult(HttpContext);
+    }
 }
+
+
+
+
+
+

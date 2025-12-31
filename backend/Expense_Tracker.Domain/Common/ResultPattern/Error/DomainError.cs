@@ -14,4 +14,6 @@ public sealed record DomainError(DomainErrorCode DomainErrorCode, string Type, s
 
     public static DomainError Unexpected(string detail) =>
         new(DomainErrorCode.Unexpected, "Domain.Unexpected", detail);
+    public static DomainError Forbidden(string detail) =>
+     new(DomainErrorCode.Forbidden, "Domain.Forbidden", detail);
 }

@@ -43,7 +43,8 @@ public sealed class SelectFamilyCommandHandler(
 
                 fu.FamilyId,
                 fu.Family.Name,
-                fu.IsParent
+                fu.IsParent,
+                fu.Family.CurrentBudget
             ))
             .FirstOrDefaultAsync(cancellationToken);
 
