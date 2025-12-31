@@ -1,5 +1,4 @@
 ﻿using Asp.Versioning;
-using Expense_Tracker.App.Filters;
 using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.UpdateNotificationPreferences;
 using Expense_Tracker.Application.Interfaces;
@@ -18,13 +17,21 @@ namespace Expense_Tracker.App.Controllers;
 public class NotificationPreferencesController(ISender sender, IUserContext userContext) : ControllerBase
 {
     /// <summary>
-    /// Update notification preferences
+    /// Updates notification preferences for the authenticated user.
     /// </summary>
+    /// <param name="request">Notification preferences containing email and push notification settings.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>No content on successful update.</returns>
+    /// <response code="204">Notification preferences updated successfully.</response>
+    /// <response code="400">Invalid request or validation failure.</response>
+    /// <response code="401">User is not authenticated.</response>
     [HttpPatch]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [RequireFamily]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [EndpointSummary("Updates notification preferences.")]
+    [EndpointDescription("Updates the user's email and push notification preferences. Changes take effect immediately.")]
+    [EndpointName("UpdateNotificationPreferences")]
     public async Task<IActionResult> UpdatePreferences(
         [FromBody] UpdateNotificationPreferencesRequest request,
         CancellationToken cancellationToken)
@@ -34,9 +41,7 @@ public class NotificationPreferencesController(ISender sender, IUserContext user
             EmailNotifications: request.EmailNotifications,
             PushNotifications: request.PushNotifications
         );
-
         Result result = await sender.Send(command, cancellationToken);
-
         return result.ToActionResult(HttpContext);
     }
 }

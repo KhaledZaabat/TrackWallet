@@ -67,33 +67,56 @@ public sealed class UserController(ISender sender) : ControllerBase
         return result.ToActionResult(HttpContext);
     }
 
+    /// <summary>
+    /// Retrieves the authenticated user's profile information.
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A <see cref="UserProfileResponse"/> containing user profile details.</returns>
+    /// <response code="200">Profile retrieved successfully.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="404">User profile not found.</response>
     [HttpGet("profile")]
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [EndpointSummary("Gets user profile.")]
+    [EndpointDescription("Returns the authenticated user's complete profile information including name, email, avatar, and notification preferences.")]
+    [EndpointName("GetUserProfile")]
     public async Task<ActionResult<UserProfileResponse>> GetProfile(CancellationToken ct)
     {
         var query = new GetProfileQuery();
         Result<UserProfileResponse> result = await sender.Send(query, ct);
-
-
-
         return result.ToActionResult(HttpContext);
     }
 
+
+    /// <summary>
+    /// Updates the authenticated user's profile information.
+    /// </summary>
+    /// <param name="command">Profile update command containing user details and optional avatar image.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Success response if profile updated.</returns>
+    /// <response code="200">Profile updated successfully.</response>
+    /// <response code="400">Invalid request, validation failure, or unsupported file format.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="404">User profile not found.</response>
+    /// <remarks>
+    /// Accepts multipart/form-data for profile updates including an optional avatar image.
+    /// Supported image formats: JPEG, PNG, GIF. Maximum file size may apply.
+    /// </remarks>
     [HttpPut("profile")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [EndpointSummary("Updates user profile.")]
+    [EndpointDescription("Updates the user's profile information including name, bio, and optional avatar image. Accepts multipart/form-data for file uploads.")]
+    [EndpointName("UpdateUserProfile")]
     public async Task<IActionResult> UpdateProfile(
         [FromForm] UpdateProfileCommand command,
         CancellationToken ct)
     {
         Result result = await sender.Send(command, ct);
-
-
-
         return result.ToActionResult(HttpContext);
     }
 }
