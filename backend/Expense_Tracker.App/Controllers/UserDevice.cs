@@ -1,4 +1,5 @@
-﻿using Expense_Tracker.App.Helpers;
+﻿using Asp.Versioning;
+using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.PushNotifications.UpdateFcmToken;
 using Expense_Tracker.Contracts.Requests.PushNotifications;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
@@ -11,6 +12,8 @@ namespace Expense_Tracker.App.Controllers;
 [Route("api/user-device")]
 [ApiController]
 [Authorize]
+[ApiVersion("1.0")]
+
 public sealed class UserDeviceController(ISender sender) : ControllerBase
 {
     [HttpPost("upsert")]
