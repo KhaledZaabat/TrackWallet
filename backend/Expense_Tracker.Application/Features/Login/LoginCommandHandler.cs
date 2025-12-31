@@ -4,6 +4,7 @@ using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Family;
 using Expense_Tracker.Contracts.Reponses.Identity;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.PushNotifications.Enums;
 using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,8 @@ public sealed class LoginCommandHandler(
     IAppDbContext db,
     [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
     IUserDeviceRepository userDeviceRepository,
-    ISender sender
+    ISender sender,
+    IUnifiedNotificationDispatcher notificationDispatcher
 ) : IRequestHandler<LoginCommand, Result<AuthResponse>>
 {
     public async Task<Result<AuthResponse>> Handle(
@@ -77,6 +79,21 @@ public sealed class LoginCommandHandler(
             cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
+
+
+        DomainNotification domainNotification = DomainNotification.Create(
+            userId: userId,
+            title: "✨ Nkmk Anis ",
+            body: $" Nkmk Anis 9lwa ",
+            type: NotificationType.nkmkAnis,
+               actorUserId: userId,
+            data: new Dictionary<string, string>
+            {
+
+
+                ["action"] = "open-user-profile"
+            });
+        await notificationDispatcher.EnqueueAsync(domainNotification, cancellationToken);
 
         return Result.Success(authResponse);
     }
