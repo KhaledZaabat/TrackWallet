@@ -156,9 +156,9 @@ class FamilyContext {
 
   factory FamilyContext.fromJson(Map<String, dynamic> json) {
     return FamilyContext(
-      familyId: json['familyId'],
-      familyName: json['familyName'],
-      isParent: json['isParent'],
+      familyId: json['familyId'] as String,
+      familyName: json['familyName'] as String,
+      isParent: json['isParent'] as bool,
       currentBudget: json['currentBudget'] != null
           ? (json['currentBudget'] as num).toDouble()
           : null,

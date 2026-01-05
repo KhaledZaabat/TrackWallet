@@ -23,14 +23,16 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            // Try to refresh token
+          final isRefreshCall =
+              error.requestOptions.path.contains('/api/identity/refresh');
+
+          if (error.response?.statusCode == 401 && !isRefreshCall) {
             final refreshed = await _refreshToken();
             if (refreshed) {
-              // Retry the request
               return handler.resolve(await _retry(error.requestOptions));
             }
           }
+
           return handler.next(error);
         },
       ),

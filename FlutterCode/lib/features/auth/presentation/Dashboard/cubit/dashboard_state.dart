@@ -1,7 +1,4 @@
-import 'package:famxpense/data/repos/family_repository.dart';
-import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_error.dart';
 import 'package:famxpense/models/Family/family_models.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 abstract class DashboardState {}
 
@@ -29,4 +26,10 @@ class DashboardLoaded extends DashboardState {
     required this.recentTransactions,
     this.transactionsCursor,
   });
+}
+
+class DashboardError extends DashboardState {
+  final String message;
+
+  DashboardError({required this.message});
 }

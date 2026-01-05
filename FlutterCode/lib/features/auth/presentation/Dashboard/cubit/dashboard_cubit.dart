@@ -1,5 +1,4 @@
 import 'package:famxpense/data/repos/dashboard_repo.dart';
-import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_error.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

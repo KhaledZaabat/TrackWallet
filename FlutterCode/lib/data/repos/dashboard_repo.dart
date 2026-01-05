@@ -9,7 +9,7 @@ class DashboardRepository {
 
   /// Get dashboard data
   Future<DashboardResult> getDashboard({
-    int budgetHistoryMonths = 1,
+    int budgetHistoryMonths = 2,
     int recentTransactionsPageSize = 10,
   }) async {
     try {

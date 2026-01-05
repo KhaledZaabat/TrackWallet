@@ -1,8 +1,11 @@
-// features/auth/presentation/Dashboard/page/dashboard_page.dart - IMPROVED
+import 'dart:math' as developer;
+
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
-import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_error.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_state.dart';
+import 'package:famxpense/common/widgets/line_chart.dart';
+import 'package:famxpense/common/widgets/models/point_pair.dart';
+import 'package:famxpense/models/Family/family_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -32,10 +35,55 @@ class _DashboardViewState extends State<_DashboardView> {
   void initState() {
     super.initState();
 
-    // Always load dashboard data when page is opened
+    // Load dashboard data when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DashboardCubit>().loadDashboard();
+      if (mounted) {
+        context.read<DashboardCubit>().loadDashboard();
+      }
     });
+  }
+
+  /// Filters budget history to only include entries from the current month
+  /// and converts them to PointPair format compatible with LineChartCard
+  List<PointPair> _filterCurrentMonthBudgetHistory(
+    List<BudgetHistoryItem> history,
+  ) {
+    final now = DateTime.now();
+    final currentMonth = now.month;
+    final currentYear = now.year;
+
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
+
+    final currentMonthHistory = history.where((item) {
+      final date = item.recordedAtUtc.toLocal();
+      return date.month == currentMonth && date.year == currentYear;
+    }).toList();
+
+    if (currentMonthHistory.isEmpty) return [];
+
+    final points = currentMonthHistory.map((item) {
+      final date = item.recordedAtUtc.toLocal(); // ✅ FIXED
+      final budget = item.budget.toDouble();
+
+      final daysBack = (lastDayOfMonth - date.day).toDouble();
+
+      return PointPair(
+        daysBack,
+        budget,
+        dateTime: date,
+      );
+    }).toList()
+      ..sort((a, b) => b.x.compareTo(a.x));
+
+    // SAFETY: fl_chart hates single-point charts
+    if (points.length == 1) {
+      points.insert(
+        0,
+        PointPair(points.first.x + 1, points.first.y),
+      );
+    }
+
+    return points;
   }
 
   @override
@@ -52,7 +100,7 @@ class _DashboardViewState extends State<_DashboardView> {
                 behavior: SnackBarBehavior.floating,
               ),
             );
-          }
+          } else if (state is DashboardLoaded) {}
         },
         builder: (context, state) {
           if (state is DashboardLoading) {
@@ -108,6 +156,10 @@ class _DashboardViewState extends State<_DashboardView> {
           }
 
           if (state is DashboardLoaded) {
+            // Filter budget history for current month only
+            final currentMonthBudgetPoints =
+                _filterCurrentMonthBudgetHistory(state.budgetHistory);
+
             return RefreshIndicator(
               onRefresh: () => context.read<DashboardCubit>().refresh(),
               color: const Color(0xFF5B7CB5),
@@ -115,7 +167,7 @@ class _DashboardViewState extends State<_DashboardView> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   SliverAppBar(
-                    expandedHeight: 200,
+                    expandedHeight: 224,
                     floating: false,
                     pinned: true,
                     backgroundColor: const Color(0xFF5B7CB5),
@@ -135,18 +187,33 @@ class _DashboardViewState extends State<_DashboardView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (state.budgetHistory.isNotEmpty) ...[
-                            const Text(
-                              'Budget History',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF5B6B8C),
-                              ),
+                          if (currentMonthBudgetPoints.isNotEmpty) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Budget This Month',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF5B6B8C),
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat('MMMM yyyy')
+                                      .format(DateTime.now()),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF5B6B8C)
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 12),
-                            _BudgetHistoryChart(
-                              history: state.budgetHistory,
+                            _BudgetMonthlyChart(
+                              points: currentMonthBudgetPoints,
                             ),
                             const SizedBox(height: 24),
                           ],
@@ -163,7 +230,6 @@ class _DashboardViewState extends State<_DashboardView> {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  // TODO: Navigate to all transactions
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content:
@@ -233,7 +299,6 @@ class _DashboardViewState extends State<_DashboardView> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // TODO: Navigate to add transaction
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Add transaction feature coming soon'),
@@ -293,7 +358,9 @@ class _DashboardHeader extends StatelessWidget {
                         : null,
                     child: profileImageUrl == null
                         ? Text(
-                            fullName.substring(0, 1).toUpperCase(),
+                            fullName.isNotEmpty
+                                ? fullName.substring(0, 1).toUpperCase()
+                                : '?',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -322,6 +389,7 @@ class _DashboardHeader extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -353,6 +421,7 @@ class _DashboardHeader extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           if (currentBudget != null) ...[
                             const SizedBox(height: 6),
@@ -370,7 +439,7 @@ class _DashboardHeader extends StatelessWidget {
                     ),
                     IconButton(
                       onPressed: () {
-                        context.push('/select-family');
+                        context.pushReplacement('/select-family');
                       },
                       icon: const Icon(
                         Icons.swap_horiz,
@@ -389,78 +458,50 @@ class _DashboardHeader extends StatelessWidget {
   }
 }
 
-class _BudgetHistoryChart extends StatelessWidget {
-  final List<dynamic> history;
+class _BudgetMonthlyChart extends StatelessWidget {
+  final List<PointPair> points;
 
-  const _BudgetHistoryChart({required this.history});
+  const _BudgetMonthlyChart({required this.points});
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.compactSimpleCurrency();
+    final currency = NumberFormat.simpleCurrency();
+    final now = DateTime.now();
 
-    return Container(
-      height: 200,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE0E5EB),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Last ${history.length} entries',
-            style: TextStyle(
-              fontSize: 12,
-              color: const Color(0xFF5B6B8C).withValues(alpha: 0.7),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: history.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final item = history[index];
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      currency.format(item.budget),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF5B6B8C),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: 40,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF5B7CB5).withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+    // Get the last day of current month - this is our endDate
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
+    final endDate = DateTime(now.year, now.month, lastDayOfMonth);
+
+    return LineChartCard(
+      points: [points],
+      color: const Color(0xFF5B7CB5),
+      isCurved: true,
+      endDate: endDate,
+      cardBackgroundColor: Colors.white,
+      cardBorderRadius: 12,
+      cardPadding: const EdgeInsets.all(16),
+      showShadow: true,
+      cardShadowColor: Colors.black.withValues(alpha: 0.05),
+      cardElevation: 10,
+      // Custom date formatter to show day of month
+      dateLabelFormatter: (date) {
+        return '${date.day}';
+      },
+      // Custom Y-axis formatter for currency
+      yLabelFormatter: (value) {
+        if (value >= 1000) {
+          return '${currency.currencySymbol}${(value / 1000).toStringAsFixed(1)}k';
+        }
+        return '${currency.currencySymbol}${value.toStringAsFixed(0)}';
+      },
+      // Custom tooltip formatter
+      tooltipFormatter: (date, value) {
+        return '${DateFormat('MMM d').format(date)}\n${currency.format(value)}';
+      },
+      textStyle: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF5B6B8C),
       ),
     );
   }
@@ -523,6 +564,8 @@ class _TransactionCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF5B6B8C),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
