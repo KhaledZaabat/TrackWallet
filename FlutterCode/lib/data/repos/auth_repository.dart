@@ -8,6 +8,7 @@ import 'package:famxpense/models/Auth/AuthResult.dart';
 import 'package:famxpense/models/Auth/otp_result.dart';
 import 'package:famxpense/models/Auth/register_result.dart';
 import 'package:famxpense/models/Family/FamilyInfo.dart';
+import 'package:famxpense/models/Family/family_models.dart';
 
 class AuthRepository {
   final ApiClient _apiClient;
@@ -384,6 +385,60 @@ class AuthRepository {
   /// Get current user ID
   Future<String?> getCurrentUserId() async {
     return await _localStorage.getUserId();
+  }
+
+  Future<AuthResult> refreshToken() async {
+    try {
+      final refreshToken = await _localStorage.getRefreshToken();
+      if (refreshToken == null) {
+        return AuthResult.failure('No refresh token available');
+      }
+
+      final deviceInfo = await _deviceManager.getDeviceInfo();
+
+      final response = await _apiClient.dio.post(
+        '/api/identity/refresh',
+        data: {
+          'refreshToken': refreshToken,
+          'deviceId': deviceInfo.deviceId,
+          'fcmToken': deviceInfo.fcmToken,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        // Save new tokens
+        await _localStorage.saveAuthTokens(
+          data['jwtToken']['token'],
+          data['refreshToken']['token'],
+        );
+
+        // Save user ID
+        await _localStorage.saveUserId(data['userId']);
+
+        return AuthResult.success(
+          userId: data['userId'],
+          email: data['email'],
+          fullName: data['fullName'],
+          profileImageUrl: data['profileImageUrl'],
+          families: (data['families'] as List?)
+              ?.map((f) => FamilyInfo.fromJson(f))
+              .toList(),
+        );
+      }
+
+      return AuthResult.failure('Failed to refresh token');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        // Refresh token is invalid, clear storage
+        await _localStorage.clearAuthTokens();
+        return AuthResult.failure('Session expired');
+      }
+      return AuthResult.failure('Network error. Please try again.');
+    } catch (e) {
+      return AuthResult.failure('An unexpected error occurred');
+    }
   }
 }
 

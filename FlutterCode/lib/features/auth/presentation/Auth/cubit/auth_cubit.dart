@@ -3,40 +3,55 @@ import 'package:famxpense/data/repos/auth_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
 import 'package:famxpense/models/Family/FamilyInfo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:developer' as developer;
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
 
   AuthCubit(this._authRepository) : super(AuthInitial());
 
-  /// Check authentication status on app start
   Future<void> checkAuthStatus() async {
     emit(AuthChecking());
 
     try {
+      // Check if user has valid refresh token
       final isAuthenticated = await _authRepository.isAuthenticated();
 
       if (isAuthenticated) {
-        // User has refresh token
+        // User has valid session, try to restore their state
         final userId = await _authRepository.getCurrentUserId();
 
         if (userId != null) {
-          // You might want to fetch user details here
-          // For now, we'll emit authenticated with minimal data
-          emit(AuthAuthenticated(
-            // fetch the home infromations
-            userId: userId,
-            email: '',
-            fullName: '',
-            families: [],
-          ));
-        } else {
-          emit(AuthUnauthenticated());
+          // Try to refresh token to get latest user data
+
+          final refreshResult = await _authRepository.refreshToken();
+
+          if (refreshResult.isSuccess && refreshResult.data != null) {
+            final data = refreshResult.data!;
+
+            emit(AuthAuthenticated(
+              userId: data.userId,
+              email: data.email,
+              fullName: data.fullName,
+              profileImageUrl: data.profileImageUrl,
+              families: data.families
+                  .map((f) => FamilyInfo(
+                        id: f.id,
+                        name: f.name,
+                        currentBudget: f.currentBudget,
+                        familyBio: f.familyBio,
+                      ))
+                  .toList(),
+            ));
+            return;
+          } else {
+            developer.log('❌ Token refresh failed', name: 'AuthCubit');
+          }
         }
-      } else {
-        emit(AuthUnauthenticated());
       }
-    } catch (e) {
+
+      emit(AuthUnauthenticated());
+    } catch (e, stackTrace) {
       emit(AuthUnauthenticated());
     }
   }

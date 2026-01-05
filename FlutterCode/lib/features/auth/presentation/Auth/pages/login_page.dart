@@ -1,3 +1,5 @@
+// features/auth/presentation/Auth/pages/login_page.dart (UPDATED)
+
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
 import 'package:famxpense/features/auth/presentation/Auth/pages/validation_patterns.dart';
@@ -117,6 +119,98 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _showForgotPasswordDialog(BuildContext context) {
+    final emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: const Text(
+          'Reset Password',
+          style: TextStyle(
+            color: Color(0xFF5B6B8C),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Enter your email to receive password reset instructions',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF5B6B8C),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: "example@email.com",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFE0E5EB),
+                    width: 1.5,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFE0E5EB),
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF5B7CB5),
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF5B6B8C)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final email = emailController.text.trim();
+              if (email.isNotEmpty) {
+                Navigator.pop(dialogContext);
+                context.push('/forgot-password', extra: email);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5B7CB5),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            child: const Text('Send Reset Link'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -134,26 +228,9 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
           if (state is AuthAuthenticated) {
-            final familiesCount = state.families.length;
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                duration: const Duration(seconds: 5),
-                backgroundColor: Colors.green,
-                content: Text(
-                  '''
-Logged in successfully 🎉
-
-User ID: ${state.userId}
-Name: ${state.fullName}
-Email: ${state.email}
-Families: $familiesCount
-        ''',
-                ),
-              ),
-            );
-
-            //  context.go(Routes.createFamily);
+            // After successful login, navigate to family selection
+            // User needs to select a family to continue
+            context.go('/select-family');
           }
         },
         builder: (context, state) {
@@ -370,17 +447,23 @@ Families: $familiesCount
                       Align(
                         alignment: Alignment.centerRight,
                         child: GestureDetector(
-                          onTap: () => context.push('/forgot-password'),
-                          child: const Text(
+                          onTap: loading
+                              ? null
+                              : () => _showForgotPasswordDialog(context),
+                          child: Text(
                             "Forgot Password?",
                             style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF5B7CB5),
+                              fontSize: 13,
+                              color: loading
+                                  ? const Color(0xFF5B7CB5)
+                                      .withValues(alpha: 0.5)
+                                  : const Color(0xFF5B7CB5),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 32),
 
                       // Log In button

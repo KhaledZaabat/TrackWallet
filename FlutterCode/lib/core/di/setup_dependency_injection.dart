@@ -1,12 +1,17 @@
-// core/di/dependency_injection.dart
+// core/di/setup_dependency_injection.dart
 
 import 'package:famxpense/core/Network/ApiClient.dart';
 import 'package:famxpense/core/services/device_manager.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/data/repos/auth_repository.dart';
+import 'package:famxpense/data/repos/dashboard_repo.dart';
+import 'package:famxpense/data/repos/family_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Families/Cubits/select_family_cubit.dart';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get_it/get_it.dart';
 
@@ -57,17 +62,41 @@ Future<void> setupDependencyInjection() async {
     ),
   );
 
-  // ========== Cubits (Factory - new instance each time) ==========
+  getIt.registerLazySingleton<FamilyRepository>(
+    () => FamilyRepository(
+      getIt<ApiClient>(),
+      getIt<LocalStorage>(),
+      getIt<DeviceManager>(),
+    ),
+  );
 
-  getIt.registerFactory<AuthCubit>(
+  // Dashboard Repository (NEW)
+  getIt.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepository(getIt<ApiClient>()),
+  );
+
+  // ========== Cubits ==========
+
+  // Auth Cubit - Singleton (shared across app)
+  getIt.registerLazySingleton<AuthCubit>(
     () => AuthCubit(getIt<AuthRepository>()),
   );
 
+  // Dashboard Cubit - Singleton (shared state)
+  getIt.registerLazySingleton<DashboardCubit>(
+    () => DashboardCubit(getIt<DashboardRepository>()),
+  );
+
+  // Factory Cubits (new instance each time)
   getIt.registerFactory<SignupCubit>(
     () => SignupCubit(getIt<AuthRepository>()),
   );
 
   getIt.registerFactory<ResetPasswordCubit>(
     () => ResetPasswordCubit(getIt<AuthRepository>()),
+  );
+
+  getIt.registerFactory<SelectFamilyCubit>(
+    () => SelectFamilyCubit(getIt<FamilyRepository>()),
   );
 }
