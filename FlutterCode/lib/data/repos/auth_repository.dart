@@ -279,6 +279,103 @@ class AuthRepository {
     }
   }
 
+  Future<OtpResult> sendResetPasswordOtp({
+    required String email,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/identity/reset-password/otp/send',
+        data: {
+          'email': email,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return OtpResult.success(message: 'OTP sent successfully');
+      }
+
+      return OtpResult.failure('Failed to send OTP');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return OtpResult.failure('Account not found');
+      } else if (e.response?.statusCode == 409) {
+        return OtpResult.failure('Please wait before requesting another OTP');
+      } else if (e.response?.statusCode == 400) {
+        final error = e.response?.data['detail'] ?? 'Invalid request';
+        return OtpResult.failure(error);
+      }
+      return OtpResult.failure('Network error. Please try again.');
+    } catch (e) {
+      return OtpResult.failure('An unexpected error occurred');
+    }
+  }
+
+  /// Verify reset password OTP
+  Future<OtpResult> verifyResetPasswordOtp({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/identity/reset-password/otp/verify',
+        data: {
+          'email': email,
+          'otp': otp,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return OtpResult.success(message: 'OTP verified successfully');
+      }
+
+      return OtpResult.failure('Failed to verify OTP');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        return OtpResult.failure('Invalid or expired OTP');
+      } else if (e.response?.statusCode == 404) {
+        return OtpResult.failure('Account not found');
+      }
+      return OtpResult.failure('Network error. Please try again.');
+    } catch (e) {
+      return OtpResult.failure('An unexpected error occurred');
+    }
+  }
+
+  /// Reset password
+  Future<OtpResult> resetPassword({
+    required String email,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/identity/reset-password',
+        data: {
+          'email': email,
+          'newPassword': newPassword,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return OtpResult.success(message: 'Password reset successfully');
+      }
+
+      return OtpResult.failure('Failed to reset password');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        final error = e.response?.data['detail'] ?? 'Invalid request';
+        return OtpResult.failure(error);
+      } else if (e.response?.statusCode == 404) {
+        return OtpResult.failure('Account not found');
+      } else if (e.response?.statusCode == 409) {
+        return OtpResult.failure(
+            'New password cannot be the same as old password');
+      }
+      return OtpResult.failure('Network error. Please try again.');
+    } catch (e) {
+      return OtpResult.failure('An unexpected error occurred');
+    }
+  }
+
   /// Check if user is authenticated
   Future<bool> isAuthenticated() async {
     return await _localStorage.hasAuthTokens();

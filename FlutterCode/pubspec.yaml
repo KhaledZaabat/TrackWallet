@@ -1,0 +1,76 @@
+name: famxpense
+description: A collaborative family expense tracker built with Flutter, Supabase, Bloc/Cubit, and GoRouter.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  # Flutter
+  flutter:
+    sdk: flutter
+
+  # Routing
+  go_router: ^12.1.1
+
+  # State management
+  flutter_bloc: ^8.1.6
+  hydrated_bloc: ^9.1.2
+  equatable: ^2.0.7
+
+  # Supabase
+  supabase_flutter: ^2.1.0
+
+  # HTTP client (for API/custom logic)
+  dio: ^5.3.4
+
+  # Forms/validation
+  flutter_form_builder: ^9.1.0
+
+  # Theme, Inter font, Icons, SVGs
+  google_fonts: ^6.1.0
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.7
+  lucide_icons: ^0.257.0
+
+
+  # Charts
+  fl_chart: ^0.70.0
+
+  # Env variables
+  flutter_dotenv: ^5.1.0
+
+  # Date/time helpers
+  intl: any # Let SDK pin correct intl version for flutter_localizations
+
+  # Misc
+  uuid: ^4.2.2
+  sqflite: ^2.4.2
+  get_it: ^9.2.0
+  json_annotation: ^4.9.0
+  build_runner: ^2.7.1
+  json_serializable: ^6.11.2
+  shared_preferences: ^2.5.4
+  flutter_secure_storage: ^10.0.0
+  firebase_core: ^4.3.0
+  firebase_messaging: ^16.1.0
+  injectable: ^2.7.1+4
+  injectable_generator: ^2.8.1
+  flutter_local_notifications: ^19.5.0
+  get: ^4.7.3
+  image_picker: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  bloc_test: ^9.1.1
+  mocktail: ^1.0.0
+  very_good_analysis: ^5.0.0 # strict lints for team projects
+
+flutter:
+  uses-material-design: true
+  assets:
+ #   - assets/icons/
+  # - assets/images/ 
+   # - assets/vectors/

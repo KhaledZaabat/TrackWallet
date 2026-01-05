@@ -5,6 +5,7 @@ import 'package:famxpense/core/services/device_manager.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/data/database/repositories/concrete/auth_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_cubit.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get_it/get_it.dart';
@@ -64,5 +65,9 @@ Future<void> setupDependencyInjection() async {
 
   getIt.registerFactory<SignupCubit>(
     () => SignupCubit(getIt<AuthRepository>()),
+  );
+
+  getIt.registerFactory<ResetPasswordCubit>(
+    () => ResetPasswordCubit(getIt<AuthRepository>()),
   );
 }

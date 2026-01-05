@@ -1,6 +1,5 @@
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
-import 'package:famxpense/features/auth/presentation/Auth/pages/otp_verification_page.dart';
 import 'package:famxpense/features/auth/presentation/Auth/pages/validation_patterns.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -329,7 +328,21 @@ Families: $familiesCount
                           errorStyle: const TextStyle(fontSize: 12),
                         ),
                       ),
-
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () => context.push('/forgot-password'),
+                          child: const Text(
+                            "Forgot Password?",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF5B7CB5),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
                       SizedBox(height: size.height * 0.05),
 
                       // Social row
