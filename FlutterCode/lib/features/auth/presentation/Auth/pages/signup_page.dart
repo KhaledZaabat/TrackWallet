@@ -228,8 +228,6 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: BlocConsumer<SignupCubit, SignupState>(
@@ -258,28 +256,28 @@ class _SignupPageState extends State<SignupPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(height: size.height * 0.04),
+                      const SizedBox(height: 24),
 
-                      // Profile Image Upload Section
+                      // Profile Image Upload Section - More Compact
                       Center(
                         child: Stack(
                           children: [
                             Container(
-                              width: 120,
-                              height: 120,
+                              width: 100,
+                              height: 100,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: const Color(0xFF5B7CB5),
-                                  width: 3,
+                                  width: 2.5,
                                 ),
                                 color: Colors.white,
                                 boxShadow: [
                                   BoxShadow(
                                     color: const Color(0xFF5B7CB5)
-                                        .withValues(alpha: 0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                                        .withValues(alpha: 0.15),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
                                   ),
                                 ],
                               ),
@@ -293,7 +291,7 @@ class _SignupPageState extends State<SignupPage> {
                                         color: const Color(0xFFF5F7FA),
                                         child: Icon(
                                           Icons.person,
-                                          size: 60,
+                                          size: 50,
                                           color: const Color(0xFF5B7CB5)
                                               .withValues(alpha: 0.5),
                                         ),
@@ -306,27 +304,27 @@ class _SignupPageState extends State<SignupPage> {
                               child: GestureDetector(
                                 onTap: _showImageSourceDialog,
                                 child: Container(
-                                  width: 36,
-                                  height: 36,
+                                  width: 32,
+                                  height: 32,
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF5B7CB5),
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: Colors.white,
-                                      width: 3,
+                                      width: 2.5,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.2),
-                                        blurRadius: 8,
+                                        color: Colors.black
+                                            .withValues(alpha: 0.15),
+                                        blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
                                   child: const Icon(
                                     Icons.camera_alt,
-                                    size: 18,
+                                    size: 16,
                                     color: Colors.white,
                                   ),
                                 ),
@@ -336,84 +334,56 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 20),
 
-                      // Optional text
-                      Text(
-                        "Add Profile Photo",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: const Color(0xFF5B6B8C).withValues(alpha: 0.6),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Decorative top border
-                      Container(
-                        height: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 60),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: const Color(0xFFE0E5EB),
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Title
+                      // Title - More Compact
                       const Text(
                         "Create Account",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 26,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF5B6B8C),
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
                         "Fill in your details to get started",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           color: const Color(0xFF5B6B8C).withValues(alpha: 0.6),
                           fontWeight: FontWeight.w400,
                         ),
                       ),
 
-                      SizedBox(height: size.height * 0.04),
+                      const SizedBox(height: 24),
 
                       // Username field
                       _buildLabel("Username"),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildTextField(
                         controller: _usernameController,
                         hintText: "ExpenseTracker1",
                         validator: ValidationPatterns.validateUsername,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
                       // Email field
                       _buildLabel("Email"),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildTextField(
                         controller: _emailController,
                         hintText: "example@gmail.com",
                         keyboardType: TextInputType.emailAddress,
                         validator: ValidationPatterns.validateEmail,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
                       // Password field
                       _buildLabel("Password"),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildTextField(
                         controller: _passwordController,
                         hintText: "************",
@@ -434,44 +404,61 @@ class _SignupPageState extends State<SignupPage> {
                           },
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
                       // Full Name field
                       _buildLabel("Full Name"),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildTextField(
                         controller: _fullNameController,
                         hintText: "John Doe",
                         validator: _validateFullName,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
-                      // Date of Birth field
-                      _buildLabel("Date of Birth"),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        controller: _dobController,
-                        hintText: "Select date",
-                        readOnly: true,
-                        validator: _validateDOB,
-                        onTap: () => _selectDate(context),
-                        suffixIcon: const Icon(
-                          Icons.calendar_today,
-                          color: Color(0xFF5B7CB5),
-                          size: 20,
-                        ),
+                      // Date of Birth and Gender in a Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel("Date of Birth"),
+                                const SizedBox(height: 6),
+                                _buildTextField(
+                                  controller: _dobController,
+                                  hintText: "Select date",
+                                  readOnly: true,
+                                  validator: _validateDOB,
+                                  onTap: () => _selectDate(context),
+                                  suffixIcon: const Icon(
+                                    Icons.calendar_today,
+                                    color: Color(0xFF5B7CB5),
+                                    size: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel("Gender"),
+                                const SizedBox(height: 6),
+                                _buildGenderDropdown(),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 20),
 
-                      // Gender field
-                      _buildLabel("Gender"),
-                      const SizedBox(height: 8),
-                      _buildGenderDropdown(),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
                       // Sign Up button
                       SizedBox(
-                        height: 54,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: isLoading ? null : _handleSignup,
                           style: ElevatedButton.styleFrom(
@@ -498,7 +485,7 @@ class _SignupPageState extends State<SignupPage> {
                               : const Text(
                                   "Sign Up",
                                   style: TextStyle(
-                                    fontSize: 17,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.3,
                                   ),
@@ -506,7 +493,7 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       // Already have account
                       Row(
@@ -515,7 +502,7 @@ class _SignupPageState extends State<SignupPage> {
                           Text(
                             "Already have an account? ",
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               color: const Color(0xFF5B6B8C)
                                   .withValues(alpha: 0.7),
                             ),
@@ -525,7 +512,7 @@ class _SignupPageState extends State<SignupPage> {
                             child: const Text(
                               "Log In",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 color: Color(0xFF5B7CB5),
                                 fontWeight: FontWeight.w700,
                               ),
@@ -534,7 +521,7 @@ class _SignupPageState extends State<SignupPage> {
                         ],
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -550,7 +537,7 @@ class _SignupPageState extends State<SignupPage> {
     return Text(
       text,
       style: TextStyle(
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: FontWeight.w600,
         color: const Color(0xFF5B6B8C).withValues(alpha: 0.8),
       ),
@@ -574,11 +561,12 @@ class _SignupPageState extends State<SignupPage> {
       obscureText: obscureText,
       readOnly: readOnly,
       onTap: onTap,
+      style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: TextStyle(
           color: const Color(0xFF5B6B8C).withValues(alpha: 0.3),
-          fontSize: 15,
+          fontSize: 14,
         ),
         suffixIcon: suffixIcon,
         filled: true,
@@ -619,10 +607,10 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 18,
+          horizontal: 14,
+          vertical: 14,
         ),
-        errorStyle: const TextStyle(fontSize: 12),
+        errorStyle: const TextStyle(fontSize: 11),
       ),
     );
   }
@@ -632,10 +620,10 @@ class _SignupPageState extends State<SignupPage> {
       value: _selectedGender,
       validator: _validateGender,
       hint: Text(
-        "Select gender",
+        "Select",
         style: TextStyle(
           color: const Color(0xFF5B6B8C).withValues(alpha: 0.3),
-          fontSize: 15,
+          fontSize: 14,
         ),
       ),
       items: const [
@@ -692,10 +680,10 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 18,
+          horizontal: 14,
+          vertical: 14,
         ),
-        errorStyle: const TextStyle(fontSize: 12),
+        errorStyle: const TextStyle(fontSize: 11),
       ),
       icon: const Icon(
         Icons.arrow_drop_down,
@@ -704,7 +692,7 @@ class _SignupPageState extends State<SignupPage> {
       dropdownColor: Colors.white,
       style: const TextStyle(
         color: Color(0xFF5B6B8C),
-        fontSize: 15,
+        fontSize: 14,
       ),
     );
   }

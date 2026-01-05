@@ -31,11 +31,15 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         title: const Text(
           'Verify Account',
           style: TextStyle(
             color: Color(0xFF5B6B8C),
             fontWeight: FontWeight.w700,
+            fontSize: 20,
           ),
         ),
         content: Column(
@@ -56,6 +60,28 @@ class _LoginPageState extends State<LoginPage> {
                 hintText: "example@email.com",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFE0E5EB),
+                    width: 1.5,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFE0E5EB),
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF5B7CB5),
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
                 ),
               ),
             ),
@@ -64,7 +90,10 @@ class _LoginPageState extends State<LoginPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF5B6B8C)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -76,6 +105,10 @@ class _LoginPageState extends State<LoginPage> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5B7CB5),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
             ),
             child: const Text('Continue'),
           ),
@@ -185,7 +218,7 @@ Families: $familiesCount
                           color: const Color(0xFF5B6B8C).withValues(alpha: 0.8),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
 
                       // Email field
                       TextFormField(
@@ -193,6 +226,7 @@ Families: $familiesCount
                         keyboardType: TextInputType.emailAddress,
                         validator: ValidationPatterns.validateEmail,
                         enabled: !loading,
+                        style: const TextStyle(fontSize: 15),
                         decoration: InputDecoration(
                           hintText: "example@email.com",
                           hintStyle: TextStyle(
@@ -239,12 +273,12 @@ Families: $familiesCount
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 18,
+                            vertical: 16,
                           ),
                           errorStyle: const TextStyle(fontSize: 12),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       // Password label
                       Text(
@@ -255,7 +289,7 @@ Families: $familiesCount
                           color: const Color(0xFF5B6B8C).withValues(alpha: 0.8),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
 
                       // Password field
                       TextFormField(
@@ -263,6 +297,7 @@ Families: $familiesCount
                         obscureText: _obscurePassword,
                         validator: ValidationPatterns.validatePassword,
                         enabled: !loading,
+                        style: const TextStyle(fontSize: 15),
                         decoration: InputDecoration(
                           hintText: "************",
                           hintStyle: TextStyle(
@@ -277,8 +312,8 @@ Families: $familiesCount
                               _obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
-                              color: const Color(0xFF5B6B8C)
-                                  .withValues(alpha: 0.5),
+                              color: const Color(0xFF5B7CB5),
+                              size: 20,
                             ),
                             onPressed: () {
                               setState(() {
@@ -323,11 +358,15 @@ Families: $familiesCount
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 18,
+                            vertical: 16,
                           ),
                           errorStyle: const TextStyle(fontSize: 12),
                         ),
                       ),
+
+                      const SizedBox(height: 12),
+
+                      // Forgot Password
                       Align(
                         alignment: Alignment.centerRight,
                         child: GestureDetector(
@@ -343,29 +382,10 @@ Families: $familiesCount
                         ),
                       ),
                       const SizedBox(height: 32),
-                      SizedBox(height: size.height * 0.05),
-
-                      // Social row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(width: 24),
-                          _SocialCircle(
-                            icon: Icons.g_mobiledata,
-                            onTap: loading
-                                ? null
-                                : () {
-                                    // TODO: Implement Google login
-                                  },
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: size.height * 0.05),
 
                       // Log In button
                       SizedBox(
-                        height: 54,
+                        height: 52,
                         child: ElevatedButton(
                           onPressed: loading
                               ? null
@@ -411,7 +431,81 @@ Families: $familiesCount
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
+
+                      // Divider with "OR"
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: const Color(0xFFE0E5EB),
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              "OR",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: const Color(0xFF5B6B8C)
+                                    .withValues(alpha: 0.5),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: const Color(0xFFE0E5EB),
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // Google Sign In button
+                      SizedBox(
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          onPressed: loading
+                              ? null
+                              : () {
+                                  // TODO: Implement Google login
+                                },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF5B6B8C),
+                            side: const BorderSide(
+                              color: Color(0xFFE0E5EB),
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          icon: Icon(
+                            Icons.g_mobiledata,
+                            size: 28,
+                            color: loading
+                                ? const Color(0xFF5B6B8C).withValues(alpha: 0.3)
+                                : const Color(0xFF5B6B8C),
+                          ),
+                          label: Text(
+                            "Continue with Google",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: loading
+                                  ? const Color(0xFF5B6B8C)
+                                      .withValues(alpha: 0.3)
+                                  : const Color(0xFF5B6B8C),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
 
                       // Sign up text
                       Row(
@@ -428,11 +522,14 @@ Families: $familiesCount
                           GestureDetector(
                             onTap:
                                 loading ? null : () => context.push('/signup'),
-                            child: const Text(
+                            child: Text(
                               "Sign Up",
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Color(0xFF5B7CB5),
+                                color: loading
+                                    ? const Color(0xFF5B7CB5)
+                                        .withValues(alpha: 0.5)
+                                    : const Color(0xFF5B7CB5),
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -441,7 +538,7 @@ Families: $familiesCount
                       ),
                       const SizedBox(height: 16),
 
-// Verify Account text
+                      // Verify Account text
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -456,15 +553,15 @@ Families: $familiesCount
                           GestureDetector(
                             onTap: loading
                                 ? null
-                                : () {
-                                    // Show dialog to enter email for OTP verification
-                                    _showVerifyAccountDialog(context);
-                                  },
-                            child: const Text(
-                              "Verify Account",
+                                : () => _showVerifyAccountDialog(context),
+                            child: Text(
+                              "Verify",
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Color(0xFF5B7CB5),
+                                color: loading
+                                    ? const Color(0xFF5B7CB5)
+                                        .withValues(alpha: 0.5)
+                                    : const Color(0xFF5B7CB5),
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -480,42 +577,6 @@ Families: $familiesCount
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _SocialCircle extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  const _SocialCircle({
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: const Color(0xFFD0D7E3),
-            width: 1.5,
-          ),
-        ),
-        child: Icon(
-          icon,
-          size: 26,
-          color: onTap == null
-              ? const Color(0xFF5B6B8C).withValues(alpha: 0.3)
-              : const Color(0xFF5B6B8C),
-        ),
       ),
     );
   }

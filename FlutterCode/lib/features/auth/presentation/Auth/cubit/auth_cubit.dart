@@ -1,5 +1,5 @@
 // features/auth/presentation/cubit/auth_cubit.dart
-import 'package:famxpense/data/database/repositories/concrete/auth_repository.dart';
+import 'package:famxpense/data/repos/auth_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
 import 'package:famxpense/models/Family/FamilyInfo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

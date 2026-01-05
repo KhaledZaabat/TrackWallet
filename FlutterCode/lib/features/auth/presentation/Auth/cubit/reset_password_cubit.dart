@@ -1,4 +1,4 @@
-import 'package:famxpense/data/database/repositories/concrete/auth_repository.dart';
+import 'package:famxpense/data/repos/auth_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
