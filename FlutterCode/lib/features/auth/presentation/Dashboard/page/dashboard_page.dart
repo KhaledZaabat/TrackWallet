@@ -52,8 +52,7 @@ class _DashboardViewState extends State<_DashboardView> {
     final currentMonth = now.month;
     final currentYear = now.year;
 
-    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
-
+    // Filter to only include current month entries
     final currentMonthHistory = history.where((item) {
       final date = item.recordedAtUtc.toLocal();
       return date.month == currentMonth && date.year == currentYear;
@@ -61,11 +60,13 @@ class _DashboardViewState extends State<_DashboardView> {
 
     if (currentMonthHistory.isEmpty) return [];
 
+    // Convert to PointPair - daysBack is calculated from TODAY
     final points = currentMonthHistory.map((item) {
-      final date = item.recordedAtUtc.toLocal(); // ✅ FIXED
+      final date = item.recordedAtUtc.toLocal();
       final budget = item.budget.toDouble();
 
-      final daysBack = (lastDayOfMonth - date.day).toDouble();
+      // Calculate days back from TODAY (not from end of month)
+      final daysBack = now.difference(date).inDays.toDouble();
 
       return PointPair(
         daysBack,
@@ -73,7 +74,8 @@ class _DashboardViewState extends State<_DashboardView> {
         dateTime: date,
       );
     }).toList()
-      ..sort((a, b) => b.x.compareTo(a.x));
+      ..sort((a, b) =>
+          b.x.compareTo(a.x)); // Sort by x descending (most recent first)
 
     // SAFETY: fl_chart hates single-point charts
     if (points.length == 1) {
@@ -468,24 +470,22 @@ class _BudgetMonthlyChart extends StatelessWidget {
     final currency = NumberFormat.simpleCurrency();
     final now = DateTime.now();
 
-    // Get the last day of current month - this is our endDate
-    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
-    final endDate = DateTime(now.year, now.month, lastDayOfMonth);
-
+    // endDate should be TODAY, not the last day of the month
+    // The chart will show from the earliest point to today
     return LineChartCard(
       points: [points],
       color: const Color(0xFF5B7CB5),
       isCurved: true,
-      endDate: endDate,
+      endDate: now, // ✅ Changed from lastDayOfMonth to now
       cardBackgroundColor: Colors.white,
       cardBorderRadius: 12,
       cardPadding: const EdgeInsets.all(16),
       showShadow: true,
       cardShadowColor: Colors.black.withValues(alpha: 0.05),
       cardElevation: 10,
-      // Custom date formatter to show day of month
+      // Custom date formatter to show month and day
       dateLabelFormatter: (date) {
-        return '${date.day}';
+        return DateFormat('MMM d').format(date);
       },
       // Custom Y-axis formatter for currency
       yLabelFormatter: (value) {
@@ -496,7 +496,7 @@ class _BudgetMonthlyChart extends StatelessWidget {
       },
       // Custom tooltip formatter
       tooltipFormatter: (date, value) {
-        return '${DateFormat('MMM d').format(date)}\n${currency.format(value)}';
+        return '${DateFormat('MMM d, yyyy').format(date)}\n${currency.format(value)}';
       },
       textStyle: const TextStyle(
         fontSize: 11,

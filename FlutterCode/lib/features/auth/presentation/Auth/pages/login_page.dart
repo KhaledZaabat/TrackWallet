@@ -1,5 +1,3 @@
-// features/auth/presentation/Auth/pages/login_page.dart (UPDATED)
-
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
 import 'package:famxpense/features/auth/presentation/Auth/pages/validation_patterns.dart';
@@ -219,17 +217,24 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Colors.white,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
+          // Show error messages
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                duration: const Duration(seconds: 4),
               ),
             );
           }
+
+          // Navigate on successful authentication
           if (state is AuthAuthenticated) {
-            // After successful login, navigate to family selection
-            // User needs to select a family to continue
             context.go('/select-family');
           }
         },

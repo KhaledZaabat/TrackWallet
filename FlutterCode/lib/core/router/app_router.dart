@@ -33,7 +33,7 @@ class AppRouter {
           final authState = authCubit.state;
           final currentPath = state.matchedLocation;
 
-          // Always allow splash screen to show while checking auth
+          // Always allow splash screen to show ONLY during initial app load
           if (currentPath == '/splash') {
             // If still checking or initial, stay on splash
             if (authState is AuthInitial || authState is AuthChecking) {
@@ -90,6 +90,12 @@ class AppRouter {
             }
 
             return '/login';
+          }
+
+          // If AuthLoading or AuthError, stay on current page
+          // This prevents redirects during login/logout operations
+          if (authState is AuthLoading || authState is AuthError) {
+            return null;
           }
 
           return '/splash';
