@@ -10,6 +10,7 @@ import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart'
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Families/Cubits/create_family_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/select_family_cubit.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -97,6 +98,9 @@ Future<void> setupDependencyInjection() async {
   );
 
   getIt.registerFactory<SelectFamilyCubit>(
-    () => SelectFamilyCubit(getIt<FamilyRepository>()),
+      () => SelectFamilyCubit(getIt<FamilyRepository>()));
+
+  getIt.registerFactory<CreateFamilyCubit>(
+    () => CreateFamilyCubit(getIt<FamilyRepository>()),
   );
 }

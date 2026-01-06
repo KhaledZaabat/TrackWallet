@@ -15,6 +15,7 @@ import 'package:famxpense/features/auth/presentation/Auth/pages/otp_verification
 import 'package:famxpense/features/auth/presentation/Auth/pages/reset_password_otp_page.dart';
 import 'package:famxpense/features/auth/presentation/Auth/pages/signup_page.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/page/dashboard_page.dart';
+import 'package:famxpense/features/auth/presentation/Families/pages/create_family_page.dart';
 import 'package:famxpense/features/auth/presentation/Families/pages/select_family_page.dart';
 
 import 'package:flutter/material.dart';
@@ -165,6 +166,14 @@ class AppRouter {
               developer.log('📱 Building select family page',
                   name: 'AppRouter');
               return const SelectFamilyPage();
+            },
+          ),
+          GoRoute(
+            path: '/create-family',
+            builder: (context, state) {
+              developer.log('📱 Building create family page',
+                  name: 'AppRouter');
+              return const CreateFamilyPage();
             },
           ),
           GoRoute(

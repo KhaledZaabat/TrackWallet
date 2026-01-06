@@ -1,7 +1,7 @@
 ﻿namespace Expense_Tracker.Contracts.Reponses.Family;
 
 public sealed record CreateFamilyResponse(
-    Guid FamilyId,
+    Guid Id,
     string Name,
     decimal CurrentBudget,
     string? FamilyBio,

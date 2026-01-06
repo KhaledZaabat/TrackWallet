@@ -61,7 +61,7 @@ public sealed class CreateFamilyCommandHandler(
 
         // 6. Build response
         var response = new CreateFamilyResponse(
-            FamilyId: family.Id,
+            Id: family.Id,
             Name: family.Name,
             CurrentBudget: family.CurrentBudget,
             FamilyBio: family.FamilyBio,
