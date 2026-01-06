@@ -26,10 +26,18 @@ public sealed class GetSentInvitationsQueryHandler(IAppDbContext db)
             return Result.Failure<List<InvitationResponse>>(
                 DomainError.Forbidden("Only parent members can view sent invitations."));
 
-        // 2. Get all invitations sent from this family
-        var invitations = await db.Invitations
+        // 2. Get invitations sent from this family
+        var query = db.Invitations
             .Include(i => i.Family)
-            .Where(i => i.FamilyId == request.FamilyId)
+            .Where(i => i.FamilyId == request.FamilyId);
+
+        // Apply status filter if provided
+        if (request.Status.HasValue)
+        {
+            query = query.Where(i => i.Status == request.Status.Value);
+        }
+
+        var invitations = await query
             .OrderByDescending(i => i.SentAtUtc)
             .ToListAsync(cancellationToken);
 
@@ -37,4 +45,3 @@ public sealed class GetSentInvitationsQueryHandler(IAppDbContext db)
         return Result.Success(response);
     }
 }
-

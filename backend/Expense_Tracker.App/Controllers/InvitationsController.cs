@@ -10,6 +10,7 @@ using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Inv;
 using Expense_Tracker.Contracts.Requests.Inv;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.Invitation.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -136,22 +137,24 @@ public class InvitationsController(ISender sender, IFamilyContext familyContext,
     }
 
     /// <summary>
-    /// Retrieves all pending invitations received by the authenticated user.
+    /// Retrieves all invitations received by the authenticated user.
     /// </summary>
+    /// <param name="status">Optional status filter (Pending, Accepted, Declined, Cancelled). Defaults to Pending if not specified.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of <see cref="InvitationResponse"/> representing pending invitations.</returns>
+    /// <returns>A list of <see cref="InvitationResponse"/> representing invitations.</returns>
     /// <response code="200">Invitations retrieved successfully.</response>
     /// <response code="401">User is not authenticated.</response>
     [HttpGet("received")]
     [ProducesResponseType(typeof(List<InvitationResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [EndpointSummary("Gets received invitations.")]
-    [EndpointDescription("Returns a list of all pending family invitations received by the authenticated user.")]
+    [EndpointDescription("Returns a list of invitations received by the authenticated user, optionally filtered by status.")]
     [EndpointName("GetReceivedInvitations")]
     public async Task<ActionResult<List<InvitationResponse>>> GetReceivedInvitations(
+        [FromQuery] InvitationStatus? status,
         CancellationToken cancellationToken)
     {
-        var query = new GetReceivedInvitationsQuery(userContext.UserId!.Value);
+        var query = new GetReceivedInvitationsQuery(userContext.UserId!.Value, status);
         Result<List<InvitationResponse>> result = await sender.Send(query, cancellationToken);
         return result.ToActionResult(HttpContext);
     }
@@ -159,6 +162,7 @@ public class InvitationsController(ISender sender, IFamilyContext familyContext,
     /// <summary>
     /// Retrieves all invitations sent by the authenticated user's family.
     /// </summary>
+    /// <param name="status">Optional status filter (Pending, Accepted, Declined, Cancelled).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of <see cref="InvitationResponse"/> representing sent invitations.</returns>
     /// <response code="200">Invitations retrieved successfully.</response>
@@ -169,18 +173,20 @@ public class InvitationsController(ISender sender, IFamilyContext familyContext,
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [EndpointSummary("Gets sent invitations.")]
-    [EndpointDescription("Returns a list of all invitations sent from the current family, including pending, accepted, declined, and cancelled invitations.")]
+    [EndpointDescription("Returns a list of invitations sent from the current family, optionally filtered by status.")]
     [EndpointName("GetSentInvitations")]
     public async Task<ActionResult<List<InvitationResponse>>> GetSentInvitations(
+        [FromQuery] InvitationStatus? status,
         CancellationToken cancellationToken)
     {
         var query = new GetSentInvitationsQuery(
             FamilyId: familyContext.FamilyId!.Value,
-            UserId: userContext.UserId!.Value);
+            UserId: userContext.UserId!.Value,
+            Status: status);
+
         Result<List<InvitationResponse>> result = await sender.Send(query, cancellationToken);
         return result.ToActionResult(HttpContext);
     }
-
     /// <summary>
     /// Cancels a sent family invitation.
     /// </summary>

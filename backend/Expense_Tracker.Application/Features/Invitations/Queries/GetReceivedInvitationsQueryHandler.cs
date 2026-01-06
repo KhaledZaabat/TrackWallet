@@ -14,9 +14,21 @@ public sealed class GetReceivedInvitationsQueryHandler(IAppDbContext db)
         GetReceivedInvitationsQuery request,
         CancellationToken cancellationToken)
     {
-        var invitations = await db.Invitations
+        var query = db.Invitations
             .Include(i => i.Family)
-            .Where(i => i.InviteeUserId == request.UserId && i.Status == InvitationStatus.Pending)
+            .Where(i => i.InviteeUserId == request.UserId);
+
+        // Apply status filter if provided, otherwise default to Pending
+        if (request.Status.HasValue)
+        {
+            query = query.Where(i => i.Status == request.Status.Value);
+        }
+        else
+        {
+            query = query.Where(i => i.Status == InvitationStatus.Pending);
+        }
+
+        var invitations = await query
             .OrderByDescending(i => i.SentAtUtc)
             .ToListAsync(cancellationToken);
 
