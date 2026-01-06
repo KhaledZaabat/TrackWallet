@@ -2,6 +2,7 @@
 using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.Family.Commands.CreateFamily;
 using Expense_Tracker.Application.Features.Family.Commands.SelectFamily;
+using Expense_Tracker.Application.Features.Family.Queries.GetMyFamiliesWithUsers;
 using Expense_Tracker.Application.Features.Family.Queries.GetUserFamilies;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Family;
@@ -109,6 +110,35 @@ public class FamiliesController(ISender sender, IUserContext userContext) : Cont
         );
 
         Result<CreateFamilyResponse> result = await sender.Send(command, cancellationToken);
+        return result.ToActionResult(HttpContext);
+    }
+
+    /// <summary>
+    /// Retrieves the currently selected family with all its members.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The active family with member profiles.</returns>
+    /// <response code="200">Family retrieved successfully.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="404">Family not found or user is not a member.</response>
+    [HttpGet("me")]
+    [ProducesResponseType(typeof(FamilyWithMembersResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [EndpointSummary("Gets current family.")]
+    [EndpointDescription("Returns the currently selected family (from family context) including all members and their profile information.")]
+    [EndpointName("GetMyFamilyWithUsers")]
+    public async Task<ActionResult<FamilyWithMembersResponse>> GetMyFamilyWithUsers(
+        CancellationToken cancellationToken)
+    {
+        if (!userContext.UserId.HasValue)
+            return Unauthorized("User is not authorized");
+
+        var query = new GetMyFamilyWithUsersQuery();
+
+        Result<FamilyWithMembersResponse> result =
+            await sender.Send(query, cancellationToken);
+
         return result.ToActionResult(HttpContext);
     }
 }
