@@ -139,7 +139,23 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
           }
 
           if (state is TransactionError) {
-            return _buildErrorState(state.message);
+            return RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: const Color(0xFF6C5CE7),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: _buildErrorState(state.message),
+                    ),
+                  );
+                },
+              ),
+            );
           }
 
           if (state is TransactionLoaded) {
@@ -149,7 +165,24 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                   _buildActiveFiltersBar(state.currentFilters),
                 Expanded(
                   child: state.transactions.isEmpty
-                      ? _buildEmptyState(state.currentFilters.hasActiveFilters)
+                      ? RefreshIndicator(
+                          onRefresh: _handleRefresh,
+                          color: const Color(0xFF6C5CE7),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: constraints.maxHeight,
+                                  ),
+                                  child: _buildEmptyState(
+                                      state.currentFilters.hasActiveFilters),
+                                ),
+                              );
+                            },
+                          ),
+                        )
                       : _buildTransactionsList(state),
                 ),
               ],
@@ -419,6 +452,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: grouped.length + (state.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == grouped.length) {
