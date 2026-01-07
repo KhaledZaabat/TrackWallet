@@ -103,7 +103,7 @@ public sealed class SelectFamilyCommandHandler(
         CursorPagedResponse<TransactionItem> transactionsPage = transactionsResult.TryGetValue();
 
 
-
+        await db.SaveChangesAsync(cancellationToken);
         // 8. Build response
         SelectFamilyResponse response = new(
             UserId: authDto.UserId,
