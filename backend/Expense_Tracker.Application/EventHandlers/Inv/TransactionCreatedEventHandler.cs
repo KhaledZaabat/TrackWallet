@@ -36,7 +36,7 @@ public sealed class TransactionCreatedEventHandler(
             : "💰 New income added";
 
         var body =
-            $"{creatorName} added {transaction.Amount} in {familyName}";
+            $"{creatorName} added {transaction.Amount} in {familyName} Family";
 
         var domainNotification = DomainNotification.Create(
             userId: transaction.CreatedById, // topic-based
