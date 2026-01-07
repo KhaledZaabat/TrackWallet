@@ -1,3 +1,4 @@
+import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
 import 'package:famxpense/features/auth/presentation/Auth/pages/validation_patterns.dart';
@@ -100,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
               final email = emailController.text.trim();
               if (email.isNotEmpty) {
                 Navigator.pop(dialogContext);
-                context.push('/otp-verification', extra: email);
+                context.push(Routes.otpVerification, extra: email);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -192,7 +193,7 @@ class _LoginPageState extends State<LoginPage> {
               final email = emailController.text.trim();
               if (email.isNotEmpty) {
                 Navigator.pop(dialogContext);
-                context.push('/forgot-password', extra: email);
+                context.push(Routes.forgotPassword, extra: email);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -608,8 +609,9 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           GestureDetector(
-                            onTap:
-                                loading ? null : () => context.push('/signup'),
+                            onTap: loading
+                                ? null
+                                : () => context.push(Routes.signup),
                             child: Text(
                               "Sign Up",
                               style: TextStyle(

@@ -1,6 +1,9 @@
+// core/router/app_router.dart
+
 import 'dart:developer' as developer;
 
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
@@ -15,6 +18,10 @@ import 'package:famxpense/features/auth/presentation/Auth/pages/signup_page.dart
 import 'package:famxpense/features/auth/presentation/Dashboard/page/dashboard_page.dart';
 import 'package:famxpense/features/auth/presentation/Families/pages/create_family_page.dart';
 import 'package:famxpense/features/auth/presentation/Families/pages/select_family_page.dart';
+import 'package:famxpense/features/auth/presentation/Profile/Cubits/profile_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Profile/pages/profile_page.dart';
+import 'package:famxpense/features/auth/presentation/Settings/Cubits/settings_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Settings/pages/settings_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,16 +38,17 @@ class AppRouter {
 
   static GoRouter createRouter(AuthCubit authCubit) => GoRouter(
         navigatorKey: _rootNavigatorKey,
-        initialLocation: '/login',
+        initialLocation: Routes.login,
         redirect: (context, state) async {
           final authState = authCubit.state;
           final currentPath = state.matchedLocation;
 
-          final isAuthRoute = currentPath.startsWith('/login') ||
-              currentPath.startsWith('/signup') ||
-              currentPath.startsWith('/otp-verification') ||
-              currentPath.startsWith('/forgot-password') ||
-              currentPath.startsWith('/reset-password');
+          final isAuthRoute = currentPath.startsWith(Routes.login) ||
+              currentPath.startsWith(Routes.signup) ||
+              currentPath.startsWith(Routes.otpVerification) ||
+              currentPath.startsWith(Routes.forgotPassword) ||
+              currentPath.startsWith(Routes.resetPasswordOtp) ||
+              currentPath.startsWith(Routes.resetPasswordNew);
 
           // If authenticated
           if (authState is AuthAuthenticated) {
@@ -48,8 +56,8 @@ class AppRouter {
               final selectedFamilyId =
                   await getIt<LocalStorage>().getSelectedFamilyId();
               return selectedFamilyId != null
-                  ? '/transactions'
-                  : '/select-family';
+                  ? Routes.dashboard
+                  : Routes.selectFamily;
             }
             return null;
           }
@@ -57,7 +65,7 @@ class AppRouter {
           // If not authenticated
           if (authState is AuthUnauthenticated) {
             if (!isAuthRoute) {
-              return '/login';
+              return Routes.login;
             }
             return null;
           }
@@ -65,19 +73,20 @@ class AppRouter {
           return null;
         },
         routes: [
+          // Auth Routes
           GoRoute(
-            path: '/login',
+            path: Routes.login,
             builder: (context, state) => const LoginPage(),
           ),
           GoRoute(
-            path: '/signup',
+            path: Routes.signup,
             builder: (context, state) => BlocProvider(
               create: (_) => getIt<SignupCubit>(),
               child: const SignupPage(),
             ),
           ),
           GoRoute(
-            path: '/otp-verification',
+            path: Routes.otpVerification,
             builder: (context, state) {
               final email = state.extra as String;
               return BlocProvider(
@@ -87,14 +96,14 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: '/forgot-password',
+            path: Routes.forgotPassword,
             builder: (context, state) => BlocProvider(
               create: (_) => getIt<ResetPasswordCubit>(),
               child: const ForgotPasswordPage(),
             ),
           ),
           GoRoute(
-            path: '/reset-password-otp',
+            path: Routes.resetPasswordOtp,
             builder: (context, state) {
               final email = state.extra as String;
               return BlocProvider(
@@ -104,7 +113,7 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: '/reset-password-new',
+            path: Routes.resetPasswordNew,
             builder: (context, state) {
               final email = state.extra as String;
               return BlocProvider(
@@ -113,34 +122,38 @@ class AppRouter {
               );
             },
           ),
+
+          // Family Routes
           GoRoute(
-            path: '/select-family',
+            path: Routes.selectFamily,
             builder: (context, state) => const SelectFamilyPage(),
           ),
           GoRoute(
-            path: '/create-family',
+            path: Routes.createFamily,
             builder: (context, state) => const CreateFamilyPage(),
           ),
+
+          // Main Routes
           GoRoute(
-            path: '/dashboard',
+            path: Routes.dashboard,
             builder: (context, state) => const DashboardPage(),
           ),
           GoRoute(
-            path: '/transactions',
+            path: Routes.transactions,
             builder: (context, state) => BlocProvider(
               create: (_) => getIt<TransactionCubit>()..loadTransactions(),
               child: const TransactionsListPage(),
             ),
           ),
           GoRoute(
-            path: '/transactions/add',
+            path: Routes.transactionsAdd,
             builder: (context, state) => BlocProvider(
               create: (_) => getIt<TransactionCubit>(),
               child: const TransactionFormPage(),
             ),
           ),
           GoRoute(
-            path: '/transactions/edit',
+            path: Routes.transactionsEdit,
             builder: (context, state) {
               final transaction = state.extra as TransactionItem;
               return BlocProvider(
@@ -148,6 +161,22 @@ class AppRouter {
                 child: TransactionFormPage(existingTransaction: transaction),
               );
             },
+          ),
+
+          // Profile & Settings Routes
+          GoRoute(
+            path: Routes.profile,
+            builder: (context, state) => BlocProvider(
+              create: (_) => getIt<ProfileCubit>(),
+              child: const ProfilePage(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.settings,
+            builder: (context, state) => BlocProvider(
+              create: (_) => getIt<SettingsCubit>(),
+              child: const SettingsPage(),
+            ),
           ),
         ],
       );

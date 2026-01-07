@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_state.dart';
 import 'package:famxpense/features/auth/presentation/Auth/pages/validation_patterns.dart';
@@ -233,7 +234,7 @@ class _SignupPageState extends State<SignupPage> {
       body: BlocConsumer<SignupCubit, SignupState>(
         listener: (context, state) {
           if (state is SignupSuccess) {
-            context.push('/otp-verification', extra: state.email);
+            context.push(Routes.otpVerification, extra: state.email);
           }
           if (state is SignupError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -508,7 +509,7 @@ class _SignupPageState extends State<SignupPage> {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => context.push('/login'),
+                            onTap: () => context.push(Routes.login),
                             child: const Text(
                               "Log In",
                               style: TextStyle(

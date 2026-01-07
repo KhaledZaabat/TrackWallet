@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_state.dart';
 import 'package:flutter/material.dart';
@@ -117,7 +118,7 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
       body: BlocConsumer<ResetPasswordCubit, ResetPasswordState>(
         listener: (context, state) {
           if (state is OtpVerified) {
-            context.push('/reset-password-new', extra: state.email);
+            context.push(Routes.resetPasswordNew, extra: state.email);
           }
           if (state is VerifyOtpError) {
             ScaffoldMessenger.of(context).showSnackBar(

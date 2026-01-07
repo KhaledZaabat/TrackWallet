@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_state.dart';
@@ -235,7 +236,7 @@ class _DashboardViewState extends State<_DashboardView> {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  context.push('/transactions');
+                                  context.push(Routes.transactions);
                                 },
                                 child: const Text(
                                   'View All',
@@ -281,7 +282,7 @@ class _DashboardViewState extends State<_DashboardView> {
                                   transaction: transaction,
                                   onTap: () {
                                     context.push(
-                                      '/transactions/edit',
+                                      Routes.transactions,
                                       extra: transaction,
                                     );
                                   },
@@ -305,7 +306,7 @@ class _DashboardViewState extends State<_DashboardView> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          context.push('/transactions/add');
+          context.push(Routes.transactionsAdd);
         },
         backgroundColor: const Color(0xFF5B7CB5),
         icon: const Icon(Icons.add),
@@ -441,7 +442,7 @@ class _DashboardHeader extends StatelessWidget {
                     ),
                     IconButton(
                       onPressed: () {
-                        context.pushReplacement('/select-family');
+                        context.pushReplacement(Routes.selectFamily);
                       },
                       icon: const Icon(
                         Icons.swap_horiz,

@@ -1,5 +1,6 @@
 // features/auth/presentation/reset_password/pages/forgot_password_page.dart
 
+import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_state.dart';
 import 'package:famxpense/features/auth/presentation/Auth/pages/validation_patterns.dart';
@@ -50,7 +51,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       body: BlocConsumer<ResetPasswordCubit, ResetPasswordState>(
         listener: (context, state) {
           if (state is OtpSent) {
-            context.push('/reset-password-otp', extra: state.email);
+            context.push(Routes.resetPasswordOtp, extra: state.email);
           }
           if (state is SendOtpError) {
             ScaffoldMessenger.of(context).showSnackBar(

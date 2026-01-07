@@ -9,12 +9,15 @@ import 'package:famxpense/data/repos/auth_repository.dart';
 import 'package:famxpense/data/repos/dashboard_repo.dart';
 import 'package:famxpense/data/repos/family_repository.dart';
 import 'package:famxpense/data/repos/transaction_repository.dart';
+import 'package:famxpense/data/repos/user_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/create_family_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/select_family_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Profile/Cubits/profile_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Settings/Cubits/settings_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_cubit.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -95,6 +98,10 @@ Future<void> setupDependencyInjection() async {
     () => TransactionRepository(getIt<ApiClient>()),
   );
 
+  getIt.registerLazySingleton<UserRepository>(
+    () => UserRepository(getIt<ApiClient>()),
+  );
+
   // ========== Cubits ==========
 
   // Auth Cubit - Singleton (shared across app)
@@ -107,9 +114,19 @@ Future<void> setupDependencyInjection() async {
     () => DashboardCubit(getIt<DashboardRepository>()),
   );
 
-  // Transaction Cubit - Singleton (shared state)
+  // Transaction Cubit - Factory (new instance per screen)
   getIt.registerFactory<TransactionCubit>(
     () => TransactionCubit(getIt<TransactionRepository>()),
+  );
+
+  // Profile Cubit - Factory (new instance per screen)
+  getIt.registerFactory<ProfileCubit>(
+    () => ProfileCubit(getIt<UserRepository>()),
+  );
+
+  // Settings Cubit - Factory (new instance per screen)
+  getIt.registerFactory<SettingsCubit>(
+    () => SettingsCubit(getIt<UserRepository>()),
   );
 
   // Factory Cubits (new instance each time)

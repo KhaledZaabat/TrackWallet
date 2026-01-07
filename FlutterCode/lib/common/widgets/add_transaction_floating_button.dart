@@ -3,8 +3,7 @@ import 'package:famxpense/core/router/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class AddTransactionFloatingActionButton
-    extends StatelessWidget {
+class AddTransactionFloatingActionButton extends StatelessWidget {
   const AddTransactionFloatingActionButton({
     super.key,
   });
@@ -12,7 +11,7 @@ class AddTransactionFloatingActionButton
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: () => context.push(Routes.addTransaction),
+      onPressed: () => context.push(Routes.transactionsAdd),
       child: const Icon(Icons.add),
       backgroundColor: AppColors.floatingActions,
       foregroundColor: AppColors.backgroundColor,

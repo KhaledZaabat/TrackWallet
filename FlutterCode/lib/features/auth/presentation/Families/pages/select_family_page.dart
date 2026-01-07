@@ -1,5 +1,6 @@
 // features/auth/presentation/Families/pages/select_family_page.dart - IMPROVED
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/SelectFamilyState.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/select_family_cubit.dart';
@@ -112,7 +113,7 @@ class _SelectFamilyView extends StatelessWidget {
                                   child: InkWell(
                                     onTap: () async {
                                       final result = await context.push(
-                                        '/create-family',
+                                        Routes.createFamily,
                                       );
 
                                       // Reload families if a family was created
@@ -346,7 +347,7 @@ class _EmptyFamiliesView extends StatelessWidget {
               height: 50,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  final result = await context.push('/create-family');
+                  final result = await context.push(Routes.createFamily);
 
                   // Reload families if a family was created
                   if (result == true && context.mounted) {

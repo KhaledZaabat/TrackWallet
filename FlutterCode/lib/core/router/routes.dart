@@ -1,17 +1,25 @@
+// core/router/routes.dart
+
 class Routes {
-  static const String home = '/home';
+  // Auth Routes
+  static const String login = '/login';
+  static const String signup = '/signup';
+  static const String otpVerification = '/otp-verification';
+  static const String forgotPassword = '/forgot-password';
+  static const String resetPasswordOtp = '/reset-password-otp';
+  static const String resetPasswordNew = '/reset-password-new';
+
+  // Family Routes
+  static const String selectFamily = '/select-family';
+  static const String createFamily = '/create-family';
+
+  // Main Routes
+  static const String dashboard = '/dashboard';
   static const String transactions = '/transactions';
+  static const String transactionsAdd = '/transactions/add';
+  static const String transactionsEdit = '/transactions/edit';
 
-  static const String family = '/family';
-  static const String createFamily = '/family/create';
-  static const String manageFamily = '/family/manage/:id';
-  static const String manageFamilyUsers =
-      '/family/manage/users/:id';
-  static const String addTransaction = '/AddTransaction';
-
-  static const String more = '/more';
-  static const String settings = '/more/settings';
-  static const String editProfile =
-      '/more/settings/edit-profile';
-  static const String myInvites = '/more/invites';
+  // Profile & Settings Routes
+  static const String profile = '/profile';
+  static const String settings = '/settings';
 }

@@ -1,3 +1,4 @@
+import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_state.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Pages/filter.dart';
@@ -51,12 +52,12 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
   }
 
   void _navigateToAddTransaction() {
-    context.push('/transactions/add');
+    context.push(Routes.transactionsAdd);
   }
 
   void _navigateToEditTransaction(TransactionItem transaction) {
     context.push(
-      '/transactions/edit',
+      Routes.transactionsEdit,
       extra: transaction,
     );
   }
