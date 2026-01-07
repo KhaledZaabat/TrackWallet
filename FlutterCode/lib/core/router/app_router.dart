@@ -31,6 +31,8 @@ import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transac
 import 'package:famxpense/features/auth/presentation/Transactions/Pages/transaction_form_page.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Pages/transactions_list_page.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
+import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
+import 'package:famxpense/features/Invitations/pages/invitations_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey =
@@ -176,6 +178,15 @@ class AppRouter {
             builder: (context, state) => BlocProvider(
               create: (_) => getIt<SettingsCubit>(),
               child: const SettingsPage(),
+            ),
+          ),
+
+          // Invitations Routes
+          GoRoute(
+            path: Routes.invitations,
+            builder: (context, state) => BlocProvider.value(
+              value: getIt<InvitationsCubit>(),
+              child: const InvitationsPage(),
             ),
           ),
         ],

@@ -92,6 +92,15 @@ class _DashboardViewState extends State<_DashboardView> {
     return points;
   }
 
+  /// Determine which navbar item should be selected based on current route
+  int _getCurrentNavIndex(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    if (location.startsWith(Routes.invitations)) return 1;
+    if (location.startsWith(Routes.transactions)) return 2;
+    if (location.startsWith(Routes.profile)) return 3;
+    return 0; // Dashboard is default
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -312,7 +321,47 @@ class _DashboardViewState extends State<_DashboardView> {
         icon: const Icon(Icons.add),
         label: const Text('Add Transaction'),
       ),
-    );
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _getCurrentNavIndex(context),
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF5B7CB5),
+        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(Routes.dashboard);
+              break;
+            case 1:
+              context.go(Routes.invitations);
+              break;
+            case 2:
+              context.go(Routes.transactions);
+              break;
+            case 3:
+              context.go(Routes.profile);
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Invitations',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt),
+            label: 'Transactions',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ));
   }
 }
 

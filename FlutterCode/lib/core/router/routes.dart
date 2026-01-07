@@ -22,4 +22,7 @@ class Routes {
   // Profile & Settings Routes
   static const String profile = '/profile';
   static const String settings = '/settings';
+
+  // Invitations Routes
+  static const String invitations = '/invitations';
 }
