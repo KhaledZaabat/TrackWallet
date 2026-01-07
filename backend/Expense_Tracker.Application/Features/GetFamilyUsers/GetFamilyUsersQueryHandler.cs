@@ -23,7 +23,7 @@ public sealed class GetFamilyUsersQueryHandler(IAppDbContext db, IFamilyContext 
 
         var users = await db.FamilyUsers
             .AsNoTracking()
-            .Where(fu => fu.FamilyId == request.FamilyId)
+            .Where(fu => fu.FamilyId == familyContext.FamilyId)
             .Select(fu => new FamilyUserSimpleResponse(
                 UserId: fu.User.Id,
                 FullName: fu.User.FullName
