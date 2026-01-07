@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Expense_Tracker.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -464,7 +464,8 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     Platform = table.Column<int>(type: "integer", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastSeenUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    LastSeenUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    SubscribedTopics = table.Column<string>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {

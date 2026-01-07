@@ -394,6 +394,10 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.Property<int>("Platform")
                         .HasColumnType("integer");
 
+                    b.Property<string>("SubscribedTopics")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 

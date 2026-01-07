@@ -51,7 +51,7 @@ public sealed class NotificationPreferences : Entity
             push: false);
 
     public static readonly Guid DefaultNotificationId =
-        Guid.Parse("018f3f0d-9c2c-7ab1-96da-4b821eac09ff");
+        Guid.Parse("018f3f0d-9c2c-7ab1-96da-4b821eac09f2");
 
     // Update methods
     public Result SetEmailNotifications(bool enabled)

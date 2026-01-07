@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Expense_Tracker.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251231190935_Initial")]
-    partial class Initial
+    [Migration("20260107121413_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -396,6 +396,10 @@ namespace Expense_Tracker.Infrastructure.Migrations
 
                     b.Property<int>("Platform")
                         .HasColumnType("integer");
+
+                    b.Property<string>("SubscribedTopics")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");

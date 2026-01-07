@@ -2,8 +2,8 @@
 using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Expense_Tracker.Infrastructure.Data.Configurations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Text.Json;
 
 public sealed class UserDeviceConfiguration
     : IEntityTypeConfiguration<UserDevice>
@@ -30,10 +30,22 @@ public sealed class UserDeviceConfiguration
         builder.Property(x => x.CreatedUtc)
             .IsRequired();
 
+        builder.Property(x => x.LastSeenUtc);
+
+
+        var topicsConverter = new ValueConverter<List<string>, string>(
+            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+            v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new()
+        );
+
+        builder.Property(x => x.SubscribedTopics)
+     .HasConversion(topicsConverter)
+     .HasColumnType("jsonb")
+     .IsRequired();
+
+
         builder.HasIndex(x => x.UserId);
         builder.HasIndex(x => new { x.UserId, x.IsActive });
-        builder.HasIndex(x => x.DeviceToken).IsUnique();
-
 
         builder.HasOne<User>()
             .WithMany()

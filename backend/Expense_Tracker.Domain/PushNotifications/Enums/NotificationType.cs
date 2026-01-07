@@ -11,6 +11,6 @@ public enum NotificationType
     InvitationDeclined,
     InvitationCancelled,
 
-
+    TransactionCreated
 
 }

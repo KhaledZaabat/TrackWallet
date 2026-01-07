@@ -1,4 +1,5 @@
-﻿using Expense_Tracker.Application.Dtos;
+﻿using Expense_Tracker.Application.Constants;
+using Expense_Tracker.Application.Dtos;
 using Expense_Tracker.Application.Features.FamiliyHistoryBudget.Queries;
 using Expense_Tracker.Application.Features.Transactions.Queries.GetFamilyTransactions;
 using Expense_Tracker.Application.Interfaces;
@@ -19,7 +20,8 @@ public sealed class SelectFamilyCommandHandler(
     ITokenProvider tokenProvider,
     IIdentityService identityService,
     [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
-    ISender sender
+    ISender sender,
+    IUserDeviceRepository deviceRepository
 ) : IRequestHandler<SelectFamilyCommand, Result<SelectFamilyResponse>>
 {
     public async Task<Result<SelectFamilyResponse>> Handle(
@@ -51,6 +53,11 @@ public sealed class SelectFamilyCommandHandler(
         if (familyContext is null)
             return Result.Failure<SelectFamilyResponse>(
                 DomainError.NotFound(nameof(Family)));
+        await deviceRepository.SubscribeToTopicAsync(
+           request.UserId,
+           Topics.getFamilyTopic(familyContext.FamilyId),
+           cancellationToken);
+
 
         // 3. Generate JWT tokens with family context
         Result<AuthDto> tokenResult =

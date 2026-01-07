@@ -2,6 +2,7 @@
 using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.Common.ResultPattern.Error;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.Events;
 using Expense_Tracker.Domain.FamilyFolder;
 using Expense_Tracker.Domain.TransactionFolder.Enums;
 using Expense_Tracker.Domain.Users;
@@ -122,6 +123,7 @@ public sealed class Transaction : AggregateRoot, IAuditable
             createdByID,
             familyID,
             categoryID);
+        transaction.AddDomainEvent(new TransactionCreatedEvent(transaction));
 
         return Result.Success(transaction);
     }
