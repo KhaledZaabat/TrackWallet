@@ -1,3 +1,5 @@
+import 'package:famxpense/models/Transactions/transaction_models.dart';
+
 class FamilyListResult {
   final bool isSuccess;
   final String? errorMessage;
@@ -181,80 +183,6 @@ class BudgetHistoryItem {
     return BudgetHistoryItem(
       budget: (json['budget'] as num).toDouble(),
       recordedAtUtc: DateTime.parse(json['recordedAtUtc']),
-    );
-  }
-}
-
-// ========== Transaction Models ==========
-
-class TransactionItem {
-  final String transactionId;
-  final String? title;
-  final double amount;
-  final String type; // "Income" or "Expense"
-  final DateTime transactedOn;
-  final DateTime createdAtUtc;
-  final CategoryResponse category;
-  final CreatorResponse creator;
-
-  TransactionItem({
-    required this.transactionId,
-    this.title,
-    required this.amount,
-    required this.type,
-    required this.transactedOn,
-    required this.createdAtUtc,
-    required this.category,
-    required this.creator,
-  });
-
-  factory TransactionItem.fromJson(Map<String, dynamic> json) {
-    return TransactionItem(
-      transactionId: json['transactionId'],
-      title: json['title'],
-      amount: (json['amount'] as num).toDouble(),
-      type: json['type'],
-      transactedOn: DateTime.parse(json['transactedOn']),
-      createdAtUtc: DateTime.parse(json['createdAtUtc']),
-      category: CategoryResponse.fromJson(json['category']),
-      creator: CreatorResponse.fromJson(json['creator']),
-    );
-  }
-}
-
-class CategoryResponse {
-  final String categoryId;
-  final String name;
-
-  CategoryResponse({
-    required this.categoryId,
-    required this.name,
-  });
-
-  factory CategoryResponse.fromJson(Map<String, dynamic> json) {
-    return CategoryResponse(
-      categoryId: json['categoryId'],
-      name: json['name'],
-    );
-  }
-}
-
-class CreatorResponse {
-  final String userId;
-  final String? fullName;
-  final String? profileImageUrl;
-
-  CreatorResponse({
-    required this.userId,
-    this.fullName,
-    this.profileImageUrl,
-  });
-
-  factory CreatorResponse.fromJson(Map<String, dynamic> json) {
-    return CreatorResponse(
-      userId: json['userId'],
-      fullName: json['fullName'],
-      profileImageUrl: json['profileImageUrl'],
     );
   }
 }

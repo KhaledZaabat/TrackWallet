@@ -1,17 +1,21 @@
 // core/di/setup_dependency_injection.dart
 
 import 'package:famxpense/core/Network/ApiClient.dart';
+import 'package:famxpense/core/app_logger.dart';
+import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/core/services/device_manager.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/data/repos/auth_repository.dart';
 import 'package:famxpense/data/repos/dashboard_repo.dart';
 import 'package:famxpense/data/repos/family_repository.dart';
+import 'package:famxpense/data/repos/transaction_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/create_family_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/select_family_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_cubit.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get_it/get_it.dart';
@@ -19,6 +23,8 @@ import 'package:get_it/get_it.dart';
 final getIt = GetIt.instance;
 
 Future<void> setupDependencyInjection() async {
+  AppLogger.info('DI', 'Starting dependency injection setup...');
+
   // ========== Core Services ==========
 
   // LocalStorage (Singleton)
@@ -40,6 +46,7 @@ Future<void> setupDependencyInjection() async {
   );
 
   // Initialize device and get device info
+  AppLogger.info('DI', 'Initializing device manager...');
   await getIt<DeviceManager>().initializeDevice();
 
   // API Client (Singleton)
@@ -52,6 +59,15 @@ Future<void> setupDependencyInjection() async {
 
   // Start listening to FCM token refresh
   getIt<DeviceManager>().listenToFcmTokenRefresh();
+
+  // ========== Category Service (Singleton) ==========
+  // This loads categories on app start
+  getIt.registerLazySingleton<CategoryService>(
+    () => CategoryService(getIt<ApiClient>()),
+  );
+
+  // NOTE: Categories will be initialized after authentication
+  // See main.dart for initialization logic
 
   // ========== Repositories ==========
 
@@ -71,9 +87,12 @@ Future<void> setupDependencyInjection() async {
     ),
   );
 
-  // Dashboard Repository (NEW)
   getIt.registerLazySingleton<DashboardRepository>(
     () => DashboardRepository(getIt<ApiClient>()),
+  );
+
+  getIt.registerLazySingleton<TransactionRepository>(
+    () => TransactionRepository(getIt<ApiClient>()),
   );
 
   // ========== Cubits ==========
@@ -88,6 +107,11 @@ Future<void> setupDependencyInjection() async {
     () => DashboardCubit(getIt<DashboardRepository>()),
   );
 
+  // Transaction Cubit - Singleton (shared state)
+  getIt.registerFactory<TransactionCubit>(
+    () => TransactionCubit(getIt<TransactionRepository>()),
+  );
+
   // Factory Cubits (new instance each time)
   getIt.registerFactory<SignupCubit>(
     () => SignupCubit(getIt<AuthRepository>()),
@@ -98,9 +122,32 @@ Future<void> setupDependencyInjection() async {
   );
 
   getIt.registerFactory<SelectFamilyCubit>(
-      () => SelectFamilyCubit(getIt<FamilyRepository>()));
+    () => SelectFamilyCubit(getIt<FamilyRepository>()),
+  );
 
   getIt.registerFactory<CreateFamilyCubit>(
     () => CreateFamilyCubit(getIt<FamilyRepository>()),
   );
+
+  AppLogger.info('DI', 'Dependency injection setup complete!');
+}
+
+/// Initialize categories after user is authenticated
+/// Call this after successful login or on app start if user is already logged in
+Future<void> initializeCategories() async {
+  try {
+    AppLogger.info('DI', 'Initializing categories...');
+    final categoryService = getIt<CategoryService>();
+
+    if (!categoryService.isInitialized) {
+      await categoryService.initialize();
+      AppLogger.info('DI', 'Categories initialized successfully');
+    } else {
+      AppLogger.info('DI', 'Categories already initialized');
+    }
+  } catch (e, stackTrace) {
+    AppLogger.error('DI', 'Failed to initialize categories',
+        error: e, stackTrace: stackTrace);
+    // Don't throw - allow app to continue
+  }
 }

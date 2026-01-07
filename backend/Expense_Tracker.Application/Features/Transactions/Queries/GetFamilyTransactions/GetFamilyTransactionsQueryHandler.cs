@@ -31,15 +31,51 @@ public sealed class GetFamilyTransactionsQueryHandler(
         // Validate and set page size (max 50)
         int size = request.PageSize is <= 0 or > 50 ? 20 : request.PageSize;
 
-        // Build query with cursor pagination
+        // Build query with cursor pagination and filters
         var query = db.Transactions
             .AsNoTracking()
             .Where(t =>
                 t.FamilyId == request.FamilyId &&
-                t.CreatedAtUtc < cursor)
+                t.CreatedAtUtc < cursor);
+
+        // Filter by transaction type
+        if (request.TransactionType.HasValue)
+        {
+            query = query.Where(t => t.Type == request.TransactionType.Value);
+        }
+
+        // Filter by category type
+        if (request.CategoryType.HasValue)
+        {
+            query = query.Where(t => t.Category!.Type == request.CategoryType.Value);
+        }
+
+        // Filter by minimum amount
+        if (request.MinAmount.HasValue)
+        {
+            query = query.Where(t => t.Amount >= request.MinAmount.Value);
+        }
+
+        // Filter by maximum amount
+        if (request.MaxAmount.HasValue)
+        {
+            query = query.Where(t => t.Amount <= request.MaxAmount.Value);
+        }
+
+        // Filter by creator (user who created the transaction)
+        if (request.CreatorId.HasValue)
+        {
+            query = query.Where(t => t.CreatedById == request.CreatorId.Value);
+        }
+
+        // Apply ordering and pagination
+        query = query
             .OrderByDescending(t => t.CreatedAtUtc)
             .ThenByDescending(t => t.Id)
-            .Take(size)
+            .Take(size);
+
+        // Select transaction items
+        var transactions = await query
             .Select(t => new TransactionItem(
                 TransactionId: t.Id,
                 Title: t.Title,
@@ -50,7 +86,6 @@ public sealed class GetFamilyTransactionsQueryHandler(
                 Category: new CategoryResponse(
                     CategoryId: t.Category!.Id,
                     Name: t.Category.Type
-
                 ),
                 Creator: new CreatorResponse(
                     UserId: t.CreatedBy!.Id,
@@ -59,10 +94,8 @@ public sealed class GetFamilyTransactionsQueryHandler(
                         ? fileUrlBuilder.GetUrl(t.CreatedBy.ProfileImageFileId.Value)
                         : null
                 )
-            ));
-
-        // Execute query
-        var transactions = await query.ToListAsync(cancellationToken);
+            ))
+            .ToListAsync(cancellationToken);
 
         // Handle empty results
         if (transactions.Count == 0)

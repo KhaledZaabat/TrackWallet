@@ -1,37 +1,5 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:uuid/v8.dart';
-
-class Category {
-  final String id;
-  final CategoryType type;
-
-  Category._({
-    required this.id,
-    required this.type,
-  });
-
-  static Category create({
-    required CategoryType type,
-  }) {
-    return Category._(
-      id: const UuidV8().generate(),
-      type: type,
-    );
-  }
-
-  static Category fromJson(Map<String, dynamic> json) {
-    return Category._(
-      id: json['id'] as String,
-      type: CategoryType.values.byName(json['type'] as String),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type.name,
-      };
-}
 
 enum CategoryType {
   // Food & Drinks
@@ -137,6 +105,78 @@ enum CategoryType {
   Miscellaneous,
 }
 
+/// Category data from API
+class CategoryData {
+  final String categoryId;
+  final String name;
+  final CategoryType categoryType;
+
+  CategoryData({
+    required this.categoryId,
+    required this.name,
+    required this.categoryType,
+  });
+
+  factory CategoryData.fromJson(Map<String, dynamic> json) {
+    final name = json['name'] as String;
+    final categoryType = _parseCategoryType(name);
+
+    return CategoryData(
+      categoryId: json['categoryId'] as String,
+      name: name,
+      categoryType: categoryType,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'categoryId': categoryId,
+        'name': name,
+      };
+
+  /// Get icon for this category
+  IconData get icon => CategoryIconHelper.iconFor(categoryType);
+
+  /// Get display name (formatted)
+  String get displayName => _formatDisplayName(name);
+
+  static String _formatDisplayName(String name) {
+    // Convert camelCase to Title Case with spaces
+    final result = name
+        .replaceAllMapped(
+          RegExp(r'([A-Z])'),
+          (match) => ' ${match.group(0)}',
+        )
+        .trim();
+    return result;
+  }
+
+  static CategoryType _parseCategoryType(String name) {
+    try {
+      return CategoryType.values.firstWhere(
+        (type) => type.name == name,
+        orElse: () => CategoryType.Miscellaneous,
+      );
+    } catch (e) {
+      return CategoryType.Miscellaneous;
+    }
+  }
+
+  @override
+  String toString() =>
+      'CategoryData(id: $categoryId, name: $name, type: $categoryType)';
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CategoryData &&
+          runtimeType == other.runtimeType &&
+          categoryId == other.categoryId;
+
+  @override
+  int get hashCode => categoryId.hashCode;
+}
+
+/// Helper class for category icons
 class CategoryIconHelper {
   static IconData iconFor(CategoryType type) {
     switch (type) {
@@ -319,4 +359,132 @@ class CategoryIconHelper {
         return LucideIcons.moreHorizontal;
     }
   }
+
+  /// Get category group name
+  static String getGroupName(CategoryType type) {
+    if (_foodAndDrinks.contains(type)) return 'Food & Drinks';
+    if (_transportation.contains(type)) return 'Transportation';
+    if (_billsUtilities.contains(type)) return 'Bills & Utilities';
+    if (_housing.contains(type)) return 'Housing';
+    if (_shopping.contains(type)) return 'Shopping';
+    if (_entertainment.contains(type)) return 'Entertainment';
+    if (_health.contains(type)) return 'Health';
+    if (_educationWork.contains(type)) return 'Education & Work';
+    if (_finance.contains(type)) return 'Finance';
+    if (_travel.contains(type)) return 'Travel';
+    if (_familyPets.contains(type)) return 'Family & Pets';
+    if (_giftsCharity.contains(type)) return 'Gifts & Charity';
+    return 'Other';
+  }
+
+  static final Set<CategoryType> _foodAndDrinks = {
+    CategoryType.Groceries,
+    CategoryType.Restaurants,
+    CategoryType.Cafes,
+    CategoryType.FastFood,
+    CategoryType.Alcohol,
+    CategoryType.Delivery,
+    CategoryType.Snacks,
+    CategoryType.Bakery,
+    CategoryType.Dessert,
+  };
+
+  static final Set<CategoryType> _transportation = {
+    CategoryType.Fuel,
+    CategoryType.PublicTransport,
+    CategoryType.Taxi,
+    CategoryType.Parking,
+    CategoryType.VehicleMaintenance,
+    CategoryType.VehicleInsurance,
+    CategoryType.CarWash,
+  };
+
+  static final Set<CategoryType> _billsUtilities = {
+    CategoryType.Electricity,
+    CategoryType.Water,
+    CategoryType.Gas,
+    CategoryType.Internet,
+    CategoryType.MobilePhone,
+    CategoryType.Heating,
+    CategoryType.TrashService,
+    CategoryType.HomeMaintenance,
+    CategoryType.SecuritySystem,
+  };
+
+  static final Set<CategoryType> _housing = {
+    CategoryType.Rent,
+    CategoryType.Mortgage,
+    CategoryType.PropertyTax,
+    CategoryType.HOAFees,
+    CategoryType.HomeInsurance,
+  };
+
+  static final Set<CategoryType> _shopping = {
+    CategoryType.Clothing,
+    CategoryType.Shoes,
+    CategoryType.Accessories,
+    CategoryType.Electronics,
+    CategoryType.Furniture,
+    CategoryType.HomeDecor,
+    CategoryType.PersonalCare,
+    CategoryType.Beauty,
+  };
+
+  static final Set<CategoryType> _entertainment = {
+    CategoryType.Movies,
+    CategoryType.Music,
+    CategoryType.Gaming,
+    CategoryType.Streaming,
+    CategoryType.Events,
+    CategoryType.Books,
+    CategoryType.Hobbies,
+    CategoryType.Subscriptions,
+  };
+
+  static final Set<CategoryType> _health = {
+    CategoryType.Healthcare,
+    CategoryType.Pharmacy,
+    CategoryType.DentalCare,
+    CategoryType.VisionCare,
+    CategoryType.GymMembership,
+    CategoryType.Sports,
+    CategoryType.MentalHealth,
+  };
+
+  static final Set<CategoryType> _educationWork = {
+    CategoryType.Education,
+    CategoryType.Tuition,
+    CategoryType.Courses,
+    CategoryType.OfficeSupplies,
+    CategoryType.Software,
+  };
+
+  static final Set<CategoryType> _finance = {
+    CategoryType.Savings,
+    CategoryType.Investments,
+    CategoryType.BankFees,
+    CategoryType.LoanPayments,
+    CategoryType.Taxes,
+  };
+
+  static final Set<CategoryType> _travel = {
+    CategoryType.Flights,
+    CategoryType.Hotels,
+    CategoryType.CarRental,
+    CategoryType.TravelActivities,
+    CategoryType.TravelInsurance,
+  };
+
+  static final Set<CategoryType> _familyPets = {
+    CategoryType.Childcare,
+    CategoryType.PetCare,
+    CategoryType.PetFood,
+    CategoryType.VetBills,
+    CategoryType.FamilySupport,
+  };
+
+  static final Set<CategoryType> _giftsCharity = {
+    CategoryType.Gifts,
+    CategoryType.Donations,
+  };
 }

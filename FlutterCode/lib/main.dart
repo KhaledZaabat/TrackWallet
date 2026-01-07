@@ -1,3 +1,5 @@
+import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/core/services/device_manager.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +9,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'package:famxpense/core/services/notifications_service.dart';
-import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/app_router.dart';
 import 'dart:async';
 
@@ -30,6 +31,7 @@ Future<void> main() async {
 
   await NotificationService.initialize();
   await setupDependencyInjection();
+  await getIt<CategoryService>().initialize();
 
   final deviceManager = getIt<DeviceManager>();
   await deviceManager.initializeDevice();

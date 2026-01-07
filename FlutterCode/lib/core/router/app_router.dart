@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
-import 'package:famxpense/core/router/splash_screen.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
@@ -22,99 +20,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_cubit.dart';
+import 'package:famxpense/features/auth/presentation/Transactions/Pages/transaction_form_page.dart';
+import 'package:famxpense/features/auth/presentation/Transactions/Pages/transactions_list_page.dart';
+import 'package:famxpense/models/Transactions/transaction_models.dart';
+
 class AppRouter {
   static final _rootNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'root');
 
   static GoRouter createRouter(AuthCubit authCubit) => GoRouter(
         navigatorKey: _rootNavigatorKey,
-        initialLocation: '/splash',
-        refreshListenable: GoRouterRefreshStream(authCubit.stream),
+        initialLocation: '/login',
         redirect: (context, state) async {
           final authState = authCubit.state;
           final currentPath = state.matchedLocation;
 
-          // Always allow splash screen to show ONLY during initial app load
-          if (currentPath == '/splash') {
-            // If still checking or initial, stay on splash
-            if (authState is AuthInitial || authState is AuthChecking) {
-              return null;
-            }
+          final isAuthRoute = currentPath.startsWith('/login') ||
+              currentPath.startsWith('/signup') ||
+              currentPath.startsWith('/otp-verification') ||
+              currentPath.startsWith('/forgot-password') ||
+              currentPath.startsWith('/reset-password');
 
-            // Auth check complete, redirect based on result
-            if (authState is AuthAuthenticated) {
-              final selectedFamilyId =
-                  await getIt<LocalStorage>().getSelectedFamilyId();
-              final destination =
-                  selectedFamilyId != null ? '/dashboard' : '/select-family';
-
-              return destination;
-            }
-
-            if (authState is AuthUnauthenticated) {
-              return '/login';
-            }
-          }
-
-          // ===== If authenticated =====
+          // If authenticated
           if (authState is AuthAuthenticated) {
-            // Prevent authenticated users from accessing auth pages
-            final isAuthRoute = currentPath.startsWith('/login') ||
-                currentPath.startsWith('/signup') ||
-                currentPath.startsWith('/otp-verification') ||
-                currentPath.startsWith('/forgot-password') ||
-                currentPath.startsWith('/reset-password');
-
             if (isAuthRoute) {
               final selectedFamilyId =
                   await getIt<LocalStorage>().getSelectedFamilyId();
-              final destination =
-                  selectedFamilyId != null ? '/dashboard' : '/select-family';
-
-              return destination;
+              return selectedFamilyId != null
+                  ? '/transactions'
+                  : '/select-family';
             }
-
-            return null; // Allow navigation to authenticated routes
-          }
-
-          // ===== If unauthenticated =====
-          if (authState is AuthUnauthenticated) {
-            // Allow access to auth routes
-            final isAuthRoute = currentPath.startsWith('/login') ||
-                currentPath.startsWith('/signup') ||
-                currentPath.startsWith('/otp-verification') ||
-                currentPath.startsWith('/forgot-password') ||
-                currentPath.startsWith('/reset-password');
-
-            if (isAuthRoute) {
-              return null;
-            }
-
-            return '/login';
-          }
-
-          // If AuthLoading or AuthError, stay on current page
-          // This prevents redirects during login/logout operations
-          if (authState is AuthLoading || authState is AuthError) {
             return null;
           }
 
-          return '/splash';
+          // If not authenticated
+          if (authState is AuthUnauthenticated) {
+            if (!isAuthRoute) {
+              return '/login';
+            }
+            return null;
+          }
+
+          return null;
         },
         routes: [
           GoRoute(
-            path: '/splash',
-            builder: (context, state) {
-              developer.log('📱 Building splash screen', name: 'AppRouter');
-              return const SplashScreen();
-            },
-          ),
-          GoRoute(
             path: '/login',
-            builder: (context, state) {
-              developer.log('📱 Building login page', name: 'AppRouter');
-              return const LoginPage();
-            },
+            builder: (context, state) => const LoginPage(),
           ),
           GoRoute(
             path: '/signup',
@@ -162,46 +115,40 @@ class AppRouter {
           ),
           GoRoute(
             path: '/select-family',
-            builder: (context, state) {
-              developer.log('📱 Building select family page',
-                  name: 'AppRouter');
-              return const SelectFamilyPage();
-            },
+            builder: (context, state) => const SelectFamilyPage(),
           ),
           GoRoute(
             path: '/create-family',
-            builder: (context, state) {
-              developer.log('📱 Building create family page',
-                  name: 'AppRouter');
-              return const CreateFamilyPage();
-            },
+            builder: (context, state) => const CreateFamilyPage(),
           ),
           GoRoute(
             path: '/dashboard',
+            builder: (context, state) => const DashboardPage(),
+          ),
+          GoRoute(
+            path: '/transactions',
+            builder: (context, state) => BlocProvider(
+              create: (_) => getIt<TransactionCubit>()..loadTransactions(),
+              child: const TransactionsListPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/transactions/add',
+            builder: (context, state) => BlocProvider(
+              create: (_) => getIt<TransactionCubit>(),
+              child: const TransactionFormPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/transactions/edit',
             builder: (context, state) {
-              return const DashboardPage();
+              final transaction = state.extra as TransactionItem;
+              return BlocProvider(
+                create: (_) => getIt<TransactionCubit>(),
+                child: TransactionFormPage(existingTransaction: transaction),
+              );
             },
           ),
         ],
       );
-}
-
-// Helper class to refresh GoRouter when auth state changes
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _subscription = stream.asBroadcastStream().listen(
-      (dynamic state) {
-        notifyListeners();
-      },
-    );
-  }
-
-  late final StreamSubscription<dynamic> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
 }

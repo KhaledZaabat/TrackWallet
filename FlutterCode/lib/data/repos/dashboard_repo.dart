@@ -1,107 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:famxpense/core/Network/ApiClient.dart';
 import 'package:famxpense/models/Family/family_models.dart';
-
-class DashboardRepository {
-  final ApiClient _apiClient;
-
-  DashboardRepository(this._apiClient);
-
-  /// Get dashboard data
-  Future<DashboardResult> getDashboard({
-    int budgetHistoryMonths = 1,
-    int recentTransactionsPageSize = 10,
-  }) async {
-    try {
-      final response = await _apiClient.dio.get(
-        '/api/Dashboard',
-        queryParameters: {
-          'budgetHistoryMonths': budgetHistoryMonths,
-          'recentTransactionsPageSize': recentTransactionsPageSize,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-
-        return DashboardResult.success(
-          userId: data['userId'],
-          email: data['email'],
-          fullName: data['fullName'],
-          profileImageUrl: data['profileImageUrl'],
-          familyContext: FamilyContext.fromJson(data['familyContext']),
-          budgetHistory: (data['budgetHistory'] as List?)
-              ?.map((h) => BudgetHistoryItem.fromJson(h))
-              .toList(),
-          recentTransactions: (data['recentTransactions'] as List?)
-              ?.map((t) => TransactionItem.fromJson(t))
-              .toList(),
-          transactionsCursor: data['transactionsCursor'],
-        );
-      }
-
-      return DashboardResult.failure('Failed to load dashboard');
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        return DashboardResult.failure('No family selected');
-      } else if (e.response?.statusCode == 401) {
-        return DashboardResult.failure('Authentication required');
-      } else if (e.response?.statusCode == 400) {
-        final error = e.response?.data['detail'] ?? 'Invalid request';
-        return DashboardResult.failure(error);
-      }
-      return DashboardResult.failure('Network error. Please try again.');
-    } catch (e) {
-      return DashboardResult.failure('An unexpected error occurred');
-    }
-  }
-}
-
-// ========== Result Model ==========
-
-class DashboardResult {
-  final bool isSuccess;
-  final String? errorMessage;
-  final DashboardData? data;
-
-  DashboardResult._({
-    required this.isSuccess,
-    this.errorMessage,
-    this.data,
-  });
-
-  factory DashboardResult.success({
-    required String userId,
-    required String email,
-    required String fullName,
-    String? profileImageUrl,
-    required FamilyContext familyContext,
-    List<BudgetHistoryItem>? budgetHistory,
-    List<TransactionItem>? recentTransactions,
-    String? transactionsCursor,
-  }) {
-    return DashboardResult._(
-      isSuccess: true,
-      data: DashboardData(
-        userId: userId,
-        email: email,
-        fullName: fullName,
-        profileImageUrl: profileImageUrl,
-        familyContext: familyContext,
-        budgetHistory: budgetHistory ?? [],
-        recentTransactions: recentTransactions ?? [],
-        transactionsCursor: transactionsCursor,
-      ),
-    );
-  }
-
-  factory DashboardResult.failure(String message) {
-    return DashboardResult._(
-      isSuccess: false,
-      errorMessage: message,
-    );
-  }
-}
+import 'package:famxpense/models/Transactions/transaction_models.dart';
 
 class DashboardData {
   final String userId;
@@ -123,4 +22,70 @@ class DashboardData {
     required this.recentTransactions,
     this.transactionsCursor,
   });
+
+  factory DashboardData.fromJson(Map<String, dynamic> json) {
+    return DashboardData(
+      userId: json['userId'] as String,
+      email: json['email'] as String,
+      fullName: json['fullName'] as String,
+      profileImageUrl: json['profileImageUrl'] as String?,
+      familyContext: FamilyContext.fromJson(
+        json['familyContext'] as Map<String, dynamic>,
+      ),
+      budgetHistory: (json['budgetHistory'] as List)
+          .map((item) =>
+              BudgetHistoryItem.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      recentTransactions: (json['recentTransactions'] as List)
+          .map((item) => TransactionItem.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      transactionsCursor: json['transactionsCursor'] as String?,
+    );
+  }
+}
+
+class ApiResult<T> {
+  final bool isSuccess;
+  final T? data;
+  final String? errorMessage;
+
+  ApiResult.success(this.data)
+      : isSuccess = true,
+        errorMessage = null;
+
+  ApiResult.error(this.errorMessage)
+      : isSuccess = false,
+        data = null;
+}
+
+class DashboardRepository {
+  final ApiClient _apiClient;
+
+  DashboardRepository(this._apiClient);
+
+  Future<ApiResult<DashboardData>> getDashboard({
+    int budgetHistoryMonths = 1,
+    int recentTransactionsPageSize = 10,
+  }) async {
+    try {
+      final response = await _apiClient.dio.get(
+        '/api/dashboard',
+        queryParameters: {
+          'budgetHistoryMonths': budgetHistoryMonths,
+          'recentTransactionsPageSize': recentTransactionsPageSize,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data =
+            DashboardData.fromJson(response.data as Map<String, dynamic>);
+        return ApiResult.success(data);
+      } else {
+        return ApiResult.error(
+            'Failed to load dashboard: ${response.statusCode}');
+      }
+    } catch (e) {
+      return ApiResult.error('An error occurred: $e');
+    }
+  }
 }

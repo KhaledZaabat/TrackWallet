@@ -8,7 +8,9 @@ using Expense_Tracker.Application.Features.UpdateTransaction;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Transaction;
 using Expense_Tracker.Contracts.Requests.Transacations;
+using Expense_Tracker.Domain.CategoryFolder;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.TransactionFolder.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,34 +24,60 @@ namespace Expense_Tracker.App.Controllers;
 public class FamilyTransactionsController(ISender sender, IFamilyContext familyContext, IUserContext userContext) : ControllerBase
 {
     /// <summary>
-    /// Retrieves paginated transactions for the authenticated user's family.
+    /// Retrieves paginated transactions for the authenticated user's family with optional filters.
     /// </summary>
     /// <param name="pageSize">Number of items per page (default: 20, max: 50).</param>
     /// <param name="cursor">Cursor for pagination to retrieve the next page of results.</param>
+    /// <param name="transactionType">Filter by transaction type (Income or Expense).</param>
+    /// <param name="categoryType">Filter by category type (e.g., Groceries, Rent, etc.).</param>
+    /// <param name="minAmount">Filter transactions with amount greater than or equal to this value.</param>
+    /// <param name="maxAmount">Filter transactions with amount less than or equal to this value.</param>
+    /// <param name="creatorId">Filter transactions created by a specific user.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="CursorPagedResponse{T}"/> containing a paginated list of <see cref="TransactionItem"/>.</returns>
     /// <response code="200">Transactions retrieved successfully.</response>
-    /// <response code="400">Invalid request parameters (e.g., page size exceeds maximum).</response>
+    /// <response code="400">Invalid request parameters (e.g., page size exceeds maximum, invalid filters).</response>
     /// <response code="401">User is not authenticated or family context is missing.</response>
     [HttpGet]
     [ProducesResponseType(typeof(CursorPagedResponse<TransactionItem>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [EndpointSummary("Gets paginated family transactions.")]
-    [EndpointDescription("Returns a cursor-paginated list of transactions for the authenticated user's family, ordered by transaction date descending.")]
+    [EndpointSummary("Gets paginated family transactions with filters.")]
+    [EndpointDescription("Returns a cursor-paginated list of transactions for the authenticated user's family, with optional filters for type, category, amount range, and creator. Results are ordered by transaction date descending.")]
     [EndpointName("GetFamilyTransactions")]
     [RequireFamily]
     public async Task<ActionResult<CursorPagedResponse<TransactionItem>>> GetTransactions(
         [FromQuery] int pageSize = 20,
         [FromQuery] string? cursor = null,
+        [FromQuery] TransactionType? transactionType = null,
+        [FromQuery] CategoryType? categoryType = null,
+        [FromQuery] decimal? minAmount = null,
+        [FromQuery] decimal? maxAmount = null,
+        [FromQuery] Guid? creatorId = null,
         CancellationToken cancellationToken = default)
     {
+        // Validate amount range
+        if (minAmount.HasValue && maxAmount.HasValue && minAmount.Value > maxAmount.Value)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid Amount Range",
+                Detail = "Minimum amount cannot be greater than maximum amount.",
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+
         Guid familyId = familyContext.FamilyId!.Value;
 
         var query = new GetFamilyTransactionsQuery(
             FamilyId: familyId,
             PageSize: pageSize,
-            Cursor: cursor
+            Cursor: cursor,
+            TransactionType: transactionType,
+            CategoryType: categoryType,
+            MinAmount: minAmount,
+            MaxAmount: maxAmount,
+            CreatorId: creatorId
         );
 
         Result<CursorPagedResponse<TransactionItem>> result =
