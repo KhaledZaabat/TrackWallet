@@ -1,9 +1,11 @@
 ﻿using Asp.Versioning;
+using Expense_Tracker.App.Filters;
 using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.Family.Commands.CreateFamily;
 using Expense_Tracker.Application.Features.Family.Commands.SelectFamily;
 using Expense_Tracker.Application.Features.Family.Queries.GetMyFamiliesWithUsers;
 using Expense_Tracker.Application.Features.Family.Queries.GetUserFamilies;
+using Expense_Tracker.Application.Features.GetFamilyUsers;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Family;
 using Expense_Tracker.Contracts.Requests.Family;
@@ -138,6 +140,29 @@ public class FamiliesController(ISender sender, IUserContext userContext) : Cont
 
         Result<FamilyWithMembersResponse> result =
             await sender.Send(query, cancellationToken);
+
+        return result.ToActionResult(HttpContext);
+    }
+
+
+    /// <summary>
+    /// Retrieves users of the currently selected family (id + name only).
+    /// </summary>
+    [HttpGet("users")]
+    [ProducesResponseType(typeof(List<FamilyUserSimpleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [EndpointSummary("Gets family users.")]
+    [EndpointDescription("Returns a list of users belonging to the currently selected family. Only user id and full name are returned.")]
+    [RequireFamily]
+
+    public async Task<ActionResult<List<FamilyUserSimpleResponse>>> GetFamilyUsers(
+        CancellationToken cancellationToken)
+    {
+
+        var query = new GetFamilyUsersQuery();
+
+        var result = await sender.Send(query, cancellationToken);
 
         return result.ToActionResult(HttpContext);
     }
