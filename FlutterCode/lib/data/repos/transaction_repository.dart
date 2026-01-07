@@ -8,21 +8,27 @@ class TransactionRepository {
 
   TransactionRepository(this._apiClient);
 
-  /// Get paginated transactions for current family
+  /// Get paginated transactions for current family with optional filters
   Future<TransactionResult> getTransactions({
     int pageSize = 20,
     String? cursor,
+    TransactionFilters? filters,
   }) async {
     try {
       AppLogger.info('TransactionRepository',
-          'Fetching transactions (pageSize: $pageSize, cursor: $cursor)');
+          'Fetching transactions (pageSize: $pageSize, cursor: $cursor, filters: $filters)');
+
+      // Build query parameters
+      final queryParams = {
+        'pageSize': pageSize,
+        if (cursor != null) 'cursor': cursor,
+        // Add filter parameters
+        if (filters != null) ...filters.toQueryParameters(),
+      };
 
       final response = await _apiClient.dio.get(
         '/api/transactions',
-        queryParameters: {
-          'pageSize': pageSize,
-          if (cursor != null) 'cursor': cursor,
-        },
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
@@ -51,6 +57,42 @@ class TransactionRepository {
           'TransactionRepository', 'Unexpected error fetching transactions',
           error: e, stackTrace: stackTrace);
       return TransactionResult.failure('An unexpected error occurred');
+    }
+  }
+
+  /// Get family users
+  Future<FamilyUsersResult> getFamilyUsers() async {
+    try {
+      AppLogger.info('TransactionRepository', 'Fetching family users');
+
+      final response = await _apiClient.dio.get('/api/families/users');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data as List<dynamic>;
+        final users = data.map((json) => FamilyUser.fromJson(json)).toList();
+
+        AppLogger.info(
+            'TransactionRepository', 'Loaded ${users.length} family users');
+
+        return FamilyUsersResult.success(users: users);
+      }
+
+      return FamilyUsersResult.failure('Failed to load family users');
+    } on DioException catch (e) {
+      AppLogger.error('TransactionRepository', 'Failed to fetch family users',
+          error: e);
+
+      if (e.response?.statusCode == 401) {
+        return FamilyUsersResult.failure('Authentication required');
+      } else if (e.response?.statusCode == 404) {
+        return FamilyUsersResult.failure('Family not found');
+      }
+      return FamilyUsersResult.failure('Network error. Please try again.');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+          'TransactionRepository', 'Unexpected error fetching family users',
+          error: e, stackTrace: stackTrace);
+      return FamilyUsersResult.failure('An unexpected error occurred');
     }
   }
 
@@ -113,11 +155,6 @@ class TransactionRepository {
         data: request.toJson(),
       );
 
-      AppLogger.info(
-          'TransactionRepository', 'Status Code is : ${response.statusCode}');
-
-      AppLogger.info(
-          'TransactionRepository', 'Response Is Code is : ${response}');
       if (response.statusCode == 200) {
         final transaction = TransactionItem.fromJson(response.data);
 
@@ -216,6 +253,32 @@ class TransactionResult {
 
   factory TransactionResult.failure(String message) {
     return TransactionResult._(
+      isSuccess: false,
+      errorMessage: message,
+    );
+  }
+}
+
+class FamilyUsersResult {
+  final bool isSuccess;
+  final String? errorMessage;
+  final List<FamilyUser>? users;
+
+  FamilyUsersResult._({
+    required this.isSuccess,
+    this.errorMessage,
+    this.users,
+  });
+
+  factory FamilyUsersResult.success({required List<FamilyUser> users}) {
+    return FamilyUsersResult._(
+      isSuccess: true,
+      users: users,
+    );
+  }
+
+  factory FamilyUsersResult.failure(String message) {
+    return FamilyUsersResult._(
       isSuccess: false,
       errorMessage: message,
     );

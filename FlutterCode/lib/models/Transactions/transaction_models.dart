@@ -209,3 +209,108 @@ class UpdateTransactionRequest {
         'categoryId': categoryId,
       };
 }
+
+class TransactionFilters {
+  final TransactionType? transactionType;
+  final String? categoryType;
+  final double? minAmount;
+  final double? maxAmount;
+  final String? creatorId;
+
+  const TransactionFilters({
+    this.transactionType,
+    this.categoryType,
+    this.minAmount,
+    this.maxAmount,
+    this.creatorId,
+  });
+
+  /// Check if any filters are active
+  bool get hasActiveFilters =>
+      transactionType != null ||
+      categoryType != null ||
+      minAmount != null ||
+      maxAmount != null ||
+      creatorId != null;
+
+  /// Get count of active filters
+  int get activeFilterCount {
+    int count = 0;
+    if (transactionType != null) count++;
+    if (categoryType != null) count++;
+    if (minAmount != null || maxAmount != null) count++;
+    if (creatorId != null) count++;
+    return count;
+  }
+
+  /// Create empty filters
+  factory TransactionFilters.empty() {
+    return const TransactionFilters();
+  }
+
+  /// Copy with method
+  TransactionFilters copyWith({
+    TransactionType? Function()? transactionType,
+    String? Function()? categoryType,
+    double? Function()? minAmount,
+    double? Function()? maxAmount,
+    String? Function()? creatorId,
+  }) {
+    return TransactionFilters(
+      transactionType:
+          transactionType != null ? transactionType() : this.transactionType,
+      categoryType: categoryType != null ? categoryType() : this.categoryType,
+      minAmount: minAmount != null ? minAmount() : this.minAmount,
+      maxAmount: maxAmount != null ? maxAmount() : this.maxAmount,
+      creatorId: creatorId != null ? creatorId() : this.creatorId,
+    );
+  }
+
+  /// Convert to query parameters for API
+  Map<String, dynamic> toQueryParameters() {
+    final Map<String, dynamic> params = {};
+
+    if (transactionType != null) {
+      params['transactionType'] = transactionType!.name;
+    }
+    if (categoryType != null) {
+      params['categoryType'] = categoryType;
+    }
+    if (minAmount != null) {
+      params['minAmount'] = minAmount;
+    }
+    if (maxAmount != null) {
+      params['maxAmount'] = maxAmount;
+    }
+    if (creatorId != null) {
+      params['creatorId'] = creatorId;
+    }
+
+    return params;
+  }
+
+  @override
+  String toString() {
+    return 'TransactionFilters(type: $transactionType, category: $categoryType, min: $minAmount, max: $maxAmount, creator: $creatorId)';
+  }
+}
+
+/// Model for family user
+class FamilyUser {
+  final String userId;
+  final String? fullName;
+
+  const FamilyUser({
+    required this.userId,
+    this.fullName,
+  });
+
+  factory FamilyUser.fromJson(Map<String, dynamic> json) {
+    return FamilyUser(
+      userId: json['userId'] as String,
+      fullName: json['fullName'] as String?,
+    );
+  }
+
+  String get displayName => fullName ?? 'Unknown User';
+}

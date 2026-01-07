@@ -13,13 +13,22 @@ class TransactionCubit extends Cubit<TransactionState> {
   List<TransactionItem> _allTransactions = [];
   String? _currentCursor;
   bool _hasNextPage = false;
+  TransactionFilters _currentFilters = TransactionFilters.empty();
 
-  /// Load initial transactions
-  Future<void> loadTransactions({int pageSize = 20}) async {
+  /// Load initial transactions with optional filters
+  Future<void> loadTransactions({
+    int pageSize = 20,
+    TransactionFilters? filters,
+  }) async {
     emit(TransactionLoading());
 
     try {
-      final result = await _repository.getTransactions(pageSize: pageSize);
+      _currentFilters = filters ?? TransactionFilters.empty();
+
+      final result = await _repository.getTransactions(
+        pageSize: pageSize,
+        filters: _currentFilters,
+      );
 
       if (result.isSuccess && result.pagedResponse != null) {
         final response = result.pagedResponse!;
@@ -32,10 +41,11 @@ class TransactionCubit extends Cubit<TransactionState> {
           transactions: _allTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
+          currentFilters: _currentFilters,
         ));
 
         AppLogger.info('TransactionCubit',
-            'Loaded ${_allTransactions.length} transactions');
+            'Loaded ${_allTransactions.length} transactions with filters: $_currentFilters');
       } else {
         emit(TransactionError(
           message: result.errorMessage ?? 'Failed to load transactions',
@@ -46,6 +56,16 @@ class TransactionCubit extends Cubit<TransactionState> {
           error: e, stackTrace: stackTrace);
       emit(TransactionError(message: 'An unexpected error occurred'));
     }
+  }
+
+  /// Apply filters - reloads transactions from beginning
+  Future<void> applyFilters(TransactionFilters filters) async {
+    await loadTransactions(filters: filters);
+  }
+
+  /// Clear all filters
+  Future<void> clearFilters() async {
+    await loadTransactions(filters: TransactionFilters.empty());
   }
 
   /// Load more transactions (pagination)
@@ -61,6 +81,7 @@ class TransactionCubit extends Cubit<TransactionState> {
     try {
       final result = await _repository.getTransactions(
         cursor: currentState.nextCursor,
+        filters: _currentFilters,
       );
 
       if (result.isSuccess && result.pagedResponse != null) {
@@ -75,6 +96,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           isLoadingMore: false,
+          currentFilters: _currentFilters,
         ));
 
         AppLogger.info('TransactionCubit',
@@ -96,7 +118,10 @@ class TransactionCubit extends Cubit<TransactionState> {
     try {
       AppLogger.info('TransactionCubit', 'Refreshing transactions...');
 
-      final result = await _repository.getTransactions(pageSize: 20);
+      final result = await _repository.getTransactions(
+        pageSize: 20,
+        filters: _currentFilters,
+      );
 
       if (result.isSuccess && result.pagedResponse != null) {
         final response = result.pagedResponse!;
@@ -109,6 +134,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           transactions: _allTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
+          currentFilters: _currentFilters,
         ));
 
         AppLogger.info(
@@ -145,6 +171,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           transactions: _allTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
+          currentFilters: _currentFilters,
         ));
 
         AppLogger.info('TransactionCubit',
@@ -161,6 +188,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           transactions: _allTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
+          currentFilters: _currentFilters,
         ));
       }
     } catch (e, stackTrace) {
@@ -177,6 +205,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         transactions: _allTransactions,
         nextCursor: _currentCursor,
         hasNextPage: _hasNextPage,
+        currentFilters: _currentFilters,
       ));
     }
   }
@@ -214,6 +243,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           transactions: _allTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
+          currentFilters: _currentFilters,
         ));
 
         AppLogger.info(
@@ -229,6 +259,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           transactions: _allTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
+          currentFilters: _currentFilters,
         ));
       }
     } catch (e, stackTrace) {
@@ -245,6 +276,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         transactions: _allTransactions,
         nextCursor: _currentCursor,
         hasNextPage: _hasNextPage,
+        currentFilters: _currentFilters,
       ));
     }
   }
@@ -271,6 +303,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           transactions: _allTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
+          currentFilters: _currentFilters,
         ));
 
         AppLogger.info(
@@ -286,6 +319,7 @@ class TransactionCubit extends Cubit<TransactionState> {
           transactions: _allTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
+          currentFilters: _currentFilters,
         ));
       }
     } catch (e, stackTrace) {
@@ -302,6 +336,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         transactions: _allTransactions,
         nextCursor: _currentCursor,
         hasNextPage: _hasNextPage,
+        currentFilters: _currentFilters,
       ));
     }
   }
@@ -343,6 +378,7 @@ class TransactionCubit extends Cubit<TransactionState> {
     _allTransactions = [];
     _currentCursor = null;
     _hasNextPage = false;
+    _currentFilters = TransactionFilters.empty();
     emit(TransactionInitial());
   }
 }

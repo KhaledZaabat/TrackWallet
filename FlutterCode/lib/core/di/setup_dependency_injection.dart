@@ -132,8 +132,6 @@ Future<void> setupDependencyInjection() async {
   AppLogger.info('DI', 'Dependency injection setup complete!');
 }
 
-/// Initialize categories after user is authenticated
-/// Call this after successful login or on app start if user is already logged in
 Future<void> initializeCategories() async {
   try {
     AppLogger.info('DI', 'Initializing categories...');
@@ -148,6 +146,5 @@ Future<void> initializeCategories() async {
   } catch (e, stackTrace) {
     AppLogger.error('DI', 'Failed to initialize categories',
         error: e, stackTrace: stackTrace);
-    // Don't throw - allow app to continue
   }
 }

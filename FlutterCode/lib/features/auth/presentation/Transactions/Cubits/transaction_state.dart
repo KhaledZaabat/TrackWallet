@@ -4,7 +4,6 @@ abstract class TransactionState {
   const TransactionState();
 }
 
-/// Initial state
 class TransactionInitial extends TransactionState {}
 
 /// Loading transactions
@@ -15,13 +14,15 @@ class TransactionLoaded extends TransactionState {
   final List<TransactionItem> transactions;
   final String? nextCursor;
   final bool hasNextPage;
-  final bool isLoadingMore; // For pagination
+  final bool isLoadingMore;
+  final TransactionFilters currentFilters;
 
   const TransactionLoaded({
     required this.transactions,
     this.nextCursor,
     required this.hasNextPage,
     this.isLoadingMore = false,
+    this.currentFilters = const TransactionFilters(),
   });
 
   TransactionLoaded copyWith({
@@ -29,12 +30,14 @@ class TransactionLoaded extends TransactionState {
     String? nextCursor,
     bool? hasNextPage,
     bool? isLoadingMore,
+    TransactionFilters? currentFilters,
   }) {
     return TransactionLoaded(
       transactions: transactions ?? this.transactions,
       nextCursor: nextCursor ?? this.nextCursor,
       hasNextPage: hasNextPage ?? this.hasNextPage,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      currentFilters: currentFilters ?? this.currentFilters,
     );
   }
 }

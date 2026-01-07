@@ -1,5 +1,6 @@
 import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_state.dart';
+import 'package:famxpense/features/auth/presentation/Transactions/Pages/filter.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Pages/transaction_list_item.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Pages/transaction_type_button.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
@@ -74,6 +75,26 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     }
   }
 
+  Future<void> _showFilterSheet(TransactionFilters currentFilters) async {
+    final filters = await showModalBottomSheet<TransactionFilters>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => TransactionFilterSheet(
+          currentFilters: currentFilters,
+        ),
+      ),
+    );
+
+    if (filters != null && mounted) {
+      context.read<TransactionCubit>().applyFilters(filters);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,6 +107,11 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               SnackBar(
                 content: Text(_getSuccessMessage(state.operationType)),
                 backgroundColor: Colors.green.shade400,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(16),
               ),
             );
           } else if (state is TransactionOperationError) {
@@ -93,13 +119,22 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Colors.red.shade400,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(16),
               ),
             );
           }
         },
         builder: (context, state) {
           if (state is TransactionLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6C5CE7)),
+              ),
+            );
           }
 
           if (state is TransactionError) {
@@ -107,60 +142,269 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
           }
 
           if (state is TransactionLoaded) {
-            if (state.transactions.isEmpty) {
-              return _buildEmptyState();
-            }
-            return _buildTransactionsList(state);
+            return Column(
+              children: [
+                if (state.currentFilters.hasActiveFilters)
+                  _buildActiveFiltersBar(state.currentFilters),
+                Expanded(
+                  child: state.transactions.isEmpty
+                      ? _buildEmptyState(state.currentFilters.hasActiveFilters)
+                      : _buildTransactionsList(state),
+                ),
+              ],
+            );
           }
 
           return const SizedBox.shrink();
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddTransaction,
-        backgroundColor: const Color(0xFF6C5CE7),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _buildFAB(),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text('Transactions'),
+      title: const Text(
+        'Transactions',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF2D3436),
+        ),
+      ),
       centerTitle: true,
       backgroundColor: Colors.white,
       elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      actions: [
+        BlocBuilder<TransactionCubit, TransactionState>(
+          builder: (context, state) {
+            final hasFilters = state is TransactionLoaded &&
+                state.currentFilters.hasActiveFilters;
+
+            return Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.filter_list_rounded),
+                  color: hasFilters
+                      ? const Color(0xFF6C5CE7)
+                      : const Color(0xFF2D3436),
+                  onPressed: () {
+                    final currentFilters = state is TransactionLoaded
+                        ? state.currentFilters
+                        : TransactionFilters.empty();
+                    _showFilterSheet(currentFilters);
+                  },
+                ),
+                if (hasFilters)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF6C5CE7),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(width: 8),
+      ],
     );
   }
 
-  Widget _buildErrorState(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildActiveFiltersBar(TransactionFilters filters) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF6C5CE7).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF6C5CE7).withOpacity(0.3),
+        ),
+      ),
+      child: Row(
         children: [
-          Text(message),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _handleRefresh,
-            child: const Text('Retry'),
+          const Icon(
+            Icons.filter_alt_rounded,
+            color: Color(0xFF6C5CE7),
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${filters.activeFilterCount} filter${filters.activeFilterCount > 1 ? 's' : ''} active',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6C5CE7),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<TransactionCubit>().clearFilters();
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              'Clear',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF6C5CE7),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildErrorState(String message) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('No Transactions'),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _navigateToAddTransaction,
-            child: const Text('Add Transaction'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: Colors.red.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Oops! Something went wrong',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C5CE7),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: _handleRefresh,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text(
+                'Try Again',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(bool hasFilters) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              hasFilters
+                  ? Icons.filter_alt_off_rounded
+                  : Icons.receipt_long_rounded,
+              size: 80,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              hasFilters ? 'No Matching Transactions' : 'No Transactions Yet',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              hasFilters
+                  ? 'Try adjusting your filters to see more results'
+                  : 'Start tracking your expenses by adding your first transaction',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (hasFilters)
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  side: const BorderSide(color: Color(0xFF6C5CE7)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  context.read<TransactionCubit>().clearFilters();
+                },
+                icon: const Icon(
+                  Icons.clear_all_rounded,
+                  color: Color(0xFF6C5CE7),
+                ),
+                label: const Text(
+                  'Clear Filters',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6C5CE7),
+                  ),
+                ),
+              )
+            else
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6C5CE7),
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _navigateToAddTransaction,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text(
+                  'Add Transaction',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -170,13 +414,21 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
 
     return RefreshIndicator(
       onRefresh: _handleRefresh,
+      color: const Color(0xFF6C5CE7),
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
         itemCount: grouped.length + (state.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == grouped.length) {
-            return const Center(child: CircularProgressIndicator());
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6C5CE7)),
+                ),
+              ),
+            );
           }
 
           final entry = grouped.entries.elementAt(index);
@@ -190,16 +442,28 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        ...transactions.map(
-          (tx) => TransactionListItem(
-            transaction: tx,
-            onTap: () => _navigateToEditTransaction(tx),
-            onLongPress: () => _handleLongPressDelete(tx),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2D3436),
+            ),
           ),
         ),
-        const SizedBox(height: 16),
+        ...transactions.map(
+          (tx) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: TransactionListItem(
+              transaction: tx,
+              onTap: () => _navigateToEditTransaction(tx),
+              onLongPress: () => _handleLongPressDelete(tx),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -226,14 +490,29 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     return grouped;
   }
 
+  Widget _buildFAB() {
+    return FloatingActionButton.extended(
+      onPressed: _navigateToAddTransaction,
+      backgroundColor: const Color(0xFF6C5CE7),
+      icon: const Icon(Icons.add_rounded),
+      label: const Text(
+        'Add Transaction',
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+        ),
+      ),
+    );
+  }
+
   String _getSuccessMessage(TransactionOperationType type) {
     switch (type) {
       case TransactionOperationType.create:
-        return 'Transaction created';
+        return 'Transaction created successfully';
       case TransactionOperationType.update:
-        return 'Transaction updated';
+        return 'Transaction updated successfully';
       case TransactionOperationType.delete:
-        return 'Transaction deleted';
+        return 'Transaction deleted successfully';
     }
   }
 }
