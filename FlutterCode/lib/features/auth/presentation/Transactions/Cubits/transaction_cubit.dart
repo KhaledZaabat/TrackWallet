@@ -1,11 +1,15 @@
 import 'package:famxpense/core/app_logger.dart';
+import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/data/repos/transaction_repository.dart';
+import 'package:famxpense/domain/entities/category.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_state.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TransactionCubit extends Cubit<TransactionState> {
   final TransactionRepository _repository;
+  final CategoryService _categoryService = getIt<CategoryService>();
 
   TransactionCubit(this._repository) : super(TransactionInitial());
 
@@ -25,9 +29,18 @@ class TransactionCubit extends Cubit<TransactionState> {
     try {
       _currentFilters = filters ?? TransactionFilters.empty();
 
+      // Only send type filter to API, handle category filtering client-side
+      final apiFilters = TransactionFilters(
+        transactionType: _currentFilters.transactionType,
+        minAmount: _currentFilters.minAmount,
+        maxAmount: _currentFilters.maxAmount,
+        creatorId: _currentFilters.creatorId,
+        // Don't send categoryType to API
+      );
+
       final result = await _repository.getTransactions(
         pageSize: pageSize,
-        filters: _currentFilters,
+        filters: apiFilters,
       );
 
       if (result.isSuccess && result.pagedResponse != null) {
@@ -37,15 +50,18 @@ class TransactionCubit extends Cubit<TransactionState> {
         _currentCursor = response.nextCursor;
         _hasNextPage = response.hasNextPage;
 
+        // Apply client-side category filtering
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           currentFilters: _currentFilters,
         ));
 
         AppLogger.info('TransactionCubit',
-            'Loaded ${_allTransactions.length} transactions with filters: $_currentFilters');
+            'Loaded ${filteredTransactions.length}/${_allTransactions.length} transactions with filters: $_currentFilters');
       } else {
         emit(TransactionError(
           message: result.errorMessage ?? 'Failed to load transactions',
@@ -56,6 +72,26 @@ class TransactionCubit extends Cubit<TransactionState> {
           error: e, stackTrace: stackTrace);
       emit(TransactionError(message: 'An unexpected error occurred'));
     }
+  }
+
+  /// Apply client-side filtering for category groups
+  List<TransactionItem> _applyClientSideFilters(
+      List<TransactionItem> transactions) {
+    if (_currentFilters.categoryType == null) {
+      return transactions;
+    }
+
+    final selectedGroup = _currentFilters.categoryType!;
+
+    return transactions.where((transaction) {
+      final category =
+          _categoryService.getCategoryById(transaction.category.categoryId);
+      if (category == null) return false;
+
+      final categoryGroup =
+          CategoryIconHelper.getGroupName(category.categoryType);
+      return categoryGroup == selectedGroup;
+    }).toList();
   }
 
   /// Apply filters - reloads transactions from beginning
@@ -79,9 +115,17 @@ class TransactionCubit extends Cubit<TransactionState> {
     emit(currentState.copyWith(isLoadingMore: true));
 
     try {
+      // Only send type filter to API
+      final apiFilters = TransactionFilters(
+        transactionType: _currentFilters.transactionType,
+        minAmount: _currentFilters.minAmount,
+        maxAmount: _currentFilters.maxAmount,
+        creatorId: _currentFilters.creatorId,
+      );
+
       final result = await _repository.getTransactions(
         cursor: currentState.nextCursor,
-        filters: _currentFilters,
+        filters: apiFilters,
       );
 
       if (result.isSuccess && result.pagedResponse != null) {
@@ -91,8 +135,11 @@ class TransactionCubit extends Cubit<TransactionState> {
         _currentCursor = response.nextCursor;
         _hasNextPage = response.hasNextPage;
 
+        // Apply client-side category filtering
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           isLoadingMore: false,
@@ -100,7 +147,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         ));
 
         AppLogger.info('TransactionCubit',
-            'Loaded ${response.items.length} more transactions. Total: ${_allTransactions.length}');
+            'Loaded ${response.items.length} more transactions. Total filtered: ${filteredTransactions.length}');
       } else {
         // Return to previous state on error
         emit(currentState.copyWith(isLoadingMore: false));
@@ -118,9 +165,17 @@ class TransactionCubit extends Cubit<TransactionState> {
     try {
       AppLogger.info('TransactionCubit', 'Refreshing transactions...');
 
+      // Only send type filter to API
+      final apiFilters = TransactionFilters(
+        transactionType: _currentFilters.transactionType,
+        minAmount: _currentFilters.minAmount,
+        maxAmount: _currentFilters.maxAmount,
+        creatorId: _currentFilters.creatorId,
+      );
+
       final result = await _repository.getTransactions(
         pageSize: 20,
-        filters: _currentFilters,
+        filters: apiFilters,
       );
 
       if (result.isSuccess && result.pagedResponse != null) {
@@ -130,8 +185,11 @@ class TransactionCubit extends Cubit<TransactionState> {
         _currentCursor = response.nextCursor;
         _hasNextPage = response.hasNextPage;
 
+        // Apply client-side category filtering
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           currentFilters: _currentFilters,
@@ -167,8 +225,11 @@ class TransactionCubit extends Cubit<TransactionState> {
 
         // Return to loaded state with updated list
         await Future.delayed(const Duration(milliseconds: 100));
+
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           currentFilters: _currentFilters,
@@ -184,8 +245,11 @@ class TransactionCubit extends Cubit<TransactionState> {
 
         // Return to loaded state
         await Future.delayed(const Duration(milliseconds: 100));
+
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           currentFilters: _currentFilters,
@@ -201,8 +265,11 @@ class TransactionCubit extends Cubit<TransactionState> {
       ));
 
       await Future.delayed(const Duration(milliseconds: 100));
+
+      final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
       emit(TransactionLoaded(
-        transactions: _allTransactions,
+        transactions: filteredTransactions,
         nextCursor: _currentCursor,
         hasNextPage: _hasNextPage,
         currentFilters: _currentFilters,
@@ -239,8 +306,11 @@ class TransactionCubit extends Cubit<TransactionState> {
         ));
 
         await Future.delayed(const Duration(milliseconds: 100));
+
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           currentFilters: _currentFilters,
@@ -255,8 +325,11 @@ class TransactionCubit extends Cubit<TransactionState> {
         ));
 
         await Future.delayed(const Duration(milliseconds: 100));
+
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           currentFilters: _currentFilters,
@@ -272,8 +345,11 @@ class TransactionCubit extends Cubit<TransactionState> {
       ));
 
       await Future.delayed(const Duration(milliseconds: 100));
+
+      final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
       emit(TransactionLoaded(
-        transactions: _allTransactions,
+        transactions: filteredTransactions,
         nextCursor: _currentCursor,
         hasNextPage: _hasNextPage,
         currentFilters: _currentFilters,
@@ -299,8 +375,11 @@ class TransactionCubit extends Cubit<TransactionState> {
         ));
 
         await Future.delayed(const Duration(milliseconds: 100));
+
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           currentFilters: _currentFilters,
@@ -315,8 +394,11 @@ class TransactionCubit extends Cubit<TransactionState> {
         ));
 
         await Future.delayed(const Duration(milliseconds: 100));
+
+        final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
         emit(TransactionLoaded(
-          transactions: _allTransactions,
+          transactions: filteredTransactions,
           nextCursor: _currentCursor,
           hasNextPage: _hasNextPage,
           currentFilters: _currentFilters,
@@ -332,8 +414,11 @@ class TransactionCubit extends Cubit<TransactionState> {
       ));
 
       await Future.delayed(const Duration(milliseconds: 100));
+
+      final filteredTransactions = _applyClientSideFilters(_allTransactions);
+
       emit(TransactionLoaded(
-        transactions: _allTransactions,
+        transactions: filteredTransactions,
         nextCursor: _currentCursor,
         hasNextPage: _hasNextPage,
         currentFilters: _currentFilters,

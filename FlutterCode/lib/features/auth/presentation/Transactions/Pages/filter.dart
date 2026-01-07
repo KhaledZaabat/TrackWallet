@@ -25,7 +25,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
 
   // Filter state
   TransactionType? _selectedType;
-  String? _selectedCategoryType;
+  String? _selectedCategoryGroup; // Changed from _selectedCategoryType
   double? _minAmount;
   double? _maxAmount;
   String? _selectedCreatorId;
@@ -63,7 +63,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
 
   void _initializeFilters() {
     _selectedType = widget.currentFilters.transactionType;
-    _selectedCategoryType = widget.currentFilters.categoryType;
+    _selectedCategoryGroup = widget.currentFilters.categoryType;
     _minAmount = widget.currentFilters.minAmount;
     _maxAmount = widget.currentFilters.maxAmount;
     _selectedCreatorId = widget.currentFilters.creatorId;
@@ -107,7 +107,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
   void _applyFilters() {
     final filters = TransactionFilters(
       transactionType: _selectedType,
-      categoryType: _selectedCategoryType,
+      categoryType: _selectedCategoryGroup,
       minAmount: _minAmount,
       maxAmount: _maxAmount,
       creatorId: _selectedCreatorId,
@@ -119,7 +119,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
   void _clearAllFilters() {
     setState(() {
       _selectedType = null;
-      _selectedCategoryType = null;
+      _selectedCategoryGroup = null;
       _minAmount = null;
       _maxAmount = null;
       _selectedCreatorId = null;
@@ -131,7 +131,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
   int get _activeFilterCount {
     int count = 0;
     if (_selectedType != null) count++;
-    if (_selectedCategoryType != null) count++;
+    if (_selectedCategoryGroup != null) count++;
     if (_minAmount != null || _maxAmount != null) count++;
     if (_selectedCreatorId != null) count++;
     return count;
@@ -277,20 +277,14 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
   }
 
   Widget _buildCategoryFilter() {
-    final categories = _categoryService.getAllCategories();
-    final groupedCategories = <String, List<CategoryData>>{};
-
-    // Group categories
-    for (final category in categories) {
-      final groupName = CategoryIconHelper.getGroupName(category.categoryType);
-      groupedCategories.putIfAbsent(groupName, () => []).add(category);
-    }
+    // Get unique category groups
+    final categoryGroups = _getCategoryGroups();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Category Type',
+          'Category Group',
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -305,22 +299,40 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             _FilterChip(
               label: 'All Categories',
               icon: Icons.category_outlined,
-              isSelected: _selectedCategoryType == null,
-              onTap: () => setState(() => _selectedCategoryType = null),
+              isSelected: _selectedCategoryGroup == null,
+              onTap: () => setState(() => _selectedCategoryGroup = null),
             ),
-            ...groupedCategories.keys.map((groupName) {
-              final firstCategory = groupedCategories[groupName]!.first;
+            ...categoryGroups.map((group) {
               return _FilterChip(
-                label: groupName,
-                icon: firstCategory.icon,
-                isSelected: _selectedCategoryType == groupName,
-                onTap: () => setState(() => _selectedCategoryType = groupName),
+                label: group.name,
+                icon: group.icon,
+                isSelected: _selectedCategoryGroup == group.name,
+                onTap: () =>
+                    setState(() => _selectedCategoryGroup = group.name),
               );
             }),
           ],
         ),
       ],
     );
+  }
+
+  List<_CategoryGroup> _getCategoryGroups() {
+    return [
+      _CategoryGroup('Food & Drinks', Icons.restaurant_rounded),
+      _CategoryGroup('Transportation', Icons.directions_car_rounded),
+      _CategoryGroup('Bills & Utilities', Icons.receipt_long_rounded),
+      _CategoryGroup('Housing', Icons.home_rounded),
+      _CategoryGroup('Shopping', Icons.shopping_bag_rounded),
+      _CategoryGroup('Entertainment', Icons.movie_rounded),
+      _CategoryGroup('Health', Icons.favorite_rounded),
+      _CategoryGroup('Education & Work', Icons.school_rounded),
+      _CategoryGroup('Finance', Icons.account_balance_rounded),
+      _CategoryGroup('Travel', Icons.flight_rounded),
+      _CategoryGroup('Family & Pets', Icons.pets_rounded),
+      _CategoryGroup('Gifts & Charity', Icons.card_giftcard_rounded),
+      _CategoryGroup('Other', Icons.more_horiz_rounded),
+    ];
   }
 
   Widget _buildAmountRangeFilter() {
@@ -654,4 +666,11 @@ class _FilterChip extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CategoryGroup {
+  final String name;
+  final IconData icon;
+
+  _CategoryGroup(this.name, this.icon);
 }

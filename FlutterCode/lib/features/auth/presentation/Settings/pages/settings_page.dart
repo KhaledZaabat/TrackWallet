@@ -2,6 +2,7 @@
 
 import 'package:famxpense/core/configs/theme/app_colors.dart';
 import 'package:famxpense/core/router/routes.dart';
+import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Settings/Cubits/settings_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Settings/Cubits/settings_state.dart';
 
@@ -80,6 +81,98 @@ class _SettingsPageState extends State<SettingsPage> {
     currentPasswordController.dispose();
     newPasswordController.dispose();
     confirmPasswordController.dispose();
+  }
+
+  Future<void> _showLogoutDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.logout_rounded,
+              color: Colors.red.shade400,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Logout',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to logout? You will need to sign in again to access your account.',
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.grey.shade700,
+            fontFamily: GoogleFonts.inter().fontFamily,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade400,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            child: const Text(
+              'Logout',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      );
+
+      // Perform logout
+      await context.read<AuthCubit>().logout();
+
+      // Close loading indicator
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
   }
 
   // ✅ Validation: Check if trying to disable both notifications
@@ -353,6 +446,20 @@ class _SettingsPageState extends State<SettingsPage> {
                                   );
                             },
                     ),
+                    const SizedBox(height: 32),
+
+                    // Account Section
+                    _sectionHeader('Account'),
+                    const SizedBox(height: 12),
+                    _buildSettingTile(
+                      icon: Icons.logout_rounded,
+                      title: 'Logout',
+                      subtitle: 'Sign out of your account',
+                      onTap: isUpdating ? null : _showLogoutDialog,
+                      iconColor: Colors.red.shade400,
+                      isDestructive: true,
+                    ),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -479,6 +586,8 @@ class _SettingsPageState extends State<SettingsPage> {
     required String title,
     required String subtitle,
     VoidCallback? onTap,
+    Color? iconColor,
+    bool isDestructive = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -497,12 +606,14 @@ class _SettingsPageState extends State<SettingsPage> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: isDestructive
+                ? Colors.red.shade50
+                : AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             icon,
-            color: AppColors.primary,
+            color: iconColor ?? AppColors.primary,
             size: 24,
           ),
         ),
@@ -512,6 +623,7 @@ class _SettingsPageState extends State<SettingsPage> {
             fontSize: 16,
             fontWeight: FontWeight.w600,
             fontFamily: GoogleFonts.inter().fontFamily,
+            color: isDestructive ? Colors.red.shade400 : null,
           ),
         ),
         subtitle: Text(
