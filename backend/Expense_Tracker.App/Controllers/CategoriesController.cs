@@ -4,14 +4,12 @@ using Expense_Tracker.Application.Features.Categories.Queries.GetCategories;
 using Expense_Tracker.Contracts.Reponses.Category;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Expense_Tracker.App.Controllers;
 
 [ApiController]
 [Route("api/categories")]
-[Authorize]
 [ApiVersion("1.0")]
 public class CategoriesController(ISender sender) : ControllerBase
 {

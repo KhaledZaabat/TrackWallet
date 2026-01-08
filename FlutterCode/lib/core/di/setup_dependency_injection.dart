@@ -4,6 +4,7 @@ import 'package:famxpense/core/Network/ApiClient.dart';
 import 'package:famxpense/core/app_logger.dart';
 import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/core/services/device_manager.dart';
+import 'package:famxpense/core/services/google_sign_in_service.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/data/repos/auth_repository.dart';
 import 'package:famxpense/data/repos/dashboard_repo.dart';
@@ -63,14 +64,17 @@ Future<void> setupDependencyInjection() async {
   // Start listening to FCM token refresh
   getIt<DeviceManager>().listenToFcmTokenRefresh();
 
+  // Google Sign-In Service (Singleton)
+  getIt.registerLazySingleton<GoogleSignInService>(
+    () => GoogleSignInService.production(),
+  );
+  AppLogger.info('DI', 'Google Sign-In service registered');
+
   // ========== Category Service (Singleton) ==========
   // This loads categories on app start
   getIt.registerLazySingleton<CategoryService>(
     () => CategoryService(getIt<ApiClient>()),
   );
-
-  // NOTE: Categories will be initialized after authentication
-  // See main.dart for initialization logic
 
   // ========== Repositories ==========
 
@@ -105,8 +109,12 @@ Future<void> setupDependencyInjection() async {
   // ========== Cubits ==========
 
   // Auth Cubit - Singleton (shared across app)
+  // Updated to include GoogleSignInService
   getIt.registerLazySingleton<AuthCubit>(
-    () => AuthCubit(getIt<AuthRepository>()),
+    () => AuthCubit(
+      getIt<AuthRepository>(),
+      getIt<GoogleSignInService>(),
+    ),
   );
 
   // Dashboard Cubit - Singleton (shared state)

@@ -20,7 +20,7 @@ namespace Expense_Tracker.App.Controllers;
 [ApiController]
 [Route("api/families")]
 [ApiVersion("1.0")]
-
+[Authorize]
 public class FamiliesController(ISender sender, IUserContext userContext) : ControllerBase
 {
     /// <summary>
@@ -36,7 +36,6 @@ public class FamiliesController(ISender sender, IUserContext userContext) : Cont
     [EndpointSummary("Gets all user families.")]
     [EndpointDescription("Returns a list of all families that the authenticated user is a member of.")]
     [EndpointName("GetUserFamilies")]
-    [RequireFamily]
 
     public async Task<ActionResult<List<FamilyResponse>>> GetUserFamilies(CancellationToken cancellationToken)
     {

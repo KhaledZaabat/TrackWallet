@@ -49,7 +49,6 @@ public sealed class UserController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [Authorize]
     public async Task<IActionResult> UpdatePassword(
         [FromBody] UpdatePasswordRequest request,
         CancellationToken cancellationToken)

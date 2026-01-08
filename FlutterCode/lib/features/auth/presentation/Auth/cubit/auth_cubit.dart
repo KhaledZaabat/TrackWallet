@@ -1,29 +1,33 @@
 // features/auth/presentation/cubit/auth_cubit.dart
+import 'package:famxpense/core/app_logger.dart';
+import 'package:famxpense/core/services/google_sign_in_service.dart';
 import 'package:famxpense/data/repos/auth_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
 import 'package:famxpense/models/Family/FamilyInfo.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'dart:developer' as developer;
 
 class AuthCubit extends Cubit<AuthState> {
+  static const String _tag = 'AuthCubit';
+
   final AuthRepository _authRepository;
+  final GoogleSignInService _googleSignInService;
 
-  AuthCubit(this._authRepository) : super(AuthInitial());
+  AuthCubit(
+    this._authRepository,
+    this._googleSignInService,
+  ) : super(AuthInitial());
 
+  /// Check if user is already authenticated
   Future<void> checkAuthStatus() async {
     emit(AuthChecking());
 
     try {
-      // Check if user has valid refresh token
       final isAuthenticated = await _authRepository.isAuthenticated();
 
       if (isAuthenticated) {
-        // User has valid session, try to restore their state
         final userId = await _authRepository.getCurrentUserId();
 
         if (userId != null) {
-          // Try to refresh token to get latest user data
-
           final refreshResult = await _authRepository.refreshToken();
 
           if (refreshResult.isSuccess && refreshResult.data != null) {
@@ -45,13 +49,19 @@ class AuthCubit extends Cubit<AuthState> {
             ));
             return;
           } else {
-            developer.log('❌ Token refresh failed', name: 'AuthCubit');
+            AppLogger.info(_tag, 'Token refresh failed');
           }
         }
       }
 
       emit(AuthUnauthenticated());
     } catch (e, stackTrace) {
+      AppLogger.error(
+        _tag,
+        'Auth status check failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
       emit(AuthUnauthenticated());
     }
   }
@@ -71,65 +81,62 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (result.isSuccess && result.data != null) {
         final data = result.data!;
-        emit(AuthAuthenticated(
-          userId: data.userId,
-          email: data.email,
-          fullName: data.fullName,
-          profileImageUrl: data.profileImageUrl,
-          families: data.families
-              .map((f) => FamilyInfo(
-                    id: f.id,
-                    name: f.name,
-                    currentBudget: f.currentBudget,
-                    familyBio: f.familyBio,
-                  ))
-              .toList(),
-        ));
+        _emitAuthenticatedState(data);
       } else {
-        emit(AuthError(result.errorMessage ?? 'Login failed'));
-        // Return to unauthenticated after showing error
-        await Future.delayed(const Duration(milliseconds: 100));
-        emit(AuthUnauthenticated());
+        _emitErrorAndReset(result.errorMessage ?? 'Login failed');
       }
-    } catch (e) {
-      emit(AuthError('An unexpected error occurred'));
-      await Future.delayed(const Duration(milliseconds: 100));
-      emit(AuthUnauthenticated());
+    } catch (e, stackTrace) {
+      AppLogger.error(_tag, 'Login failed', error: e, stackTrace: stackTrace);
+      _emitErrorAndReset('An unexpected error occurred');
     }
   }
 
   /// Login with Google
-  Future<void> loginWithGoogle(String idToken) async {
+  Future<void> loginWithGoogle() async {
     emit(AuthLoading());
 
     try {
+      AppLogger.info(_tag, 'Starting Google Sign-In flow');
+
+      // Get ID token from Google
+      final idToken = await _googleSignInService.signIn();
+
+      if (idToken == null) {
+        // User cancelled the sign-in
+        AppLogger.info(_tag, 'Google Sign-In cancelled by user');
+        emit(AuthUnauthenticated());
+        return;
+      }
+
+      // Authenticate with backend
+      AppLogger.info(_tag, 'Authenticating with backend');
       final result = await _authRepository.loginWithGoogle(idToken);
 
       if (result.isSuccess && result.data != null) {
         final data = result.data!;
-        emit(AuthAuthenticated(
-          userId: data.userId,
-          email: data.email,
-          fullName: data.fullName,
-          profileImageUrl: data.profileImageUrl,
-          families: data.families
-              .map((f) => FamilyInfo(
-                    id: f.id,
-                    name: f.name,
-                    currentBudget: f.currentBudget,
-                    familyBio: f.familyBio,
-                  ))
-              .toList(),
-        ));
+        AppLogger.info(_tag, 'Google login successful for user: ${data.email}');
+        _emitAuthenticatedState(data);
       } else {
-        emit(AuthError(result.errorMessage ?? 'Google login failed'));
-        await Future.delayed(const Duration(milliseconds: 100));
-        emit(AuthUnauthenticated());
+        AppLogger.error(
+            _tag, 'Backend authentication failed: ${result.errorMessage}');
+        _emitErrorAndReset(result.errorMessage ?? 'Google login failed');
       }
-    } catch (e) {
-      emit(AuthError('An unexpected error occurred'));
-      await Future.delayed(const Duration(milliseconds: 100));
-      emit(AuthUnauthenticated());
+    } on GoogleSignInException catch (e, stackTrace) {
+      AppLogger.error(
+        _tag,
+        'Google Sign-In exception',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _emitErrorAndReset('Failed to sign in with Google. Please try again.');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        _tag,
+        'Unexpected error during Google login',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _emitErrorAndReset('An unexpected error occurred');
     }
   }
 
@@ -138,11 +145,52 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
 
     try {
+      // Logout from backend
       await _authRepository.logout();
+
+      // Disconnect Google account if signed in
+      if (await _googleSignInService.isSignedIn()) {
+        await _googleSignInService.disconnect();
+      }
+
       emit(AuthUnauthenticated());
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error(_tag, 'Logout error', error: e, stackTrace: stackTrace);
       // Still logout locally even if API fails
       emit(AuthUnauthenticated());
     }
+  }
+
+  /// Helper: Emit authenticated state
+  void _emitAuthenticatedState(dynamic data) {
+    // data.families is already List<FamilyInfo> from the repository
+    final List<FamilyInfo> families = data.families is List<FamilyInfo>
+        ? data.families
+        : (data.families as List?)
+                ?.map((f) => f is FamilyInfo
+                    ? f
+                    : FamilyInfo(
+                        id: f.id,
+                        name: f.name,
+                        currentBudget: f.currentBudget,
+                        familyBio: f.familyBio,
+                      ))
+                .toList() ??
+            [];
+
+    emit(AuthAuthenticated(
+      userId: data.userId,
+      email: data.email,
+      fullName: data.fullName,
+      profileImageUrl: data.profileImageUrl,
+      families: families,
+    ));
+  }
+
+  /// Helper: Emit error and return to unauthenticated
+  Future<void> _emitErrorAndReset(String message) async {
+    emit(AuthError(message));
+    await Future.delayed(const Duration(milliseconds: 100));
+    emit(AuthUnauthenticated());
   }
 }
