@@ -107,6 +107,10 @@ class LocalStorage {
     return await _secureStorage.read(key: _selectedFamilyIdKey);
   }
 
+  Future<void> clearSelectedFamilyId() async {
+    await _secureStorage.delete(key: _selectedFamilyIdKey);
+  }
+
   Future<void> setOnboardingCompleted(bool completed) async {
     await _secureStorage.write(
         key: _onboardingKey, value: completed.toString());

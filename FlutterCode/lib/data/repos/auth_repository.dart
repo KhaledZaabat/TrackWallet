@@ -270,12 +270,14 @@ class AuthRepository {
       // Clear local storage
       await _localStorage.clearAuthTokens();
       await _localStorage.clearFcmToken();
+      await _localStorage.clearSelectedFamilyId();
 
       return true;
     } catch (e) {
       // Still clear local storage even if API call fails
       await _localStorage.clearAuthTokens();
       await _localStorage.clearFcmToken();
+      await _localStorage.clearSelectedFamilyId();
       return false;
     }
   }

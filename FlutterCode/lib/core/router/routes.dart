@@ -25,4 +25,7 @@ class Routes {
 
   // Invitations Routes
   static const String invitations = '/invitations';
+
+  // MyFamily Routes
+  static const String myFamily = '/my-family';
 }

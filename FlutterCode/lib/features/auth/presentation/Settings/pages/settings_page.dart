@@ -1,7 +1,9 @@
 // presentation/settings/pages/settings_page.dart
 
 import 'package:famxpense/core/configs/theme/app_colors.dart';
+import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
+import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Settings/Cubits/settings_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Settings/Cubits/settings_state.dart';
@@ -19,9 +21,17 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  bool _isFamilySelected = true;
+
   @override
   void initState() {
     super.initState();
+    // Check if family is selected
+    getIt<LocalStorage>().getSelectedFamilyId().then((familyId) {
+      setState(() {
+        _isFamilySelected = familyId != null && familyId.isNotEmpty;
+      });
+    });
     final cubit = context.read<SettingsCubit>();
     final state = cubit.state;
 
@@ -322,7 +332,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => context.pop(),
+                          onTap: () => context.go(Routes.dashboard),
                           child: Icon(
                             Icons.arrow_back,
                             size: 24,
@@ -467,7 +477,85 @@ class _SettingsPageState extends State<SettingsPage> {
           },
         ),
       ),
+      bottomNavigationBar: _buildNavBar(),
     );
+  }
+
+  BottomNavigationBar _buildNavBar() {
+    if (_isFamilySelected) {
+      return BottomNavigationBar(
+        currentIndex: 4,
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(Routes.dashboard);
+              break;
+            case 1:
+              context.go(Routes.invitations);
+              break;
+            case 2:
+              context.go(Routes.transactions);
+              break;
+            case 3:
+              context.go(Routes.myFamily);
+              break;
+            case 4:
+              context.go(Routes.settings);
+              break;
+          }
+        },
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Invitations',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt),
+            label: 'Transactions',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'My Family',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+      );
+    } else {
+      return BottomNavigationBar(
+        currentIndex: 1,
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(Routes.selectFamily);
+              break;
+            case 1:
+              context.go(Routes.invitations);
+              break;
+          }
+        },
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Families',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Invitations',
+          ),
+        ],
+      );
+    }
   }
 
   Widget _buildUserInfoCard(user) {

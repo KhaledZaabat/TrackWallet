@@ -71,7 +71,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
   /// Build the appropriate navbar based on whether family is selected
   BottomNavigationBar _buildNavBar(BuildContext context) {
     if (_isFamilySelected) {
-      // Show full 4-item navbar
+      // Show full 5-item navbar
       return BottomNavigationBar(
         currentIndex: _getCurrentNavIndex(context),
         type: BottomNavigationBarType.fixed,
@@ -90,7 +90,10 @@ class _InvitationsPageState extends State<InvitationsPage> {
               context.go(Routes.transactions);
               break;
             case 3:
-              context.go(Routes.profile);
+              context.go(Routes.myFamily);
+              break;
+            case 4:
+              context.go(Routes.settings);
               break;
           }
         },
@@ -108,13 +111,17 @@ class _InvitationsPageState extends State<InvitationsPage> {
             label: 'Transactions',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.people),
+            label: 'My Family',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
       );
     } else {
-      // Show 2-item navbar for new users without family
+      // Show 2-item navbar for users without family selected
       return BottomNavigationBar(
         currentIndex: 1, // Default to invitations
         type: BottomNavigationBarType.fixed,
@@ -134,7 +141,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
-            label: 'Select Family',
+            label: 'Families',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.mail),
@@ -151,6 +158,9 @@ class _InvitationsPageState extends State<InvitationsPage> {
       // Listener: Show snackbars for success/error feedback
       listener: (context, state) {
         if (state is InvitationsError) {
+          // Capture cubit reference before showing snackbar to avoid deactivated context
+          final cubit = context.read<InvitationsCubit>();
+          
           // Show error snackbar with retry button
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -158,8 +168,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
               duration: const Duration(seconds: 5),
               action: SnackBarAction(
                 label: 'Retry',
-                onPressed: () =>
-                    context.read<InvitationsCubit>().loadAll(),
+                onPressed: () => cubit.loadAll(),
               ),
             ),
           );
@@ -230,6 +239,29 @@ class _InvitationsPageState extends State<InvitationsPage> {
           // Capture cubit reference for use in callbacks
           final cubit = context.read<InvitationsCubit>();
 
+          // If no family selected, only show Received tab
+          if (!_isFamilySelected) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Family Invitations'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.go(Routes.dashboard),
+                ),
+              ),
+              body: ReceivedInvitationsTab(
+                invitations: state.receivedInvitations,
+                loadingInvitationId: state.loadingInvitationId,
+                onAccept: (id) =>
+                    context.read<InvitationsCubit>().acceptInvitation(id),
+                onDecline: (id) =>
+                    context.read<InvitationsCubit>().declineInvitation(id),
+              ),
+              bottomNavigationBar: _buildNavBar(context),
+            );
+          }
+
+          // Family selected: Show both tabs
           return DefaultTabController(
             length: 2,
             initialIndex: state.selectedTab,

@@ -1,4 +1,6 @@
+import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
+import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_state.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Pages/filter.dart';
@@ -19,11 +21,18 @@ class TransactionsListPage extends StatefulWidget {
 
 class _TransactionsListPageState extends State<TransactionsListPage> {
   final _scrollController = ScrollController();
+  bool _isFamilySelected = true;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // Check if family is selected
+    getIt<LocalStorage>().getSelectedFamilyId().then((familyId) {
+      setState(() {
+        _isFamilySelected = familyId != null && familyId.isNotEmpty;
+      });
+    });
   }
 
   @override
@@ -193,7 +202,85 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
         },
       ),
       floatingActionButton: _buildFAB(),
+      bottomNavigationBar: _buildNavBar(),
     );
+  }
+
+  BottomNavigationBar _buildNavBar() {
+    if (_isFamilySelected) {
+      return BottomNavigationBar(
+        currentIndex: 2,
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(Routes.dashboard);
+              break;
+            case 1:
+              context.go(Routes.invitations);
+              break;
+            case 2:
+              context.go(Routes.transactions);
+              break;
+            case 3:
+              context.go(Routes.myFamily);
+              break;
+            case 4:
+              context.go(Routes.settings);
+              break;
+          }
+        },
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Invitations',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt),
+            label: 'Transactions',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'My Family',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+      );
+    } else {
+      return BottomNavigationBar(
+        currentIndex: 1,
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(Routes.selectFamily);
+              break;
+            case 1:
+              context.go(Routes.invitations);
+              break;
+          }
+        },
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Families',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Invitations',
+          ),
+        ],
+      );
+    }
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -210,6 +297,10 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
       backgroundColor: Colors.white,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go(Routes.dashboard),
+      ),
       actions: [
         BlocBuilder<TransactionCubit, TransactionState>(
           builder: (context, state) {

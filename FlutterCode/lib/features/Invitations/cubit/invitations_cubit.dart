@@ -19,8 +19,8 @@ class InvitationsCubit extends Cubit<InvitationsState> {
   /// Load all invitations (both received and sent)
   /// 
   /// Fetches:
-  /// - Received invitations: GET /api/invitations/received
-  /// - Sent invitations: GET /api/invitations/sent
+  /// - Received invitations: GET /api/invitations/received (always)
+  /// - Sent invitations: GET /api/invitations/sent (only if family selected)
   /// 
   /// Emits: InvitationsLoading → InvitationsLoaded or InvitationsError
   Future<void> loadAll() async {
@@ -28,12 +28,23 @@ class InvitationsCubit extends Cubit<InvitationsState> {
       emit(const InvitationsLoading());
 
       final receivedResult = await _repository.getReceivedInvitations();
+      
+      // Only load sent invitations if family is selected
+      // Check if family is selected by trying to load sent invitations
       final sentResult = await _repository.getSentInvitations();
 
       if (receivedResult.isSuccess && sentResult.isSuccess) {
         emit(InvitationsLoaded(
           receivedInvitations: receivedResult.data ?? [],
           sentInvitations: sentResult.data ?? [],
+          selectedTab: 0,
+        ));
+      } else if (receivedResult.isSuccess && !sentResult.isSuccess) {
+        // If sent invitations failed (likely no family selected), 
+        // still show received invitations
+        emit(InvitationsLoaded(
+          receivedInvitations: receivedResult.data ?? [],
+          sentInvitations: [],
           selectedTab: 0,
         ));
       } else {

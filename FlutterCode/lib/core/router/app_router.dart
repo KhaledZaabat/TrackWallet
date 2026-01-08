@@ -33,6 +33,7 @@ import 'package:famxpense/features/auth/presentation/Transactions/Pages/transact
 import 'package:famxpense/models/Transactions/transaction_models.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
 import 'package:famxpense/features/Invitations/pages/invitations_page.dart';
+import 'package:famxpense/features/MyFamily/pages/my_family_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey =
@@ -188,6 +189,12 @@ class AppRouter {
               value: getIt<InvitationsCubit>(),
               child: const InvitationsPage(),
             ),
+          ),
+
+          // MyFamily Routes
+          GoRoute(
+            path: Routes.myFamily,
+            builder: (context, state) => const MyFamilyPage(),
           ),
         ],
       );

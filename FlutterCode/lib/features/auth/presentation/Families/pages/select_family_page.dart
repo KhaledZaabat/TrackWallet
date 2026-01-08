@@ -200,7 +200,7 @@ class _SelectFamilyView extends StatelessWidget {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
-            label: 'Select Family',
+            label: 'Families',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.mail),
