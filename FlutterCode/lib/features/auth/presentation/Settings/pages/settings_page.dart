@@ -179,9 +179,10 @@ class _SettingsPageState extends State<SettingsPage> {
       await context.read<AuthCubit>().logout();
 
       // Close loading indicator
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+      if (!mounted) return;
+      Navigator.of(context).pop();
+
+      context.go(Routes.login);
     }
   }
 
