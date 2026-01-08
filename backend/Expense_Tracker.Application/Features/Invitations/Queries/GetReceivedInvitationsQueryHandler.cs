@@ -16,10 +16,10 @@ public sealed class GetReceivedInvitationsQueryHandler(IAppDbContext db)
         var query =
             from i in db.Invitations
             join inviter in db.Users on i.InviterUserId equals inviter.Id
+            join invitee in db.Users on i.InviteeUserId equals invitee.Id  // ✅ Added invitee join
             join family in db.Families on i.FamilyId equals family.Id
             where i.InviteeUserId == request.UserId
-            select new { i, inviter, family };
-
+            select new { i, inviter, invitee, family };  // ✅ Added invitee to select
 
         if (request.Status.HasValue)
         {
@@ -33,15 +33,17 @@ public sealed class GetReceivedInvitationsQueryHandler(IAppDbContext db)
         var result = await query
             .OrderByDescending(x => x.i.SentAtUtc)
             .Select(x => new InvitationResponse(
-                x.i.Id,
-                x.i.InviteeUserId,
-                x.i.InviterUserId,
-                x.i.FamilyId,
-                x.i.IsParent,
-                x.i.Status,
-                x.i.SentAtUtc,
-                x.inviter.FullName,
-                x.family.Name
+                InvitationId: x.i.Id,
+                InviteeUserId: x.i.InviteeUserId,
+                InviteeEmail: x.invitee.Email,
+                InviterUserId: x.i.InviterUserId,
+                InviterEmail: x.inviter.Email,
+                FamilyId: x.i.FamilyId,
+                IsParent: x.i.IsParent,
+                Status: x.i.Status,
+                SentAtUtc: x.i.SentAtUtc,
+                InviterName: x.inviter.FullName,
+                FamilyName: x.family.Name
             ))
             .ToListAsync(cancellationToken);
 

@@ -25,35 +25,32 @@ public sealed class GetMyFamilyWithUsersQueryHandler(
 
         Guid familyId = familyContext.FamilyId.Value;
         Guid userId = userContext.UserId.Value;
-
-        var family = await db.FamilyUsers
-            .AsNoTracking()
-            .Where(fu =>
-                fu.FamilyId == familyId &&
-                fu.UserId == userId &&
-                !fu.Family.IsDeleted)
-            .Select(fu => fu.Family)
-            .Select(f => new FamilyWithMembersResponse(
-                Id: f.Id,
-                Name: f.Name,
-                CurrentBudget: f.CurrentBudget,
-                FamilyBio: f.FamilyBio,
-                Members: f.FamilyUsers
-                    .Where(mu => !mu.User.IsDeleted)
-                    .Select(mu => new FamilyUserProfileResponse(
-                        UserId: mu.User.Id,
-                        FullName: mu.User.FullName,
-                        UserName: mu.User.UserName,
-                        BirthDate: mu.User.BirthDate,
-                        IsMale: mu.User.IsMale,
-                        ProfileImageUrl: mu.User.ProfileImageFileId.HasValue
-                            ? fileUrlBuilder.GetUrl(mu.User.ProfileImageFileId.Value)
-                            : null,
-                        IsParent: mu.IsParent
-                    ))
-                    .ToList()
-            ))
-            .FirstOrDefaultAsync(ct);
+        var family = await (
+                 from f in db.Families
+                 where f.Id == familyId && !f.IsDeleted
+                 select new FamilyWithMembersResponse(
+                     Id: f.Id,
+                     Name: f.Name,
+                     CurrentBudget: f.CurrentBudget,
+                     FamilyBio: f.FamilyBio,
+                     Members: (
+                         from fu in db.FamilyUsers
+                         join u in db.Users on fu.UserId equals u.Id
+                         where fu.FamilyId == f.Id && !u.IsDeleted
+                         select new FamilyUserProfileResponse(
+                             UserId: u.Id,
+                             FullName: u.FullName,
+                             UserName: u.UserName,
+                             BirthDate: u.BirthDate,
+                             IsMale: u.IsMale,
+                             ProfileImageUrl: u.ProfileImageFileId.HasValue
+                                 ? fileUrlBuilder.GetUrl(u.ProfileImageFileId.Value)
+                                 : null,
+                             IsParent: fu.IsParent
+                         )
+                     ).ToList()
+                 )
+             ).FirstOrDefaultAsync(ct);
 
         if (family is null)
             return Result.Failure<FamilyWithMembersResponse>(
