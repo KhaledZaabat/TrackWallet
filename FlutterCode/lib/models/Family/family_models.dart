@@ -1,4 +1,92 @@
 import 'package:famxpense/models/Transactions/transaction_models.dart';
+import 'package:equatable/equatable.dart';
+
+// ========== MyFamily Page Models ==========
+
+/// Represents a single family member with detailed profile information
+/// Used in the MyFamily page to display all family members
+class FamilyMember extends Equatable {
+  final String userId;
+  final String fullName;
+  final String? userName;
+  final DateTime? birthDate;
+  final bool? isMale;
+  final String? profileImageUrl;
+  final bool isParent;
+
+  const FamilyMember({
+    required this.userId,
+    required this.fullName,
+    this.userName,
+    this.birthDate,
+    this.isMale,
+    this.profileImageUrl,
+    required this.isParent,
+  });
+
+  /// Create FamilyMember from API JSON response
+  factory FamilyMember.fromJson(Map<String, dynamic> json) {
+    return FamilyMember(
+      userId: json['userId'] as String,
+      fullName: json['fullName'] as String,
+      userName: json['userName'] as String?,
+      birthDate: json['birthDate'] != null
+          ? DateTime.parse(json['birthDate'] as String)
+          : null,
+      isMale: json['isMale'] as bool?,
+      profileImageUrl: json['profileImageUrl'] as String?,
+      isParent: json['isParent'] as bool? ?? false,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    userId,
+    fullName,
+    userName,
+    birthDate,
+    isMale,
+    profileImageUrl,
+    isParent,
+  ];
+}
+
+/// Represents the complete family details including all members
+/// Used in the MyFamily page to display family info and member list
+class FamilyDetails extends Equatable {
+  final String id;
+  final String name;
+  final double currentBudget;
+  final String? familyBio;
+  final List<FamilyMember> members;
+
+  const FamilyDetails({
+    required this.id,
+    required this.name,
+    required this.currentBudget,
+    this.familyBio,
+    required this.members,
+  });
+
+  /// Create FamilyDetails from API JSON response (/api/families/me)
+  factory FamilyDetails.fromJson(Map<String, dynamic> json) {
+    return FamilyDetails(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      currentBudget: (json['currentBudget'] as num).toDouble(),
+      familyBio: json['familyBio'] as String?,
+      members: (json['members'] as List?)
+          ?.map((m) => FamilyMember.fromJson(m as Map<String, dynamic>))
+          .toList() ??
+          [],
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, name, currentBudget, familyBio, members];
+}
+
+// ========== Existing Models ==========
 
 class FamilyListResult {
   final bool isSuccess;
