@@ -58,7 +58,6 @@ class AppRouter {
 
           final requiresFamilySelection = currentPath.startsWith(Routes.dashboard) ||
               currentPath.startsWith(Routes.transactions) ||
-              currentPath.startsWith(Routes.invitations) ||
               currentPath.startsWith(Routes.settings) ||
               currentPath.startsWith(Routes.myFamily) ||
               currentPath.startsWith(Routes.profile);

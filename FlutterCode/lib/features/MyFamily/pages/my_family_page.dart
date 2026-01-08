@@ -19,24 +19,30 @@ import 'package:famxpense/features/MyFamily/widgets/members_list.dart';
 /// - Error handling with retry button
 /// - Conditional navbar based on family selection (2-item vs 5-item)
 ///
-/// State Management:
-/// - MyFamilyInitial: Initial state before loading
-/// - MyFamilyLoading: Loading state during API call
-/// - MyFamilyLoaded: Success state with FamilyDetails
-/// - MyFamilyError: Error state with message
-///
 /// Usage:
 /// - Place in routes as '/my-family' route
 /// - Accessible only after family selection (protected by route guard)
 /// - Automatically loads data on page open (via initState)
-class MyFamilyPage extends StatefulWidget {
+class MyFamilyPage extends StatelessWidget {
   const MyFamilyPage({super.key});
 
   @override
-  State<MyFamilyPage> createState() => _MyFamilyPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider.value(
+      value: getIt<MyFamilyCubit>(),
+      child: const _MyFamilyView(),
+    );
+  }
 }
 
-class _MyFamilyPageState extends State<MyFamilyPage> {
+class _MyFamilyView extends StatefulWidget {
+  const _MyFamilyView();
+
+  @override
+  State<_MyFamilyView> createState() => _MyFamilyViewState();
+}
+
+class _MyFamilyViewState extends State<_MyFamilyView> {
   bool _isFamilySelected = true; // Default to true, will check on init
 
   @override
