@@ -9,5 +9,7 @@ public sealed record InvitationResponse(
     Guid FamilyId,
     bool IsParent,
     InvitationStatus Status,
-    DateTimeOffset SentAtUtc
+    DateTimeOffset SentAtUtc,
+    string InviterName,
+    string FamilyName
 );

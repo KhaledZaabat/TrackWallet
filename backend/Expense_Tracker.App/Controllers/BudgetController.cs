@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using Expense_Tracker.App.Filters;
 using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.FamiliyHistoryBudget.Queries;
 using Expense_Tracker.Application.Interfaces;
@@ -33,6 +34,7 @@ public sealed class BudgetController(ISender sender, IFamilyContext familyContex
     [EndpointSummary("Retrieves family budget history.")]
     [EndpointDescription("Returns monthly budget data including planned amounts, actual spending, and variance for each category. Family context is extracted from JWT token.")]
     [EndpointName("GetBudgetHistory")]
+    [RequireFamily]
     public async Task<ActionResult<List<BudgetHistoryItem>>> GetBudgetHistory(
         [FromQuery] int months = 1,
         CancellationToken cancellationToken = default)

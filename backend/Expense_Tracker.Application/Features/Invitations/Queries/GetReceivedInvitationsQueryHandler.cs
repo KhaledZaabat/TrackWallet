@@ -1,7 +1,6 @@
 ﻿using Expense_Tracker.Contracts.Reponses.Inv;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.Invitation.Enums;
-using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,25 +13,38 @@ public sealed class GetReceivedInvitationsQueryHandler(IAppDbContext db)
         GetReceivedInvitationsQuery request,
         CancellationToken cancellationToken)
     {
-        var query = db.Invitations
-            .Include(i => i.Family)
-            .Where(i => i.InviteeUserId == request.UserId);
+        var query =
+            from i in db.Invitations
+            join inviter in db.Users on i.InviterUserId equals inviter.Id
+            join family in db.Families on i.FamilyId equals family.Id
+            where i.InviteeUserId == request.UserId
+            select new { i, inviter, family };
 
-        // Apply status filter if provided, otherwise default to Pending
+
         if (request.Status.HasValue)
         {
-            query = query.Where(i => i.Status == request.Status.Value);
+            query = query.Where(x => x.i.Status == request.Status.Value);
         }
         else
         {
-            query = query.Where(i => i.Status == InvitationStatus.Pending);
+            query = query.Where(x => x.i.Status == InvitationStatus.Pending);
         }
 
-        var invitations = await query
-            .OrderByDescending(i => i.SentAtUtc)
+        var result = await query
+            .OrderByDescending(x => x.i.SentAtUtc)
+            .Select(x => new InvitationResponse(
+                x.i.Id,
+                x.i.InviteeUserId,
+                x.i.InviterUserId,
+                x.i.FamilyId,
+                x.i.IsParent,
+                x.i.Status,
+                x.i.SentAtUtc,
+                x.inviter.FullName,
+                x.family.Name
+            ))
             .ToListAsync(cancellationToken);
 
-        var response = invitations.Adapt<List<InvitationResponse>>();
-        return Result.Success(response);
+        return Result.Success(result);
     }
 }

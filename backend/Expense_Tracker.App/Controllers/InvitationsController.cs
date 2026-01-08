@@ -88,6 +88,7 @@ public class InvitationsController(ISender sender, IFamilyContext familyContext,
     [EndpointSummary("Accepts a family invitation.")]
     [EndpointDescription("Accepts a pending invitation and adds the user to the family. Family parents receive an FCM notification about the new member.")]
     [EndpointName("AcceptInvitation")]
+    [Authorize]
     public async Task<IActionResult> AcceptInvitation(
         [FromRoute] Guid invitationId,
         CancellationToken cancellationToken)
@@ -124,6 +125,7 @@ public class InvitationsController(ISender sender, IFamilyContext familyContext,
     [EndpointSummary("Declines a family invitation.")]
     [EndpointDescription("Declines a pending invitation. Only parents can perform this action. The inviter receives an FCM notification about the declined invitation.")]
     [EndpointName("DeclineInvitation")]
+    [Authorize]
     public async Task<IActionResult> DeclineInvitation(
         [FromRoute] Guid invitationId,
         CancellationToken cancellationToken)
@@ -150,6 +152,7 @@ public class InvitationsController(ISender sender, IFamilyContext familyContext,
     [EndpointSummary("Gets received invitations.")]
     [EndpointDescription("Returns a list of invitations received by the authenticated user, optionally filtered by status.")]
     [EndpointName("GetReceivedInvitations")]
+    [Authorize]
     public async Task<ActionResult<List<InvitationResponse>>> GetReceivedInvitations(
         [FromQuery] InvitationStatus? status,
         CancellationToken cancellationToken)
@@ -175,6 +178,7 @@ public class InvitationsController(ISender sender, IFamilyContext familyContext,
     [EndpointSummary("Gets sent invitations.")]
     [EndpointDescription("Returns a list of invitations sent from the current family, optionally filtered by status.")]
     [EndpointName("GetSentInvitations")]
+    [RequireFamily]
     public async Task<ActionResult<List<InvitationResponse>>> GetSentInvitations(
         [FromQuery] InvitationStatus? status,
         CancellationToken cancellationToken)

@@ -1,14 +1,12 @@
 ﻿using Expense_Tracker.Application.Interfaces;
 using Hangfire;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Infrastructure.Services;
 
 public sealed class NotificationService(
-    IEmailSender emailSender,
-    IAppDbContext db,
-    IUserContext userContext) : INotificationService
+    IEmailSender emailSender
+    ) : INotificationService
 {
     public async Task SendEmailAsync(
         string to,
@@ -16,22 +14,6 @@ public sealed class NotificationService(
         string htmlBody,
         CancellationToken cancellationToken = default)
     {
-        if (!userContext.UserId.HasValue)
-        {
-            BackgroundJob.Enqueue<NotificationService>(x =>
-                x.SendEmailNowAsync(to, subject, htmlBody));
-            return;
-        }
-
-        bool shouldSend = await db.Users
-            .Where(u => u.Id == userContext.UserId.Value)
-            .Select(u => u.NotificationPreferences!.EmailNotifications)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (!shouldSend)
-        {
-            return;
-        }
 
 
         BackgroundJob.Enqueue<NotificationService>(x =>

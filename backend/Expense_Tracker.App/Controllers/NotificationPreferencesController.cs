@@ -32,6 +32,7 @@ public class NotificationPreferencesController(ISender sender, IUserContext user
     [EndpointSummary("Updates notification preferences.")]
     [EndpointDescription("Updates the user's email and push notification preferences. Changes take effect immediately.")]
     [EndpointName("UpdateNotificationPreferences")]
+    [Authorize]
     public async Task<IActionResult> UpdatePreferences(
         [FromBody] UpdateNotificationPreferencesRequest request,
         CancellationToken cancellationToken)

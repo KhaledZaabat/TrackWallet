@@ -49,6 +49,7 @@ public sealed class UserController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [Authorize]
     public async Task<IActionResult> UpdatePassword(
         [FromBody] UpdatePasswordRequest request,
         CancellationToken cancellationToken)
@@ -82,6 +83,7 @@ public sealed class UserController(ISender sender) : ControllerBase
     [EndpointSummary("Gets user profile.")]
     [EndpointDescription("Returns the authenticated user's complete profile information including name, email, avatar, and notification preferences.")]
     [EndpointName("GetUserProfile")]
+    [Authorize]
     public async Task<ActionResult<UserProfileResponse>> GetProfile(CancellationToken ct)
     {
         var query = new GetProfileQuery();
@@ -112,6 +114,7 @@ public sealed class UserController(ISender sender) : ControllerBase
     [EndpointSummary("Updates user profile.")]
     [EndpointDescription("Updates the user's profile information including name, bio, and optional avatar image. Accepts multipart/form-data for file uploads.")]
     [EndpointName("UpdateUserProfile")]
+    [Authorize]
     public async Task<IActionResult> UpdateProfile(
         [FromForm] UpdateProfileCommand command,
         CancellationToken ct)

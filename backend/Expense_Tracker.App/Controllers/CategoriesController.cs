@@ -1,5 +1,4 @@
 ﻿using Asp.Versioning;
-using Expense_Tracker.App.Filters;
 using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.Categories.Queries.GetCategories;
 using Expense_Tracker.Contracts.Reponses.Category;
@@ -29,7 +28,6 @@ public class CategoriesController(ISender sender) : ControllerBase
     [EndpointSummary("Gets all  categories for transactions .")]
     [EndpointDescription("Returns a complete list of budget categories available for the authenticated user's family.")]
     [EndpointName("GetCategories")]
-    [RequireFamily]
     public async Task<ActionResult<List<CategoryResponse>>> GetCategories(
         CancellationToken cancellationToken)
     {

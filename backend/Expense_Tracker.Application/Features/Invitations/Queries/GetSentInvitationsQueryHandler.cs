@@ -1,7 +1,6 @@
 ﻿using Expense_Tracker.Contracts.Reponses.Inv;
 using Expense_Tracker.Domain.Common.ResultPattern.Error;
 using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +13,7 @@ public sealed class GetSentInvitationsQueryHandler(IAppDbContext db)
         GetSentInvitationsQuery request,
         CancellationToken cancellationToken)
     {
-        // 1. Verify user is a parent member of the family
+        // 1. Verify parent
         bool isParent = await db.FamilyUsers
             .AnyAsync(fu =>
                 fu.FamilyId == request.FamilyId &&
@@ -26,22 +25,34 @@ public sealed class GetSentInvitationsQueryHandler(IAppDbContext db)
             return Result.Failure<List<InvitationResponse>>(
                 DomainError.Forbidden("Only parent members can view sent invitations."));
 
-        // 2. Get invitations sent from this family
-        var query = db.Invitations
-            .Include(i => i.Family)
-            .Where(i => i.FamilyId == request.FamilyId);
+        // 2. Query
+        var query =
+            from i in db.Invitations
+            join inviter in db.Users on i.InviterUserId equals inviter.Id
+            join family in db.Families on i.FamilyId equals family.Id
+            where i.FamilyId == request.FamilyId
+            select new { i, inviter, family };
 
-        // Apply status filter if provided
         if (request.Status.HasValue)
         {
-            query = query.Where(i => i.Status == request.Status.Value);
+            query = query.Where(x => x.i.Status == request.Status.Value);
         }
 
-        var invitations = await query
-            .OrderByDescending(i => i.SentAtUtc)
+        var result = await query
+            .OrderByDescending(x => x.i.SentAtUtc)
+            .Select(x => new InvitationResponse(
+                x.i.Id,
+                x.i.InviteeUserId,
+                x.i.InviterUserId,
+                x.i.FamilyId,
+                x.i.IsParent,
+                x.i.Status,
+                x.i.SentAtUtc,
+                x.inviter.FullName,
+                x.family.Name
+            ))
             .ToListAsync(cancellationToken);
 
-        var response = invitations.Adapt<List<InvitationResponse>>();
-        return Result.Success(response);
+        return Result.Success(result);
     }
 }

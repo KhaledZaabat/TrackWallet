@@ -105,7 +105,6 @@ public class FamilyTransactionsController(ISender sender, IFamilyContext familyC
     [EndpointDescription("Creates a new income or expense transaction for the current family and updates budget tracking accordingly.")]
     [EndpointName("CreateTransaction")]
     [RequireFamily]
-    [Authorize]
     public async Task<ActionResult<TransactionResponse>> CreateTransaction(
         [FromBody] CreateTransactionRequest request,
         CancellationToken cancellationToken)
@@ -152,7 +151,6 @@ public class FamilyTransactionsController(ISender sender, IFamilyContext familyC
     [EndpointDescription("Updates a transaction by reversing the original budget impact and applying the new values. Only transactions belonging to the user's current family can be updated.")]
     [EndpointName("UpdateTransaction")]
     [RequireFamily]
-    [Authorize]
     public async Task<ActionResult<TransactionResponse>> UpdateTransaction(
         [FromRoute] Guid transactionId,
         [FromBody] UpdateTransactionRequest request,
@@ -199,7 +197,6 @@ public class FamilyTransactionsController(ISender sender, IFamilyContext familyC
     [EndpointDescription("Permanently deletes a transaction and reverses its budget impact. Only transactions belonging to the user's current family can be deleted.")]
     [EndpointName("DeleteTransaction")]
     [RequireFamily]
-    [Authorize]
     public async Task<IActionResult> DeleteTransaction(
         [FromRoute] Guid transactionId,
         CancellationToken cancellationToken)
