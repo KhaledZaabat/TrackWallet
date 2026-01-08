@@ -53,8 +53,19 @@ class AppRouter {
               currentPath.startsWith(Routes.resetPasswordOtp) ||
               currentPath.startsWith(Routes.resetPasswordNew);
 
+          final isFamilyRoute = currentPath.startsWith(Routes.selectFamily) ||
+              currentPath.startsWith(Routes.createFamily);
+
+          final requiresFamilySelection = currentPath.startsWith(Routes.dashboard) ||
+              currentPath.startsWith(Routes.transactions) ||
+              currentPath.startsWith(Routes.invitations) ||
+              currentPath.startsWith(Routes.settings) ||
+              currentPath.startsWith(Routes.myFamily) ||
+              currentPath.startsWith(Routes.profile);
+
           // If authenticated
           if (authState is AuthAuthenticated) {
+            // If on auth route, redirect to dashboard or selectFamily
             if (isAuthRoute) {
               final selectedFamilyId =
                   await getIt<LocalStorage>().getSelectedFamilyId();
@@ -62,6 +73,17 @@ class AppRouter {
                   ? Routes.dashboard
                   : Routes.selectFamily;
             }
+
+            // If route requires family selection, check if family is selected
+            if (requiresFamilySelection) {
+              final selectedFamilyId =
+                  await getIt<LocalStorage>().getSelectedFamilyId();
+              // If no family selected, redirect to selectFamily
+              if (selectedFamilyId == null || selectedFamilyId.isEmpty) {
+                return Routes.selectFamily;
+              }
+            }
+
             return null;
           }
 
