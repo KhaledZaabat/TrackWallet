@@ -33,6 +33,7 @@ import 'package:famxpense/features/auth/presentation/Transactions/Pages/transact
 import 'package:famxpense/models/Transactions/transaction_models.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
 import 'package:famxpense/features/Invitations/pages/invitations_page.dart';
+import 'package:famxpense/features/Invitations/pages/invitations_to_join_page.dart';
 import 'package:famxpense/features/MyFamily/pages/my_family_page.dart';
 
 class AppRouter {
@@ -204,6 +205,10 @@ class AppRouter {
           ),
 
           // Invitations Routes
+          GoRoute(
+            path: Routes.invitationsToJoin,
+            builder: (context, state) => const InvitationsToJoinPage(),
+          ),
           GoRoute(
             path: Routes.invitations,
             builder: (context, state) => BlocProvider.value(

@@ -200,7 +200,7 @@ class _SelectFamilyView extends StatelessWidget {
               // Already on select family page
               break;
             case 1:
-              context.go(Routes.invitations);
+              context.go(Routes.invitationsToJoin);
               break;
           }
         },
