@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/services/category_service.dart';
+import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_state.dart';
 import 'package:famxpense/common/widgets/line_chart.dart';
@@ -35,6 +36,8 @@ class _DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<_DashboardView> {
+  bool _isFamilySelected = true; // Default to true, will check on init
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +45,12 @@ class _DashboardViewState extends State<_DashboardView> {
     // Load dashboard data when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        // Check if family is selected
+        getIt<LocalStorage>().getSelectedFamilyId().then((familyId) {
+          setState(() {
+            _isFamilySelected = familyId != null && familyId.isNotEmpty;
+          });
+        });
         context.read<DashboardCubit>().loadDashboard();
       }
     });
@@ -90,6 +99,16 @@ class _DashboardViewState extends State<_DashboardView> {
     }
 
     return points;
+  }
+
+  /// Determine which navbar item should be selected based on current route
+  int _getCurrentNavIndex(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    if (location.startsWith(Routes.invitations)) return 1;
+    if (location.startsWith(Routes.transactions)) return 2;
+    if (location.startsWith(Routes.myFamily)) return 3;
+    if (location.startsWith(Routes.settings)) return 4;
+    return 0; // Dashboard is default
   }
 
   @override
@@ -312,7 +331,91 @@ class _DashboardViewState extends State<_DashboardView> {
         icon: const Icon(Icons.add),
         label: const Text('Add Transaction'),
       ),
+      bottomNavigationBar: _buildNavBar(context),
     );
+  }
+
+  BottomNavigationBar _buildNavBar(BuildContext context) {
+    if (_isFamilySelected) {
+      // Show full 5-item navbar
+      return BottomNavigationBar(
+        currentIndex: _getCurrentNavIndex(context),
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF5B7CB5),
+        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(Routes.dashboard);
+              break;
+            case 1:
+              context.go(Routes.invitations);
+              break;
+            case 2:
+              context.go(Routes.transactions);
+              break;
+            case 3:
+              context.go(Routes.myFamily);
+              break;
+            case 4:
+              context.go(Routes.settings);
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Invitations',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt),
+            label: 'Transactions',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'MyFamily',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+      );
+    } else {
+      // Show 2-item navbar for users without family selected
+      return BottomNavigationBar(
+        currentIndex: 0, // Default to select family
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF5B7CB5),
+        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(Routes.selectFamily);
+              break;
+            case 1:
+              context.go(Routes.invitations);
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Families',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Invitations',
+          ),
+        ],
+      );
+    }
   }
 }
 

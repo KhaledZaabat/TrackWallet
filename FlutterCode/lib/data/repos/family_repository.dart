@@ -7,6 +7,23 @@ import 'package:famxpense/core/services/device_manager.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 
+// ========== ApiResult Pattern ==========
+
+/// Generic result wrapper for API calls following consistent error handling pattern
+class ApiResult<T> {
+  final bool isSuccess;
+  final T? data;
+  final String? errorMessage;
+
+  ApiResult.success(this.data)
+      : isSuccess = true,
+        errorMessage = null;
+
+  ApiResult.error(this.errorMessage)
+      : isSuccess = false,
+        data = null;
+}
+
 class FamilyRepository {
   final ApiClient _apiClient;
   final LocalStorage _localStorage;
@@ -150,6 +167,32 @@ class FamilyRepository {
   /// Get selected family ID from local storage
   Future<String?> getSelectedFamilyId() async {
     return await _localStorage.getSelectedFamilyId();
+  }
+
+  /// Get current family details with all members
+  /// GET /api/families/me
+  /// Returns: FamilyDetails with all members
+  /// Used by MyFamily page to display family info and member list
+  Future<ApiResult<FamilyDetails>> getFamilyDetails() async {
+    try {
+      final response = await _apiClient.dio.get('/api/families/me');
+
+      if (response.statusCode == 200) {
+        final familyDetails = FamilyDetails.fromJson(response.data as Map<String, dynamic>);
+        return ApiResult.success(familyDetails);
+      }
+
+      return ApiResult.error('Failed to load family details');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return ApiResult.error('Authentication required');
+      } else if (e.response?.statusCode == 404) {
+        return ApiResult.error('Family not found');
+      }
+      return ApiResult.error(e.message ?? 'Network error. Please try again.');
+    } catch (e) {
+      return ApiResult.error('An unexpected error occurred');
+    }
   }
 }
 

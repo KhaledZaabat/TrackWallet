@@ -9,12 +9,15 @@ import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/data/repos/auth_repository.dart';
 import 'package:famxpense/data/repos/dashboard_repo.dart';
 import 'package:famxpense/data/repos/family_repository.dart';
+import 'package:famxpense/data/repos/invitations_repository.dart';
 import 'package:famxpense/data/repos/transaction_repository.dart';
 import 'package:famxpense/data/repos/user_repository.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
+import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
+import 'package:famxpense/features/MyFamily/cubit/my_family_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/create_family_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/select_family_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Profile/Cubits/profile_cubit.dart';
@@ -106,6 +109,10 @@ Future<void> setupDependencyInjection() async {
     () => UserRepository(getIt<ApiClient>()),
   );
 
+  getIt.registerLazySingleton<InvitationsRepository>(
+    () => InvitationsRepository(getIt<ApiClient>()),
+  );
+
   // ========== Cubits ==========
 
   // Auth Cubit - Singleton (shared across app)
@@ -120,6 +127,16 @@ Future<void> setupDependencyInjection() async {
   // Dashboard Cubit - Singleton (shared state)
   getIt.registerLazySingleton<DashboardCubit>(
     () => DashboardCubit(getIt<DashboardRepository>()),
+  );
+
+  // Invitations Cubit - Singleton (shared state)
+  getIt.registerLazySingleton<InvitationsCubit>(
+    () => InvitationsCubit(getIt<InvitationsRepository>()),
+  );
+
+  // MyFamily Cubit - Singleton (shared state)
+  getIt.registerLazySingleton<MyFamilyCubit>(
+    () => MyFamilyCubit(getIt<FamilyRepository>()),
   );
 
   // Transaction Cubit - Factory (new instance per screen)

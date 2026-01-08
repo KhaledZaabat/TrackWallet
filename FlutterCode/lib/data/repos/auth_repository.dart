@@ -395,6 +395,7 @@ class AuthRepository {
       // Clear local storage
       await _localStorage.clearAuthTokens();
       await _localStorage.clearFcmToken();
+      await _localStorage.clearSelectedFamilyId();
 
       AppLogger.info(_tag, 'Logout successful');
       return true;
@@ -403,7 +404,6 @@ class AuthRepository {
       // Still clear local storage even if API call fails
       await _localStorage.clearAuthTokens();
       await _localStorage.clearFcmToken();
-      AppLogger.info(_tag, 'Local storage cleared despite logout error');
       return false;
     }
   }

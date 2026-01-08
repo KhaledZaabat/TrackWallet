@@ -31,6 +31,10 @@ import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transac
 import 'package:famxpense/features/auth/presentation/Transactions/Pages/transaction_form_page.dart';
 import 'package:famxpense/features/auth/presentation/Transactions/Pages/transactions_list_page.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
+import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
+import 'package:famxpense/features/Invitations/pages/invitations_page.dart';
+import 'package:famxpense/features/Invitations/pages/invitations_to_join_page.dart';
+import 'package:famxpense/features/MyFamily/pages/my_family_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey =
@@ -50,8 +54,18 @@ class AppRouter {
               currentPath.startsWith(Routes.resetPasswordOtp) ||
               currentPath.startsWith(Routes.resetPasswordNew);
 
+          final isFamilyRoute = currentPath.startsWith(Routes.selectFamily) ||
+              currentPath.startsWith(Routes.createFamily);
+
+          final requiresFamilySelection = currentPath.startsWith(Routes.dashboard) ||
+              currentPath.startsWith(Routes.transactions) ||
+              currentPath.startsWith(Routes.settings) ||
+              currentPath.startsWith(Routes.myFamily) ||
+              currentPath.startsWith(Routes.profile);
+
           // If authenticated
           if (authState is AuthAuthenticated) {
+            // If on auth route, redirect to dashboard or selectFamily
             if (isAuthRoute) {
               final selectedFamilyId =
                   await getIt<LocalStorage>().getSelectedFamilyId();
@@ -59,6 +73,17 @@ class AppRouter {
                   ? Routes.dashboard
                   : Routes.selectFamily;
             }
+
+            // If route requires family selection, check if family is selected
+            if (requiresFamilySelection) {
+              final selectedFamilyId =
+                  await getIt<LocalStorage>().getSelectedFamilyId();
+              // If no family selected, redirect to selectFamily
+              if (selectedFamilyId == null || selectedFamilyId.isEmpty) {
+                return Routes.selectFamily;
+              }
+            }
+
             return null;
           }
 
@@ -177,6 +202,25 @@ class AppRouter {
               create: (_) => getIt<SettingsCubit>(),
               child: const SettingsPage(),
             ),
+          ),
+
+          // Invitations Routes
+          GoRoute(
+            path: Routes.invitationsToJoin,
+            builder: (context, state) => const InvitationsToJoinPage(),
+          ),
+          GoRoute(
+            path: Routes.invitations,
+            builder: (context, state) => BlocProvider.value(
+              value: getIt<InvitationsCubit>(),
+              child: const InvitationsPage(),
+            ),
+          ),
+
+          // MyFamily Routes
+          GoRoute(
+            path: Routes.myFamily,
+            builder: (context, state) => const MyFamilyPage(),
           ),
         ],
       );

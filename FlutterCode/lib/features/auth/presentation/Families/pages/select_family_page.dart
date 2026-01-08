@@ -2,6 +2,8 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/auth/presentation/Dashboard/cubit/dashboard_cubit.dart';
+import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
+import 'package:famxpense/features/MyFamily/cubit/my_family_cubit.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/SelectFamilyState.dart';
 import 'package:famxpense/features/auth/presentation/Families/Cubits/select_family_cubit.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +33,12 @@ class _SelectFamilyView extends StatelessWidget {
       body: BlocConsumer<SelectFamilyCubit, SelectFamilyState>(
         listener: (context, state) {
           if (state is SelectFamilySuccess) {
-            // Family selection successful - navigate to dashboard
+            // Reset cubits to clear cached data from previous family
+            getIt<InvitationsCubit>().loadAll();
+            getIt<DashboardCubit>().loadDashboard();
+            getIt<MyFamilyCubit>().loadFamilyDetails();
+            
+            // Navigate to dashboard
             context.go('/dashboard');
           }
           if (state is SelectFamilyError) {
@@ -180,6 +187,33 @@ class _SelectFamilyView extends StatelessWidget {
             child: Text('Something went wrong'),
           );
         },
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF5B7CB5),
+        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              // Already on select family page
+              break;
+            case 1:
+              context.go(Routes.invitationsToJoin);
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Families',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Invitations',
+          ),
+        ],
       ),
     );
   }
@@ -378,3 +412,4 @@ class _EmptyFamiliesView extends StatelessWidget {
     );
   }
 }
+
