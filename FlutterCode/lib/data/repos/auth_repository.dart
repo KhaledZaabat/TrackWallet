@@ -9,7 +9,7 @@ import 'package:famxpense/models/Auth/AuthResult.dart';
 import 'package:famxpense/models/Auth/otp_result.dart';
 import 'package:famxpense/models/Auth/register_result.dart';
 import 'package:famxpense/models/Family/FamilyInfo.dart';
-import 'package:famxpense/models/Family/family_models.dart';
+
 
 class AuthRepository {
   static const String _tag = 'AuthRepository';

@@ -67,11 +67,10 @@ class MyAppBar extends StatelessWidget {
                   ? [
                       BoxShadow(
                         color: Colors.black
-                            // ignore: deprecated_member_use
                             .withValues(alpha: 0.2),
                         blurRadius: 10,
                         offset: const Offset(
-                            0, 4), // shadow offset
+                            0, 4),
                       ),
                     ]
                   : [],

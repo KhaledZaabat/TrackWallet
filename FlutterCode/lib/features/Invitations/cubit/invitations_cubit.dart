@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:famxpense/data/repos/invitations_repository.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_state.dart';
-import 'package:famxpense/models/Invitations/invitation_model.dart';
+
 
 /// Cubit for managing invitations feature
 /// 

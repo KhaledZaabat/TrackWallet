@@ -1,35 +1,31 @@
-// core/router/app_router.dart
-
-import 'dart:developer' as developer;
-
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
-import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
-import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_state.dart';
-import 'package:famxpense/features/auth/presentation/Auth/cubit/reset_password_cubit.dart';
-import 'package:famxpense/features/auth/presentation/Auth/cubit/signup_cubit.dart';
-import 'package:famxpense/features/auth/presentation/Auth/pages/forgot_password_page.dart';
-import 'package:famxpense/features/auth/presentation/Auth/pages/login_page.dart';
-import 'package:famxpense/features/auth/presentation/Auth/pages/new_password_page.dart';
-import 'package:famxpense/features/auth/presentation/Auth/pages/otp_verification_page.dart';
-import 'package:famxpense/features/auth/presentation/Auth/pages/reset_password_otp_page.dart';
-import 'package:famxpense/features/auth/presentation/Auth/pages/signup_page.dart';
-import 'package:famxpense/features/auth/presentation/Dashboard/page/dashboard_page.dart';
-import 'package:famxpense/features/auth/presentation/Families/pages/create_family_page.dart';
-import 'package:famxpense/features/auth/presentation/Families/pages/select_family_page.dart';
-import 'package:famxpense/features/auth/presentation/Profile/Cubits/profile_cubit.dart';
-import 'package:famxpense/features/auth/presentation/Profile/pages/profile_page.dart';
-import 'package:famxpense/features/auth/presentation/Settings/Cubits/settings_cubit.dart';
-import 'package:famxpense/features/auth/presentation/Settings/pages/settings_page.dart';
+import 'package:famxpense/features/Auth/cubit/auth_cubit.dart';
+import 'package:famxpense/features/Auth/cubit/auth_state.dart';
+import 'package:famxpense/features/Auth/cubit/reset_password_cubit.dart';
+import 'package:famxpense/features/Auth/cubit/signup_cubit.dart';
+import 'package:famxpense/features/Auth/pages/forgot_password_page.dart';
+import 'package:famxpense/features/Auth/pages/login_page.dart';
+import 'package:famxpense/features/Auth/pages/new_password_page.dart';
+import 'package:famxpense/features/Auth/pages/otp_verification_page.dart';
+import 'package:famxpense/features/Auth/pages/reset_password_otp_page.dart';
+import 'package:famxpense/features/Auth/pages/signup_page.dart';
+import 'package:famxpense/features/Dashboard/page/dashboard_page.dart';
+import 'package:famxpense/features/Families/pages/create_family_page.dart';
+import 'package:famxpense/features/Families/pages/select_family_page.dart';
+import 'package:famxpense/features/Profile/Cubits/profile_cubit.dart';
+import 'package:famxpense/features/Profile/pages/profile_page.dart';
+import 'package:famxpense/features/Settings/Cubits/settings_cubit.dart';
+import 'package:famxpense/features/Settings/pages/settings_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:famxpense/features/auth/presentation/Transactions/Cubits/transaction_cubit.dart';
-import 'package:famxpense/features/auth/presentation/Transactions/Pages/transaction_form_page.dart';
-import 'package:famxpense/features/auth/presentation/Transactions/Pages/transactions_list_page.dart';
+import 'package:famxpense/features/Transactions/Cubits/transaction_cubit.dart';
+import 'package:famxpense/features/Transactions/Pages/transaction_form_page.dart';
+import 'package:famxpense/features/Transactions/Pages/transactions_list_page.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
 import 'package:famxpense/features/Invitations/pages/invitations_page.dart';

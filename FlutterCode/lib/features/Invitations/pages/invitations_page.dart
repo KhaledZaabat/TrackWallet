@@ -6,7 +6,7 @@ import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_state.dart';
-import 'package:famxpense/features/Invitations/widgets/invitation_card.dart';
+
 import 'package:famxpense/features/Invitations/widgets/received_invitations_tab.dart';
 import 'package:famxpense/features/Invitations/widgets/sent_invitations_tab.dart';
 import 'package:famxpense/features/Invitations/widgets/send_invitation_dialog.dart';

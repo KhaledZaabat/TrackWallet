@@ -8,8 +8,8 @@ class AppColors {
 
   static const backgroundColor = Color(0xFFF7FAFC);
 
-  static const mainBlackShade = Color(0xFF181E29); // text
-  static const mainGrayShade = Color(0xFF7B8196); // subtext
+  static const mainBlackShade = Color(0xFF181E29);
+  static const mainGrayShade = Color(0xFF7B8196);
 
   static const stroke = Color(0xFFC6CFD8);
 

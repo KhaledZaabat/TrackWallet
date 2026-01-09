@@ -1,7 +1,7 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/core/services/device_manager.dart';
-import 'package:famxpense/features/auth/presentation/Auth/cubit/auth_cubit.dart';
+import 'package:famxpense/features/Auth/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
