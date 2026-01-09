@@ -70,12 +70,19 @@ public sealed class ExternalAuthService : IExternalAuthService
 
                 if (identityUser is null)
                 {
-                    // CreateRoot Identity user
+                    // Create new Identity user using the factory method
+                    string userName = email.Split('@')[0];
+                    Result<ApplicationUser> userResult = ApplicationUser.Create(email, userName);
+                    if (userResult.IsFailure)
+                    {
+                        return Result.Failure<ExternalAuthDto>(
+                            ExternalAuthError.UserCreationFailed(userResult.TryGetError()?.Description ?? "Failed to create user."));
+                    }
 
-
+                    identityUser = userResult.TryGetValue();
+                    identityUser.EmailConfirmed = true;
 
                     IdentityResult createResult = await userManager.CreateAsync(identityUser);
-                    identityUser.EmailConfirmed = true;
                     if (!createResult.Succeeded)
                     {
                         return Result.Failure<ExternalAuthDto>(
