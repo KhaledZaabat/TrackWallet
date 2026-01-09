@@ -211,14 +211,11 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
           color: AppColors.textPrimary,
         ),
       ),
-      centerTitle: true,
-      backgroundColor: Colors.white,
+      centerTitle: false,
+      backgroundColor: AppColors.surface,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => context.go(Routes.dashboard),
-      ),
+      automaticallyImplyLeading: false,
       actions: [
         BlocBuilder<TransactionCubit, TransactionState>(
           builder: (context, state) {

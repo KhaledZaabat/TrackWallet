@@ -68,6 +68,12 @@ dev_dependencies:
   bloc_test: ^9.1.1
   mocktail: ^1.0.0
   very_good_analysis: ^5.0.0 # strict lints for team projects
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon.jpg"
 
 flutter:
   uses-material-design: true

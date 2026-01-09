@@ -97,10 +97,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
               backgroundColor: AppColors.surface,
               foregroundColor: AppColors.textPrimary,
               elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.go(Routes.dashboard),
-              ),
+              automaticallyImplyLeading: false,
             ),
             body: const Center(
               child: CircularProgressIndicator(),
@@ -116,10 +113,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
               backgroundColor: AppColors.surface,
               foregroundColor: AppColors.textPrimary,
               elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.go(Routes.dashboard),
-              ),
+              automaticallyImplyLeading: false,
             ),
             backgroundColor: AppColors.background,
             body: Center(
@@ -197,10 +191,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
                 backgroundColor: AppColors.surface,
                 foregroundColor: AppColors.textPrimary,
                 elevation: 0,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.go(Routes.dashboard),
-                ),
+                automaticallyImplyLeading: false,
                 bottom: TabBar(
                   onTap: (index) =>
                       context.read<InvitationsCubit>().switchTab(index),
@@ -266,10 +257,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
               backgroundColor: AppColors.surface,
               foregroundColor: AppColors.textPrimary,
               elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.go(Routes.dashboard),
-              ),
+              automaticallyImplyLeading: false,
             ),
           body: const Center(
             child: CircularProgressIndicator(),

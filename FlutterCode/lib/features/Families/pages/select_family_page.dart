@@ -18,8 +18,9 @@ class SelectFamilyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<SelectFamilyCubit>()..loadFamilies(),
+    // Use BlocProvider.value since SelectFamilyCubit is a singleton
+    return BlocProvider.value(
+      value: getIt<SelectFamilyCubit>(),
       child: const _SelectFamilyView(),
     );
   }
@@ -58,6 +59,75 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
         _currentFamilyId = id;
       });
     }
+  }
+
+  void _showDeleteFamilyDialog(dynamic family) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.delete_forever_rounded,
+              color: AppColors.error,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Delete Family',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to permanently delete "${family.name}"?\n\nThis will remove all members and cancel pending invitations. Transactions will be preserved for historical data.',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await context.read<SelectFamilyCubit>().deleteFamily(family.id);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -134,36 +204,37 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                   ],
                                 ),
                               ),
-                              // Create Family Button (Floating Action Button style)
-                              Material(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(12),
-                                elevation: 4,
-                                shadowColor: AppColors.primary.withValues(alpha: 0.3),
-                                child: InkWell(
-                                  onTap: () async {
-                                    final result = await context.push(
-                                      Routes.createFamily,
-                                    );
-
-                                    // Reload families if a family was created
-                                    if (result == true && context.mounted) {
-                                      context
-                                          .read<SelectFamilyCubit>()
-                                          .loadFamilies();
-                                    }
-                                  },
+                              // Create Family Button (only show when there are families)
+                              if (state.families.isNotEmpty)
+                                Material(
+                                  color: AppColors.primary,
                                   borderRadius: BorderRadius.circular(12),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                      size: 24,
+                                  elevation: 4,
+                                  shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                                  child: InkWell(
+                                    onTap: () async {
+                                      final result = await context.push(
+                                        Routes.createFamily,
+                                      );
+
+                                      // Reload families if a family was created
+                                      if (result == true && context.mounted) {
+                                        context
+                                            .read<SelectFamilyCubit>()
+                                            .loadFamilies();
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(12),
+                                      child: Icon(
+                                        Icons.add,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                         ],
@@ -201,6 +272,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                       .selectFamily(family.id);
                                   }
                                 },
+                                onDelete: () => _showDeleteFamilyDialog(family),
                               ),
                             );
                           },
@@ -212,6 +284,92 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                     child: SizedBox(height: 24),
                   ),
                 ],
+              ),
+            );
+          }
+
+          // Handle initial state - trigger load
+          if (state is SelectFamilyInitial) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                context.read<SelectFamilyCubit>().loadFamilies();
+              }
+            });
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            );
+          }
+
+          // Handle error state with retry button
+          if (state is SelectFamilyError) {
+            return SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        size: 64,
+                        color: AppColors.error.withOpacity(0.6),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Failed to load families',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.message,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<SelectFamilyCubit>().loadFamilies();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          // Handle success state - should navigate away, but if still here reload
+          if (state is SelectFamilySuccess) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                context.read<SelectFamilyCubit>().loadFamilies();
+              }
+            });
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             );
           }
@@ -264,11 +422,13 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
 class _FamilyCard extends StatelessWidget {
   final dynamic family;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
   final bool isSelected;
 
   const _FamilyCard({
     required this.family,
     required this.onTap,
+    this.onDelete,
     this.isSelected = false,
   });
 
@@ -331,6 +491,22 @@ class _FamilyCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    // Delete button
+                    if (onDelete != null)
+                      IconButton(
+                        onPressed: onDelete,
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.error.withOpacity(0.08),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
+                        tooltip: 'Delete family',
+                      ),
+                    const SizedBox(width: 8),
                     const Icon(
                       Icons.arrow_forward_ios,
                       size: 18,

@@ -2,12 +2,16 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:famxpense/core/app_logger.dart';
 import 'package:famxpense/data/repos/user_repository.dart';
+import 'package:famxpense/features/Dashboard/cubit/dashboard_cubit.dart';
+import 'package:famxpense/features/MyFamily/cubit/my_family_cubit.dart';
 import 'package:famxpense/features/Profile/Cubits/profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final UserRepository _userRepository;
+  final DashboardCubit _dashboardCubit;
+  final MyFamilyCubit _myFamilyCubit;
 
-  ProfileCubit(this._userRepository) : super(const ProfileInitial());
+  ProfileCubit(this._userRepository, this._dashboardCubit, this._myFamilyCubit) : super(const ProfileInitial());
 
   /// Load current user profile
   Future<void> loadProfile() async {
@@ -66,6 +70,10 @@ class ProfileCubit extends Cubit<ProfileState> {
 
       // Reload profile to get updated data
       final updatedUser = await _userRepository.getProfile();
+
+      // Refresh dashboard and family to reflect profile changes
+      _dashboardCubit.refresh();
+      _myFamilyCubit.loadFamilyDetails();
 
       AppLogger.info('ProfileCubit', 'Profile updated successfully');
       emit(ProfileUpdateSuccess(

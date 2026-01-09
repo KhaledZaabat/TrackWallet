@@ -48,4 +48,33 @@ class SelectFamilyCubit extends Cubit<SelectFamilyState> {
       await loadFamilies();
     }
   }
+
+  /// Delete a family
+  /// Only parents can delete. Returns true on success.
+  Future<bool> deleteFamily(String familyId) async {
+    final currentState = state;
+    
+    emit(SelectFamilyLoading());
+
+    try {
+      final result = await _familyRepository.deleteFamily(familyId);
+
+      if (result.isSuccess) {
+        // Reload families to update the list
+        await loadFamilies();
+        return true;
+      } else {
+        emit(SelectFamilyError(
+            message: result.errorMessage ?? 'Failed to delete family'));
+        await Future.delayed(const Duration(milliseconds: 100));
+        await loadFamilies();
+        return false;
+      }
+    } catch (e) {
+      emit(SelectFamilyError(message: 'An unexpected error occurred'));
+      await Future.delayed(const Duration(milliseconds: 100));
+      await loadFamilies();
+      return false;
+    }
+  }
 }

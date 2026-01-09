@@ -194,6 +194,168 @@ class FamilyRepository {
       return ApiResult.error('An unexpected error occurred');
     }
   }
+
+  /// Kick a member from the family
+  /// DELETE /api/families/members/{userId}
+  /// Only parents can kick non-parent members. Cannot kick self or other parents.
+  Future<ApiResult<void>> kickMember(String userId) async {
+    try {
+      AppLogger.info('FamilyRepository', 'Kicking member: $userId');
+
+      final response = await _apiClient.dio.delete(
+        '/api/families/members/$userId',
+      );
+
+      if (response.statusCode == 200) {
+        AppLogger.info('FamilyRepository', 'Member kicked successfully');
+        return ApiResult.success(null);
+      }
+
+      return ApiResult.error('Failed to remove member');
+    } on DioException catch (e) {
+      AppLogger.error('FamilyRepository', 'DioException kicking member', error: e);
+
+      if (e.response?.statusCode == 400) {
+        final error = e.response?.data['detail'] ?? 'Cannot remove this member';
+        return ApiResult.error(error);
+      } else if (e.response?.statusCode == 401) {
+        return ApiResult.error('Authentication required');
+      } else if (e.response?.statusCode == 403) {
+        return ApiResult.error('Only parents can remove members');
+      } else if (e.response?.statusCode == 404) {
+        return ApiResult.error('Member not found');
+      }
+      return ApiResult.error('Network error. Please try again.');
+    } catch (e, stackTrace) {
+      AppLogger.error('FamilyRepository', 'Error kicking member', error: e, stackTrace: stackTrace);
+      return ApiResult.error('An unexpected error occurred');
+    }
+  }
+
+  /// Update family information (name and/or bio)
+  /// PUT /api/families/select
+  /// Only parents can update family information.
+  Future<ApiResult<void>> updateFamily({
+    String? name,
+    String? bio,
+  }) async {
+    try {
+      AppLogger.info('FamilyRepository', 'Updating family: name=$name, bio=$bio');
+
+      final data = <String, dynamic>{};
+      if (name != null && name.isNotEmpty) data['name'] = name;
+      if (bio != null) data['familyBio'] = bio;
+
+      if (data.isEmpty) {
+        return ApiResult.error('No changes to update');
+      }
+
+      final response = await _apiClient.dio.put(
+        '/api/families',
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        AppLogger.info('FamilyRepository', 'Family updated successfully');
+        return ApiResult.success(null);
+      }
+
+      return ApiResult.error('Failed to update family');
+    } on DioException catch (e) {
+      AppLogger.error('FamilyRepository', 'DioException updating family', error: e);
+
+      if (e.response?.statusCode == 400) {
+        final error = e.response?.data['detail'] ?? 'Invalid request';
+        return ApiResult.error(error);
+      } else if (e.response?.statusCode == 401) {
+        return ApiResult.error('Authentication required');
+      } else if (e.response?.statusCode == 403) {
+        return ApiResult.error('Only parents can update family information');
+      } else if (e.response?.statusCode == 404) {
+        return ApiResult.error('Family not found');
+      }
+      return ApiResult.error('Network error. Please try again.');
+    } catch (e, stackTrace) {
+      AppLogger.error('FamilyRepository', 'Error updating family', error: e, stackTrace: stackTrace);
+      return ApiResult.error('An unexpected error occurred');
+    }
+  }
+
+  /// Leave the current family
+  /// DELETE /api/families/leave
+  /// The last parent cannot leave if other members exist.
+  /// User's transactions remain with the family.
+  Future<ApiResult<void>> leaveFamily() async {
+    try {
+      AppLogger.info('FamilyRepository', 'Leaving family');
+
+      final response = await _apiClient.dio.delete('/api/families/leave');
+
+      if (response.statusCode == 200) {
+        AppLogger.info('FamilyRepository', 'Left family successfully');
+        // Clear selected family since user is no longer in it
+        await _localStorage.clearSelectedFamilyId();
+        return ApiResult.success(null);
+      }
+
+      return ApiResult.error('Failed to leave family');
+    } on DioException catch (e) {
+      AppLogger.error('FamilyRepository', 'DioException leaving family', error: e);
+
+      if (e.response?.statusCode == 400) {
+        final error = e.response?.data['detail'] ?? 'Cannot leave family';
+        return ApiResult.error(error);
+      } else if (e.response?.statusCode == 401) {
+        return ApiResult.error('Authentication required');
+      } else if (e.response?.statusCode == 403) {
+        return ApiResult.error('You cannot leave as the last parent while other members exist');
+      } else if (e.response?.statusCode == 404) {
+        return ApiResult.error('Family not found');
+      }
+      return ApiResult.error('Network error. Please try again.');
+    } catch (e, stackTrace) {
+      AppLogger.error('FamilyRepository', 'Error leaving family', error: e, stackTrace: stackTrace);
+      return ApiResult.error('An unexpected error occurred');
+    }
+  }
+
+  /// Delete a family
+  /// DELETE /api/families/{familyId}
+  /// Only parents can delete. All members removed, invitations cancelled.
+  /// Transactions preserved for historical data.
+  Future<ApiResult<void>> deleteFamily(String familyId) async {
+    try {
+      AppLogger.info('FamilyRepository', 'Deleting family: $familyId');
+
+      final response = await _apiClient.dio.delete('/api/families/$familyId');
+
+      if (response.statusCode == 200) {
+        AppLogger.info('FamilyRepository', 'Family deleted successfully');
+        // Clear selected family if it was the deleted one
+        final currentFamilyId = await _localStorage.getSelectedFamilyId();
+        if (currentFamilyId == familyId) {
+          await _localStorage.clearSelectedFamilyId();
+        }
+        return ApiResult.success(null);
+      }
+
+      return ApiResult.error('Failed to delete family');
+    } on DioException catch (e) {
+      AppLogger.error('FamilyRepository', 'DioException deleting family', error: e);
+
+      if (e.response?.statusCode == 401) {
+        return ApiResult.error('Authentication required');
+      } else if (e.response?.statusCode == 403) {
+        return ApiResult.error('Only parents can delete this family');
+      } else if (e.response?.statusCode == 404) {
+        return ApiResult.error('Family not found');
+      }
+      return ApiResult.error('Network error. Please try again.');
+    } catch (e, stackTrace) {
+      AppLogger.error('FamilyRepository', 'Error deleting family', error: e, stackTrace: stackTrace);
+      return ApiResult.error('An unexpected error occurred');
+    }
+  }
 }
 
 // ========== Result Models ==========

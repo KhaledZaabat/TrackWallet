@@ -328,27 +328,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => context.go(Routes.dashboard),
-                          child: Icon(
-                            Icons.arrow_back,
-                            size: 24,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Settings',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontFamily: GoogleFonts.inter().fontFamily,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Settings',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontFamily: GoogleFonts.inter().fontFamily,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 32),
 

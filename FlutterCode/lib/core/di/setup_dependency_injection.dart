@@ -136,7 +136,7 @@ Future<void> setupDependencyInjection() async {
 
   // MyFamily Cubit - Singleton (shared state)
   getIt.registerLazySingleton<MyFamilyCubit>(
-    () => MyFamilyCubit(getIt<FamilyRepository>()),
+    () => MyFamilyCubit(getIt<FamilyRepository>(), getIt<LocalStorage>(), getIt<DashboardCubit>()),
   );
 
   // Transaction Cubit - Singleton (shared state for list and forms)
@@ -146,7 +146,7 @@ Future<void> setupDependencyInjection() async {
 
   // Profile Cubit - Singleton
   getIt.registerLazySingleton<ProfileCubit>(
-    () => ProfileCubit(getIt<UserRepository>()),
+    () => ProfileCubit(getIt<UserRepository>(), getIt<DashboardCubit>(), getIt<MyFamilyCubit>()),
   );
 
   // Settings Cubit - Singleton
