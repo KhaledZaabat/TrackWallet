@@ -139,18 +139,18 @@ Future<void> setupDependencyInjection() async {
     () => MyFamilyCubit(getIt<FamilyRepository>()),
   );
 
-  // Transaction Cubit - Factory (new instance per screen)
-  getIt.registerFactory<TransactionCubit>(
+  // Transaction Cubit - Singleton (shared state for list and forms)
+  getIt.registerLazySingleton<TransactionCubit>(
     () => TransactionCubit(getIt<TransactionRepository>()),
   );
 
-  // Profile Cubit - Factory (new instance per screen)
-  getIt.registerFactory<ProfileCubit>(
+  // Profile Cubit - Singleton
+  getIt.registerLazySingleton<ProfileCubit>(
     () => ProfileCubit(getIt<UserRepository>()),
   );
 
-  // Settings Cubit - Factory (new instance per screen)
-  getIt.registerFactory<SettingsCubit>(
+  // Settings Cubit - Singleton
+  getIt.registerLazySingleton<SettingsCubit>(
     () => SettingsCubit(getIt<UserRepository>()),
   );
 

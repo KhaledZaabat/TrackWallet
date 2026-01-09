@@ -43,35 +43,21 @@ class _MyFamilyView extends StatefulWidget {
 }
 
 class _MyFamilyViewState extends State<_MyFamilyView> {
-  bool _isFamilySelected = true; // Default to true, will check on init
+  // Default to true, will check on init
 
   @override
   void initState() {
     super.initState();
-    // Load family details after first frame builds
+    // Load family data when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        // Check if family is selected
-        getIt<LocalStorage>().getSelectedFamilyId().then((familyId) {
-          setState(() {
-            _isFamilySelected = familyId != null && familyId.isNotEmpty;
-          });
-        });
-        // Load family details via cubit
+        // Data loading logic if any
         context.read<MyFamilyCubit>().loadFamilyDetails();
       }
     });
   }
 
-  /// Determine which navbar item should be selected based on current route
-  int _getCurrentNavIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
-    if (location.startsWith(Routes.myFamily)) return 3;
-    if (location.startsWith(Routes.transactions)) return 2;
-    if (location.startsWith(Routes.invitations)) return 1;
-    if (location.startsWith(Routes.settings)) return 4;
-    return 0; // Dashboard is default
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -169,91 +155,6 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
           return const SizedBox.shrink();
         },
       ),
-      bottomNavigationBar: _buildNavBar(context),
     );
-  }
-
-  /// Build the appropriate navbar based on whether family is selected
-  BottomNavigationBar _buildNavBar(BuildContext context) {
-    if (_isFamilySelected) {
-      // Show full 5-item navbar
-      return BottomNavigationBar(
-        currentIndex: _getCurrentNavIndex(context),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B7CB5),
-        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go(Routes.dashboard);
-              break;
-            case 1:
-              context.go(Routes.invitations);
-              break;
-            case 2:
-              context.go(Routes.transactions);
-              break;
-            case 3:
-              context.go(Routes.myFamily);
-              break;
-            case 4:
-              context.go(Routes.settings);
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Invitations',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
-            label: 'Transactions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'My Family',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      );
-    } else {
-      // Show 2-item navbar for users without family selected
-      return BottomNavigationBar(
-        currentIndex: 1, // Default to invitations
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B7CB5),
-        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go(Routes.selectFamily);
-              break;
-            case 1:
-              context.go(Routes.invitations);
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Families',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Invitations',
-          ),
-        ],
-      );
-    }
   }
 }

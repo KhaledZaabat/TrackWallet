@@ -33,14 +33,16 @@ import 'package:famxpense/features/Invitations/widgets/send_invitation_dialog.da
 /// - Accessible after family selection
 /// - Automatically loads data on page open (via initState)
 class InvitationsPage extends StatefulWidget {
-  const InvitationsPage({Key? key}) : super(key: key);
+  final bool forceGuestMode;
+  const InvitationsPage({Key? key, this.forceGuestMode = false}) : super(key: key);
 
   @override
   State<InvitationsPage> createState() => _InvitationsPageState();
 }
 
 class _InvitationsPageState extends State<InvitationsPage> {
-  bool _isFamilySelected = true; // Default to true, will check on init
+  bool _isFamilySelected = false;
+
 
   @override
   void initState() {
@@ -51,7 +53,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
         // Check if family is selected
         getIt<LocalStorage>().getSelectedFamilyId().then((familyId) {
           setState(() {
-            _isFamilySelected = familyId != null && familyId.isNotEmpty;
+            _isFamilySelected = !widget.forceGuestMode && familyId != null && familyId.isNotEmpty;
           });
         });
         context.read<InvitationsCubit>().loadAll();
@@ -59,98 +61,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
     });
   }
 
-  /// Determine which navbar item should be selected based on current route
-  int _getCurrentNavIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
-    if (location.startsWith(Routes.invitations)) return 1;
-    if (location.startsWith(Routes.transactions)) return 2;
-    if (location.startsWith(Routes.profile)) return 3;
-    return 0; // Dashboard is default
-  }
 
-  /// Build the appropriate navbar based on whether family is selected
-  BottomNavigationBar _buildNavBar(BuildContext context) {
-    if (_isFamilySelected) {
-      // Show full 5-item navbar
-      return BottomNavigationBar(
-        currentIndex: _getCurrentNavIndex(context),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B7CB5),
-        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go(Routes.dashboard);
-              break;
-            case 1:
-              context.go(Routes.invitations);
-              break;
-            case 2:
-              context.go(Routes.transactions);
-              break;
-            case 3:
-              context.go(Routes.myFamily);
-              break;
-            case 4:
-              context.go(Routes.settings);
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Invitations',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
-            label: 'Transactions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'My Family',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      );
-    } else {
-      // Show 2-item navbar for users without family selected
-      return BottomNavigationBar(
-        currentIndex: 1, // Default to invitations
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B7CB5),
-        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go(Routes.selectFamily);
-              break;
-            case 1:
-              // Already on invitations
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Families',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Invitations',
-          ),
-        ],
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +100,6 @@ class _InvitationsPageState extends State<InvitationsPage> {
             body: const Center(
               child: CircularProgressIndicator(),
             ),
-            bottomNavigationBar: _buildNavBar(context),
           );
         }
 
@@ -227,7 +137,6 @@ class _InvitationsPageState extends State<InvitationsPage> {
                 ],
               ),
             ),
-            bottomNavigationBar: _buildNavBar(context),
           );
         }
 
@@ -240,14 +149,11 @@ class _InvitationsPageState extends State<InvitationsPage> {
           final cubit = context.read<InvitationsCubit>();
 
           // If no family selected, only show Received tab
+          // NOTE: We don't render AppBottomNavBar here anymore, it's in the shell.
           if (!_isFamilySelected) {
             return Scaffold(
               appBar: AppBar(
                 title: const Text('Family Invitations'),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.go(Routes.dashboard),
-                ),
               ),
               body: ReceivedInvitationsTab(
                 invitations: state.receivedInvitations,
@@ -257,7 +163,6 @@ class _InvitationsPageState extends State<InvitationsPage> {
                 onDecline: (id) =>
                     context.read<InvitationsCubit>().declineInvitation(id),
               ),
-              bottomNavigationBar: _buildNavBar(context),
             );
           }
 
@@ -317,7 +222,6 @@ class _InvitationsPageState extends State<InvitationsPage> {
                 tooltip: 'Send Invitation',
                 child: const Icon(Icons.mail_outline),
               ),
-              bottomNavigationBar: _buildNavBar(context),
             ),
           );
         }
@@ -334,7 +238,6 @@ class _InvitationsPageState extends State<InvitationsPage> {
           body: const Center(
             child: CircularProgressIndicator(),
           ),
-          bottomNavigationBar: _buildNavBar(context),
         );
       },
     );

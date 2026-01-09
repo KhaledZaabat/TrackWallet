@@ -21,7 +21,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _isFamilySelected = true;
+  bool _isFamilySelected = false; // Initialize _isFamilySelected
 
   @override
   void initState() {
@@ -32,12 +32,19 @@ class _SettingsPageState extends State<SettingsPage> {
         _isFamilySelected = familyId != null && familyId.isNotEmpty;
       });
     });
-    final cubit = context.read<SettingsCubit>();
-    final state = cubit.state;
 
-    if (state is! SettingsLoaded && state is! SettingsLoading) {
-      cubit.loadSettings();
-    }
+    // Load settings - using post frame callback to ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final cubit = context.read<SettingsCubit>();
+        final state = cubit.state;
+
+        if (state is! SettingsLoaded && state is! SettingsLoading) {
+          cubit.loadSettings();
+        }
+        cubit.loadSettings();
+      }
+    });
   }
 
   void _onStateChanged(BuildContext context, SettingsState state) {
@@ -478,85 +485,7 @@ class _SettingsPageState extends State<SettingsPage> {
           },
         ),
       ),
-      bottomNavigationBar: _buildNavBar(),
     );
-  }
-
-  BottomNavigationBar _buildNavBar() {
-    if (_isFamilySelected) {
-      return BottomNavigationBar(
-        currentIndex: 4,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go(Routes.dashboard);
-              break;
-            case 1:
-              context.go(Routes.invitations);
-              break;
-            case 2:
-              context.go(Routes.transactions);
-              break;
-            case 3:
-              context.go(Routes.myFamily);
-              break;
-            case 4:
-              context.go(Routes.settings);
-              break;
-          }
-        },
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Invitations',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
-            label: 'Transactions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'My Family',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      );
-    } else {
-      return BottomNavigationBar(
-        currentIndex: 1,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go(Routes.selectFamily);
-              break;
-            case 1:
-              context.go(Routes.invitations);
-              break;
-          }
-        },
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Families',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Invitations',
-          ),
-        ],
-      );
-    }
   }
 
   Widget _buildUserInfoCard(user) {

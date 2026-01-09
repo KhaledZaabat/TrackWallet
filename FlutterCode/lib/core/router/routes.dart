@@ -12,6 +12,7 @@ class Routes {
   // Family Routes
   static const String selectFamily = '/select-family';
   static const String createFamily = '/create-family';
+  static const String manageFamilies = '/manage-families';
 
   // Main Routes
   static const String dashboard = '/dashboard';
@@ -26,6 +27,7 @@ class Routes {
   // Invitations Routes
   static const String invitationsToJoin = '/invitations-to-join';
   static const String invitations = '/invitations';
+  static const String invitationsGuest = '/invitations-guest';
 
   // MyFamily Routes
   static const String myFamily = '/my-family';

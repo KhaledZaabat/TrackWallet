@@ -188,33 +188,7 @@ class _SelectFamilyView extends StatelessWidget {
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B7CB5),
-        unselectedItemColor: const Color(0xFF5B6B8C).withOpacity(0.6),
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              // Already on select family page
-              break;
-            case 1:
-              context.go(Routes.invitationsToJoin);
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Families',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Invitations',
-          ),
-        ],
-      ),
+
     );
   }
 }

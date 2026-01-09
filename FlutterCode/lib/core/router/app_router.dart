@@ -1,3 +1,4 @@
+import 'package:famxpense/common/widgets/scaffold_with_nested_navigation.dart';
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
@@ -144,79 +145,150 @@ class AppRouter {
             },
           ),
 
-          // Family Routes
-          GoRoute(
-            path: Routes.selectFamily,
-            builder: (context, state) => const SelectFamilyPage(),
-          ),
+          // Family Routes (outside shell - though SelectFamily is also used in NoFamily shell, wait.
+          // In "No Family" mode, navigation is: SelectFamily <-> Invitations.
+          // In "Family" mode, navigation is: Dashboard <-> Invitations <-> Transactions <-> MyFamily <-> Settings.
+          //
+          // We can put SelectFamily in the shell too, as a branch.
+          
           GoRoute(
             path: Routes.createFamily,
             builder: (context, state) => const CreateFamilyPage(),
           ),
+          
+          GoRoute(
+            path: Routes.manageFamilies,
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const SelectFamilyPage(),
+          ),
 
-          // Main Routes
-          GoRoute(
-            path: Routes.dashboard,
-            builder: (context, state) => const DashboardPage(),
-          ),
-          GoRoute(
-            path: Routes.transactions,
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<TransactionCubit>()..loadTransactions(),
-              child: const TransactionsListPage(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.transactionsAdd,
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<TransactionCubit>(),
-              child: const TransactionFormPage(),
-            ),
-          ),
-          GoRoute(
-            path: Routes.transactionsEdit,
-            builder: (context, state) {
-              final transaction = state.extra as TransactionItem;
-              return BlocProvider(
-                create: (_) => getIt<TransactionCubit>(),
-                child: TransactionFormPage(existingTransaction: transaction),
-              );
+          // Stateful Shell Route
+          StatefulShellRoute.indexedStack(
+            builder: (context, state, navigationShell) {
+              return ScaffoldWithNestedNavigation(
+                  navigationShell: navigationShell);
             },
+            branches: [
+              // Branch 0: Dashboard
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: Routes.dashboard,
+                    builder: (context, state) => const DashboardPage(),
+                  ),
+                ],
+              ),
+              // Branch 1: Invitations (Shared)
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: Routes.invitations,
+                    builder: (context, state) => BlocProvider.value(
+                      value: getIt<InvitationsCubit>(),
+                      child: const InvitationsPage(),
+                    ),
+                    routes: [
+                      // Sub-routes if any
+                      GoRoute(
+                        path: 'to-join', // relative path
+                        // matches /invitations/to-join
+                        name: 'invitationsToJoin',
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) =>
+                            const InvitationsToJoinPage(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              // Branch 2: Transactions
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: Routes.transactions,
+                    builder: (context, state) => BlocProvider.value(
+                      value:
+                          getIt<TransactionCubit>()..loadTransactions(),
+                      child: const TransactionsListPage(),
+                    ),
+                     routes: [
+                       GoRoute(
+                        path: 'add',
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) => BlocProvider.value(
+                          value: getIt<TransactionCubit>(),
+                          child: const TransactionFormPage(),
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'edit',
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) {
+                          final transaction = state.extra as TransactionItem;
+                          return BlocProvider.value(
+                            value: getIt<TransactionCubit>(),
+                            child: TransactionFormPage(
+                                existingTransaction: transaction),
+                          );
+                        },
+                      ),
+                     ]
+                  ),
+                ],
+              ),
+              // Branch 3: MyFamily
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: Routes.myFamily,
+                    builder: (context, state) => const MyFamilyPage(),
+                  ),
+                ],
+              ),
+              // Branch 4: Settings
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: Routes.settings,
+                    builder: (context, state) => BlocProvider.value(
+                      value: getIt<SettingsCubit>(),
+                      child: const SettingsPage(),
+                    ),
+                  ),
+                ],
+              ),
+               // Branch 5: Select Family
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: Routes.selectFamily,
+                    builder: (context, state) => const SelectFamilyPage(),
+                  ),
+                ],
+              ),
+               // Branch 6: Invitations (Guest/No-Family Mode)
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: Routes.invitationsGuest,
+                    builder: (context, state) => BlocProvider.value(
+                      value: getIt<InvitationsCubit>(),
+                      child: const InvitationsPage(forceGuestMode: true),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-
-          // Profile & Settings Routes
-          GoRoute(
+          
+          // Profile as a standalone route or inside Settings shell usually?
+          // Keeping it standalone for now as previous impl
+           GoRoute(
             path: Routes.profile,
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<ProfileCubit>(),
+            builder: (context, state) => BlocProvider.value(
+              value: getIt<ProfileCubit>(),
               child: const ProfilePage(),
             ),
-          ),
-          GoRoute(
-            path: Routes.settings,
-            builder: (context, state) => BlocProvider(
-              create: (_) => getIt<SettingsCubit>(),
-              child: const SettingsPage(),
-            ),
-          ),
-
-          // Invitations Routes
-          GoRoute(
-            path: Routes.invitationsToJoin,
-            builder: (context, state) => const InvitationsToJoinPage(),
-          ),
-          GoRoute(
-            path: Routes.invitations,
-            builder: (context, state) => BlocProvider.value(
-              value: getIt<InvitationsCubit>(),
-              child: const InvitationsPage(),
-            ),
-          ),
-
-          // MyFamily Routes
-          GoRoute(
-            path: Routes.myFamily,
-            builder: (context, state) => const MyFamilyPage(),
           ),
         ],
       );
