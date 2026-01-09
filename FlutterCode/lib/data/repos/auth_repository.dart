@@ -392,18 +392,17 @@ class AuthRepository {
       AppLogger.info(_tag, 'Logout response - Status: ${response.statusCode}');
       AppLogger.info(_tag, 'Logout response - Data: ${response.data}');
 
-      // Clear local storage
+      // Clear local storage (keep FCM token for future logins)
       await _localStorage.clearAuthTokens();
-      await _localStorage.clearFcmToken();
       await _localStorage.clearSelectedFamilyId();
 
       AppLogger.info(_tag, 'Logout successful');
       return true;
     } catch (e, stackTrace) {
       AppLogger.error(_tag, 'Logout error', error: e, stackTrace: stackTrace);
-      // Still clear local storage even if API call fails
+      // Still clear local storage even if API call fails (keep FCM token)
       await _localStorage.clearAuthTokens();
-      await _localStorage.clearFcmToken();
+      await _localStorage.clearSelectedFamilyId();
       return false;
     }
   }

@@ -1,5 +1,6 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/services/category_service.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/domain/entities/category.dart';
 import 'package:famxpense/features/Transactions/Pages/transaction_type_button.dart';
 import 'package:flutter/material.dart';
@@ -90,7 +91,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
@@ -113,7 +114,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
         width: 48,
         height: 5,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: AppColors.border,
           borderRadius: BorderRadius.circular(3),
         ),
       ),
@@ -128,7 +129,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF2D3436),
+          color: AppColors.textPrimary,
         ),
       ),
     );
@@ -140,13 +141,13 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search_rounded,
-            color: Color(0xFF636E72),
+            color: AppColors.textSecondary.withOpacity(0.7),
           ),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close_rounded),
+                  icon: Icon(Icons.close_rounded, color: AppColors.textSecondary),
                   onPressed: () {
                     _searchController.clear();
                     _filterCategories('');
@@ -154,15 +155,19 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
                 )
               : null,
           hintText: 'Search category',
-          hintStyle: const TextStyle(
-            color: Color(0xFFB2BEC3),
+          hintStyle: TextStyle(
+            color: AppColors.textSecondary.withOpacity(0.5),
           ),
           filled: true,
-          fillColor: const Color(0xFFF5F8FA),
+          fillColor: AppColors.background,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: AppColors.primary, width: 1.5),
           ),
         ),
         onChanged: _filterCategories,
@@ -186,17 +191,17 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
               label: Text(group),
               selected: isSelected,
               onSelected: (_) => _filterByGroup(group),
-              backgroundColor: Colors.white,
-              selectedColor: const Color(0xFF6C5CE7),
+              backgroundColor: AppColors.white,
+              selectedColor: AppColors.primary,
               labelStyle: TextStyle(
-                color: isSelected ? Colors.white : const Color(0xFF2D3436),
+                color: isSelected ? Colors.white : AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
               side: BorderSide(
                 color: isSelected
-                    ? const Color(0xFF6C5CE7)
-                    : const Color(0xFFDFE6E9),
+                    ? AppColors.primary
+                    : AppColors.border,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
@@ -248,7 +253,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
             Icon(
               Icons.category_outlined,
               size: 64,
-              color: const Color(0xFFB2BEC3).withOpacity(0.5),
+              color: AppColors.textSecondary.withOpacity(0.3),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -256,16 +261,16 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF636E72),
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Try searching with different keywords',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFFB2BEC3),
+                color: AppColors.textSecondary.withOpacity(0.6),
               ),
             ),
           ],

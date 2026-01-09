@@ -1,6 +1,6 @@
 // presentation/settings/pages/settings_page.dart
 
-import 'package:famxpense/core/configs/theme/app_colors.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
@@ -62,7 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? AppColors.error : AppColors.success,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -104,8 +104,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -113,7 +113,7 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Icon(
               Icons.logout_rounded,
-              color: Colors.red.shade400,
+              color: AppColors.error,
               size: 28,
             ),
             const SizedBox(width: 12),
@@ -132,26 +132,26 @@ class _SettingsPageState extends State<SettingsPage> {
           'Are you sure you want to logout? You will need to sign in again to access your account.',
           style: TextStyle(
             fontSize: 15,
-            color: Colors.grey.shade700,
+            color: AppColors.textSecondary,
             fontFamily: GoogleFonts.inter().fontFamily,
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(
               'Cancel',
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
               ),
             ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
+              backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -170,26 +170,17 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
-    if (confirmed == true && mounted) {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-        ),
-      );
-
-      // Perform logout
-      await context.read<AuthCubit>().logout();
-
-      // Close loading indicator
-      if (!mounted) return;
-      Navigator.of(context).pop();
-
-      context.go(Routes.login);
+    if (confirmed == true) {
+      // Call logout - the AuthCubit will emit AuthUnauthenticated
+      // and the GoRouter's refreshListenable will handle navigation to login
+      await getIt<AuthCubit>().logout();
+      
+      // Use a post-frame callback to navigate after the current frame completes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.go(Routes.login);
+        }
+      });
     }
   }
 
@@ -219,7 +210,7 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -227,7 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Icon(
               Icons.warning_amber_rounded,
-              color: Colors.orange.shade700,
+              color: AppColors.textPrimary,
               size: 28,
             ),
             const SizedBox(width: 12),
@@ -247,7 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
           message,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.grey.shade700,
+            color: AppColors.textSecondary,
             fontFamily: GoogleFonts.inter().fontFamily,
           ),
         ),
@@ -284,7 +275,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FA),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: BlocConsumer<SettingsCubit, SettingsState>(
           listener: _onStateChanged,
@@ -298,7 +289,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                    Icon(Icons.error_outline, size: 48, color: AppColors.error),
                     const SizedBox(height: 16),
                     Text(
                       state.error,
@@ -344,7 +335,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           child: Icon(
                             Icons.arrow_back,
                             size: 24,
-                            color: Colors.grey.shade700,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -354,7 +345,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             fontSize: 32,
                             fontFamily: GoogleFonts.inter().fontFamily,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.mainBlackShade,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -391,10 +382,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: Colors.blue.shade200,
+                          color: AppColors.border,
                           width: 1,
                         ),
                       ),
@@ -402,7 +393,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: Colors.blue.shade700,
+                            color: AppColors.textPrimary,
                             size: 20,
                           ),
                           const SizedBox(width: 10),
@@ -411,7 +402,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               'At least one notification method must be enabled',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.blue.shade900,
+                                color: AppColors.textPrimary,
                                 fontFamily: GoogleFonts.inter().fontFamily,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -474,7 +465,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       title: 'Logout',
                       subtitle: 'Sign out of your account',
                       onTap: isUpdating ? null : _showLogoutDialog,
-                      iconColor: Colors.red.shade400,
+                      iconColor: AppColors.error,
                       isDestructive: true,
                     ),
                     const SizedBox(height: 32),
@@ -494,7 +485,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -508,7 +499,7 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           CircleAvatar(
             radius: 32,
-            backgroundColor: AppColors.stroke,
+            backgroundColor: AppColors.border,
             child: hasProfilePicture
                 ? ClipOval(
                     child: Image.network(
@@ -519,14 +510,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       errorBuilder: (_, __, ___) => const Icon(
                         Icons.person,
                         size: 32,
-                        color: Colors.grey,
+                        color: AppColors.lightGrey,
                       ),
                     ),
                   )
                 : const Icon(
                     Icons.person,
                     size: 32,
-                    color: Colors.grey,
+                    color: AppColors.lightGrey,
                   ),
           ),
           const SizedBox(width: 16),
@@ -547,7 +538,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   user.email,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey.shade600,
+                    color: AppColors.textSecondary,
                     fontFamily: GoogleFonts.inter().fontFamily,
                   ),
                 ),
@@ -591,7 +582,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Text(
       title,
       style: TextStyle(
-        color: AppColors.mainBlackShade,
+        color: AppColors.textPrimary,
         fontSize: 16,
         fontFamily: GoogleFonts.inter().fontFamily,
         fontWeight: FontWeight.w700,
@@ -609,7 +600,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -625,7 +616,7 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: isDestructive
-                ? Colors.red.shade50
+                ? AppColors.error.withOpacity(0.1)
                 : AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
@@ -641,21 +632,21 @@ class _SettingsPageState extends State<SettingsPage> {
             fontSize: 16,
             fontWeight: FontWeight.w600,
             fontFamily: GoogleFonts.inter().fontFamily,
-            color: isDestructive ? Colors.red.shade400 : null,
+            color: isDestructive ? AppColors.error : null,
           ),
         ),
         subtitle: Text(
           subtitle,
           style: TextStyle(
             fontSize: 13,
-            color: Colors.grey.shade600,
+            color: AppColors.textSecondary,
             fontFamily: GoogleFonts.inter().fontFamily,
           ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: Colors.grey.shade400,
+          color: AppColors.lightGrey,
         ),
         onTap: onTap,
       ),
@@ -671,7 +662,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -707,7 +698,7 @@ class _SettingsPageState extends State<SettingsPage> {
           subtitle,
           style: TextStyle(
             fontSize: 13,
-            color: Colors.grey.shade600,
+            color: AppColors.textSecondary,
             fontFamily: GoogleFonts.inter().fontFamily,
           ),
         ),
@@ -745,7 +736,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -904,7 +895,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
           child: Text(
             'Cancel',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),

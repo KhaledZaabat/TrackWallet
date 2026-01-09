@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 
 /// Reusable Google Sign-In button widget
 class GoogleSignInButton extends StatelessWidget {
@@ -20,15 +21,15 @@ class GoogleSignInButton extends StatelessWidget {
       child: OutlinedButton.icon(
         onPressed: (isEnabled && !isLoading) ? onPressed : null,
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF5B6B8C),
+          foregroundColor: AppColors.textSecondary,
           side: BorderSide(
-            color: const Color(0xFFE0E5EB),
+            color: AppColors.border,
             width: 1.5,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(6),
           ),
-          disabledForegroundColor: const Color(0xFF5B6B8C).withOpacity(0.3),
+          disabledForegroundColor: AppColors.textSecondary.withOpacity(0.3),
         ),
         icon: isLoading
             ? const SizedBox(
@@ -37,7 +38,7 @@ class GoogleSignInButton extends StatelessWidget {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    Color(0xFF5B6B8C),
+                    AppColors.textSecondary,
                   ),
                 ),
               )
@@ -51,8 +52,8 @@ class GoogleSignInButton extends StatelessWidget {
                     Icons.g_mobiledata,
                     size: 28,
                     color: (isEnabled && !isLoading)
-                        ? const Color(0xFF5B6B8C)
-                        : const Color(0xFF5B6B8C).withOpacity(0.3),
+                        ? AppColors.textSecondary
+                        : AppColors.textSecondary.withOpacity(0.3),
                   );
                 },
               ),
@@ -62,8 +63,8 @@ class GoogleSignInButton extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w600,
             color: (isEnabled && !isLoading)
-                ? const Color(0xFF5B6B8C)
-                : const Color(0xFF5B6B8C).withOpacity(0.3),
+                ? AppColors.textSecondary
+                : AppColors.textSecondary.withOpacity(0.3),
           ),
         ),
       ),

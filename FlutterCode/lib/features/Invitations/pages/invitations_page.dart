@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_state.dart';
 
@@ -90,8 +91,12 @@ class _InvitationsPageState extends State<InvitationsPage> {
         // Loading state: Show centered progress indicator
         if (state is InvitationsLoading) {
           return Scaffold(
+            backgroundColor: AppColors.background,
             appBar: AppBar(
               title: const Text('Family Invitations'),
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.go(Routes.dashboard),
@@ -106,13 +111,17 @@ class _InvitationsPageState extends State<InvitationsPage> {
         // Error state: Show error message with retry button
         if (state is InvitationsError) {
           return Scaffold(
-            appBar: AppBar(
+             appBar: AppBar(
               title: const Text('Family Invitations'),
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.go(Routes.dashboard),
               ),
             ),
+            backgroundColor: AppColors.background,
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -120,7 +129,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.red[300],
+                    color: AppColors.error,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -132,6 +141,10 @@ class _InvitationsPageState extends State<InvitationsPage> {
                   ElevatedButton(
                     onPressed: () =>
                         context.read<InvitationsCubit>().loadAll(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -152,8 +165,12 @@ class _InvitationsPageState extends State<InvitationsPage> {
           // NOTE: We don't render AppBottomNavBar here anymore, it's in the shell.
           if (!_isFamilySelected) {
             return Scaffold(
+              backgroundColor: AppColors.background,
               appBar: AppBar(
                 title: const Text('Family Invitations'),
+                backgroundColor: AppColors.surface,
+                foregroundColor: AppColors.textPrimary,
+                elevation: 0,
               ),
               body: ReceivedInvitationsTab(
                 invitations: state.receivedInvitations,
@@ -162,6 +179,9 @@ class _InvitationsPageState extends State<InvitationsPage> {
                     context.read<InvitationsCubit>().acceptInvitation(id),
                 onDecline: (id) =>
                     context.read<InvitationsCubit>().declineInvitation(id),
+                onRefresh: () async {
+                  await context.read<InvitationsCubit>().loadAll();
+                },
               ),
             );
           }
@@ -171,8 +191,12 @@ class _InvitationsPageState extends State<InvitationsPage> {
             length: 2,
             initialIndex: state.selectedTab,
             child: Scaffold(
+              backgroundColor: AppColors.background,
               appBar: AppBar(
                 title: const Text('Family Invitations'),
+                backgroundColor: AppColors.surface,
+                foregroundColor: AppColors.textPrimary,
+                elevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => context.go(Routes.dashboard),
@@ -180,6 +204,9 @@ class _InvitationsPageState extends State<InvitationsPage> {
                 bottom: TabBar(
                   onTap: (index) =>
                       context.read<InvitationsCubit>().switchTab(index),
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  indicatorColor: AppColors.primary,
                   tabs: const [
                     Tab(text: 'Received'),
                     Tab(text: 'Sent'),
@@ -196,6 +223,9 @@ class _InvitationsPageState extends State<InvitationsPage> {
                         context.read<InvitationsCubit>().acceptInvitation(id),
                     onDecline: (id) =>
                         context.read<InvitationsCubit>().declineInvitation(id),
+                    onRefresh: () async {
+                      await context.read<InvitationsCubit>().loadAll();
+                    },
                   ),
 
                   // Sent Invitations Tab (All statuses, grouped)
@@ -210,6 +240,8 @@ class _InvitationsPageState extends State<InvitationsPage> {
 
               // Floating Action Button: Send new invitation
               floatingActionButton: FloatingActionButton(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -228,13 +260,17 @@ class _InvitationsPageState extends State<InvitationsPage> {
 
         // Initial state: Show loading
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Family Invitations'),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.go(Routes.dashboard),
+            backgroundColor: AppColors.background,
+            appBar: AppBar(
+              title: const Text('Family Invitations'),
+              backgroundColor: AppColors.surface,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go(Routes.dashboard),
+              ),
             ),
-          ),
           body: const Center(
             child: CircularProgressIndicator(),
           ),

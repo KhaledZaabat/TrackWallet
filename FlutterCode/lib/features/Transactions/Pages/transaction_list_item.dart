@@ -1,6 +1,7 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -30,10 +31,10 @@ class TransactionListItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0xFFDFE6E9),
+            color: AppColors.border,
             width: 1.5,
           ),
           boxShadow: [
@@ -63,13 +64,13 @@ class TransactionListItem extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         color: isIncome
-            ? const Color(0xFF27AE60).withOpacity(0.15)
-            : const Color(0xFFE74C3C).withOpacity(0.15),
+            ? AppColors.success.withOpacity(0.15)
+            : AppColors.error.withOpacity(0.15),
         shape: BoxShape.circle,
       ),
       child: Icon(
         icon ?? Icons.category_outlined,
-        color: isIncome ? const Color(0xFF27AE60) : const Color(0xFFE74C3C),
+        color: isIncome ? AppColors.success : AppColors.error,
         size: 24,
       ),
     );
@@ -88,7 +89,7 @@ class TransactionListItem extends StatelessWidget {
           style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 15,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -99,7 +100,7 @@ class TransactionListItem extends StatelessWidget {
             Icon(
               Icons.access_time_rounded,
               size: 14,
-              color: const Color(0xFFB2BEC3),
+              color: AppColors.textSecondary,
             ),
             const SizedBox(width: 4),
             Text(
@@ -107,7 +108,7 @@ class TransactionListItem extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFFB2BEC3),
+                color: AppColors.textSecondary,
               ),
             ),
             if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
@@ -115,7 +116,7 @@ class TransactionListItem extends StatelessWidget {
               const Icon(
                 Icons.note_outlined,
                 size: 14,
-                color: Color(0xFFB2BEC3),
+                color: AppColors.textSecondary,
               ),
             ],
           ],
@@ -127,7 +128,7 @@ class TransactionListItem extends StatelessWidget {
               Icon(
                 Icons.label_outline_rounded,
                 size: 14,
-                color: const Color(0xFFB2BEC3),
+                color: AppColors.textSecondary,
               ),
               const SizedBox(width: 4),
               Flexible(
@@ -136,7 +137,7 @@ class TransactionListItem extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFB2BEC3),
+                    color: AppColors.textSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -162,7 +163,7 @@ class TransactionListItem extends StatelessWidget {
                   : Icons.arrow_downward_rounded,
               size: 16,
               color:
-                  isIncome ? const Color(0xFF27AE60) : const Color(0xFFE74C3C),
+                  isIncome ? AppColors.success : AppColors.error,
             ),
             const SizedBox(width: 4),
             Text(
@@ -171,8 +172,8 @@ class TransactionListItem extends StatelessWidget {
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 color: isIncome
-                    ? const Color(0xFF27AE60)
-                    : const Color(0xFFE74C3C),
+                    ? AppColors.success
+                    : AppColors.error,
               ),
             ),
           ],
@@ -183,7 +184,7 @@ class TransactionListItem extends StatelessWidget {
           style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: Color(0xFFB2BEC3),
+            color: AppColors.textSecondary,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

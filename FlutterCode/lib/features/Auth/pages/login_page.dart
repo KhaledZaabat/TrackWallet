@@ -3,6 +3,7 @@ import 'package:famxpense/features/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/auth_state.dart';
 import 'package:famxpense/features/Auth/pages/google_sign_in_button.dart';
 import 'package:famxpense/features/Auth/pages/login_form.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -51,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
         title: const Text(
           'Verify Account',
           style: TextStyle(
-            color: Color(0xFF5B6B8C),
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
@@ -63,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
               'Enter your email to resend verification code',
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF5B6B8C),
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -75,21 +76,21 @@ class _LoginPageState extends State<LoginPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: const BorderSide(
-                    color: Color(0xFFE0E5EB),
+                    color: AppColors.border,
                     width: 1.5,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: const BorderSide(
-                    color: Color(0xFFE0E5EB),
+                    color: AppColors.border,
                     width: 1.5,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: const BorderSide(
-                    color: Color(0xFF5B7CB5),
+                    color: AppColors.primary,
                     width: 1.5,
                   ),
                 ),
@@ -118,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5B7CB5),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
@@ -143,7 +144,7 @@ class _LoginPageState extends State<LoginPage> {
         title: const Text(
           'Reset Password',
           style: TextStyle(
-            color: Color(0xFF5B6B8C),
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
@@ -155,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
               'Enter your email to receive password reset instructions',
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF5B6B8C),
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -167,21 +168,21 @@ class _LoginPageState extends State<LoginPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: const BorderSide(
-                    color: Color(0xFFE0E5EB),
+                    color: AppColors.border,
                     width: 1.5,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: const BorderSide(
-                    color: Color(0xFFE0E5EB),
+                    color: AppColors.border,
                     width: 1.5,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: const BorderSide(
-                    color: Color(0xFF5B7CB5),
+                    color: AppColors.primary,
                     width: 1.5,
                   ),
                 ),
@@ -210,7 +211,7 @@ class _LoginPageState extends State<LoginPage> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5B7CB5),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
@@ -228,7 +229,7 @@ class _LoginPageState extends State<LoginPage> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           // Show error messages
@@ -236,7 +237,7 @@ class _LoginPageState extends State<LoginPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
                 margin: const EdgeInsets.all(16),
                 shape: RoundedRectangleBorder(
@@ -270,7 +271,7 @@ class _LoginPageState extends State<LoginPage> {
                       margin: const EdgeInsets.symmetric(horizontal: 60),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: const Color(0xFFE0E5EB),
+                          color: AppColors.border,
                           width: 2,
                         ),
                         borderRadius: BorderRadius.circular(2),
@@ -286,7 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF5B6B8C),
+                        color: AppColors.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -296,7 +297,7 @@ class _LoginPageState extends State<LoginPage> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
-                        color: const Color(0xFF5B6B8C).withOpacity(0.6),
+                        color: AppColors.textSecondary.withOpacity(0.6),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -329,7 +330,7 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         Expanded(
                           child: Divider(
-                            color: const Color(0xFFE0E5EB),
+                            color: AppColors.border,
                             thickness: 1,
                           ),
                         ),
@@ -339,14 +340,14 @@ class _LoginPageState extends State<LoginPage> {
                             "OR",
                             style: TextStyle(
                               fontSize: 13,
-                              color: const Color(0xFF5B6B8C).withOpacity(0.5),
+                              color: AppColors.textSecondary.withOpacity(0.5),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                         Expanded(
                           child: Divider(
-                            color: const Color(0xFFE0E5EB),
+                            color: AppColors.border,
                             thickness: 1,
                           ),
                         ),
@@ -372,7 +373,7 @@ class _LoginPageState extends State<LoginPage> {
                           "Don't have an account? ",
                           style: TextStyle(
                             fontSize: 14,
-                            color: const Color(0xFF5B6B8C).withOpacity(0.7),
+                            color: AppColors.textSecondary.withOpacity(0.7),
                           ),
                         ),
                         GestureDetector(
@@ -384,8 +385,8 @@ class _LoginPageState extends State<LoginPage> {
                             style: TextStyle(
                               fontSize: 14,
                               color: isLoading
-                                  ? const Color(0xFF5B7CB5).withOpacity(0.5)
-                                  : const Color(0xFF5B7CB5),
+                                  ? AppColors.primary.withOpacity(0.5)
+                                  : AppColors.primary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -402,7 +403,7 @@ class _LoginPageState extends State<LoginPage> {
                           "Need to verify your account? ",
                           style: TextStyle(
                             fontSize: 14,
-                            color: const Color(0xFF5B6B8C).withOpacity(0.7),
+                            color: AppColors.textSecondary.withOpacity(0.7),
                           ),
                         ),
                         GestureDetector(
@@ -414,8 +415,8 @@ class _LoginPageState extends State<LoginPage> {
                             style: TextStyle(
                               fontSize: 14,
                               color: isLoading
-                                  ? const Color(0xFF5B7CB5).withOpacity(0.5)
-                                  : const Color(0xFF5B7CB5),
+                                  ? AppColors.primary.withOpacity(0.5)
+                                  : AppColors.primary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),

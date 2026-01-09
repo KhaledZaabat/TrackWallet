@@ -3,6 +3,7 @@ import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/services/category_service.dart';
 
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Dashboard/cubit/dashboard_cubit.dart';
 import 'package:famxpense/features/Dashboard/cubit/dashboard_state.dart';
 import 'package:famxpense/features/Transactions/Cubits/transaction_cubit.dart';
@@ -108,7 +109,7 @@ class _DashboardViewState extends State<_DashboardView> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F8FA),
+        backgroundColor: AppColors.background,
         body: BlocConsumer<DashboardCubit, DashboardState>(
           listener: (context, state) {
             if (state is DashboardError) {
@@ -125,7 +126,7 @@ class _DashboardViewState extends State<_DashboardView> {
           if (state is DashboardLoading) {
             return const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5B7CB5)),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             );
           }
@@ -147,7 +148,7 @@ class _DashboardViewState extends State<_DashboardView> {
                       state.message,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Color(0xFF5B6B8C),
+                        color: AppColors.textSecondary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -158,7 +159,7 @@ class _DashboardViewState extends State<_DashboardView> {
                         context.read<DashboardCubit>().loadDashboard();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5B7CB5),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -189,7 +190,7 @@ class _DashboardViewState extends State<_DashboardView> {
                     expandedHeight: 224,
                     floating: false,
                     pinned: true,
-                    backgroundColor: const Color(0xFF5B7CB5),
+                    backgroundColor: AppColors.primary,
                     elevation: 0,
                     flexibleSpace: FlexibleSpaceBar(
                       background: _DashboardHeader(
@@ -215,7 +216,7 @@ class _DashboardViewState extends State<_DashboardView> {
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF5B6B8C),
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
                                 Text(
@@ -224,8 +225,7 @@ class _DashboardViewState extends State<_DashboardView> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF5B6B8C)
-                                        .withOpacity(0.6),
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -243,9 +243,9 @@ class _DashboardViewState extends State<_DashboardView> {
                                 'Recent Transactions',
                                 style: TextStyle(
                                   fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF5B6B8C),
-                                ),
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
                               ),
                               TextButton(
                                 onPressed: () {
@@ -254,7 +254,7 @@ class _DashboardViewState extends State<_DashboardView> {
                                 child: const Text(
                                   'View All',
                                   style: TextStyle(
-                                    color: Color(0xFF5B7CB5),
+                                    color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -321,11 +321,10 @@ class _DashboardViewState extends State<_DashboardView> {
         onPressed: () {
           context.push(Routes.transactionsAdd);
         },
-        backgroundColor: const Color(0xFF5B7CB5),
+        backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
       ),
-      ),
-    );
+    ));
   }
 }
 
@@ -348,14 +347,7 @@ class _DashboardHeader extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF5B7CB5),
-            Color(0xFF4A6BA0),
-          ],
-        ),
+        gradient: AppColors.wolfGradient,
       ),
       child: SafeArea(
         child: Padding(
@@ -486,7 +478,7 @@ class _BudgetMonthlyChart extends StatelessWidget {
 
     return LineChartCard(
       points: [points],
-      color: const Color(0xFF5B7CB5),
+      color: AppColors.primary,
       isCurved: true,
       endDate: now,
       cardBackgroundColor: Colors.white,
@@ -510,7 +502,7 @@ class _BudgetMonthlyChart extends StatelessWidget {
       textStyle: const TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: Color(0xFF5B6B8C),
+        color: AppColors.textSecondary,
       ),
     );
   }
@@ -543,7 +535,7 @@ class _TransactionCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFFE0E5EB),
+            color: AppColors.border,
             width: 1.5,
           ),
           boxShadow: [
@@ -562,16 +554,16 @@ class _TransactionCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: (isIncome
-                        ? const Color(0xFF27AE60)
-                        : const Color(0xFFE74C3C))
+                        ? AppColors.success
+                        : AppColors.error)
                     .withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 category?.icon ?? Icons.category_outlined,
                 color: isIncome
-                    ? const Color(0xFF27AE60)
-                    : const Color(0xFFE74C3C),
+                    ? AppColors.success
+                    : AppColors.error,
                 size: 24,
               ),
             ),
@@ -585,7 +577,7 @@ class _TransactionCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF5B6B8C),
+                      color: AppColors.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -596,7 +588,7 @@ class _TransactionCard extends StatelessWidget {
                       Icon(
                         Icons.label_outline_rounded,
                         size: 14,
-                        color: const Color(0xFF5B6B8C).withOpacity(0.6),
+                        color: AppColors.textSecondary.withOpacity(0.6),
                       ),
                       const SizedBox(width: 4),
                       Flexible(
@@ -604,7 +596,7 @@ class _TransactionCard extends StatelessWidget {
                           category?.displayName ?? transaction.category.name,
                           style: TextStyle(
                             fontSize: 12,
-                            color: const Color(0xFF5B6B8C).withOpacity(0.6),
+                            color: AppColors.textSecondary.withOpacity(0.6),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -614,7 +606,7 @@ class _TransactionCard extends StatelessWidget {
                       Icon(
                         Icons.person_outline_rounded,
                         size: 14,
-                        color: const Color(0xFF5B6B8C).withOpacity(0.6),
+                        color: AppColors.textSecondary.withOpacity(0.6),
                       ),
                       const SizedBox(width: 4),
                       Flexible(
@@ -622,7 +614,7 @@ class _TransactionCard extends StatelessWidget {
                           transaction.creator.fullName ?? 'Unknown',
                           style: TextStyle(
                             fontSize: 12,
-                            color: const Color(0xFF5B6B8C).withOpacity(0.6),
+                            color: AppColors.textSecondary.withOpacity(0.6),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -636,14 +628,14 @@ class _TransactionCard extends StatelessWidget {
                       Icon(
                         Icons.calendar_today_outlined,
                         size: 14,
-                        color: const Color(0xFF5B6B8C).withOpacity(0.5),
+                        color: AppColors.textSecondary.withOpacity(0.5),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         dateFormat.format(transaction.transactedOn),
                         style: TextStyle(
                           fontSize: 11,
-                          color: const Color(0xFF5B6B8C).withOpacity(0.5),
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -674,8 +666,8 @@ class _TransactionCard extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: isIncome
-                            ? const Color(0xFF27AE60)
-                            : const Color(0xFFE74C3C),
+                            ? AppColors.success
+                            : AppColors.error,
                       ),
                     ),
                   ],

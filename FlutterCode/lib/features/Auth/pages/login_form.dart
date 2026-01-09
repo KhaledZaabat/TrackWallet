@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Auth/pages/validation_patterns.dart';
 
 /// Reusable login form widget containing email and password fields
@@ -40,7 +41,7 @@ class _LoginFormState extends State<LoginForm> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF5B6B8C).withOpacity(0.8),
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -64,7 +65,7 @@ class _LoginFormState extends State<LoginForm> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF5B6B8C).withOpacity(0.8),
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -81,7 +82,7 @@ class _LoginFormState extends State<LoginForm> {
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  color: const Color(0xFF5B7CB5),
+                  color: AppColors.primary,
                   size: 20,
                 ),
                 onPressed: () {
@@ -105,8 +106,8 @@ class _LoginFormState extends State<LoginForm> {
                 style: TextStyle(
                   fontSize: 13,
                   color: widget.isEnabled
-                      ? const Color(0xFF5B7CB5)
-                      : const Color(0xFF5B7CB5).withOpacity(0.5),
+                      ? AppColors.primary
+                      : AppColors.primary.withOpacity(0.5),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -121,14 +122,14 @@ class _LoginFormState extends State<LoginForm> {
             child: ElevatedButton(
               onPressed: widget.isEnabled ? widget.onSubmit : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5B7CB5),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
                 disabledBackgroundColor:
-                    const Color(0xFF5B7CB5).withOpacity(0.6),
+                    AppColors.primary.withOpacity(0.6),
               ),
               child: const Text(
                 "Log In",
@@ -152,44 +153,44 @@ class _LoginFormState extends State<LoginForm> {
     return InputDecoration(
       hintText: hintText,
       hintStyle: TextStyle(
-        color: const Color(0xFF5B6B8C).withOpacity(0.3),
+        color: AppColors.textSecondary.withOpacity(0.3),
         fontSize: 15,
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.surface,
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(
-          color: Color(0xFFE0E5EB),
+          color: AppColors.border,
           width: 1.5,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(
-          color: Color(0xFFE0E5EB),
+          color: AppColors.border,
           width: 1.5,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(
-          color: Color(0xFF5B7CB5),
+          color: AppColors.primary,
           width: 1.5,
         ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(
-          color: Colors.red,
+          color: AppColors.error,
           width: 1.5,
         ),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(
-          color: Colors.red,
+          color: AppColors.error,
           width: 1.5,
         ),
       ),

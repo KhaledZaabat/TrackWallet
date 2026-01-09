@@ -3,6 +3,7 @@ import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/Auth/cubit/signup_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/signup_state.dart';
 import 'package:famxpense/features/Auth/pages/validation_patterns.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +62,7 @@ class _SignupPageState extends State<SignupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to pick image: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -85,7 +86,7 @@ class _SignupPageState extends State<SignupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to take photo: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -110,15 +111,15 @@ class _SignupPageState extends State<SignupPage> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: AppColors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 ListTile(
-                  leading: const Icon(
-                    Icons.photo_library,
-                    color: Color(0xFF5B7CB5),
-                  ),
+                    leading: const Icon(
+                      Icons.photo_library,
+                      color: AppColors.primary,
+                    ),
                   title: const Text('Choose from Gallery'),
                   onTap: () {
                     Navigator.pop(context);
@@ -128,7 +129,7 @@ class _SignupPageState extends State<SignupPage> {
                 ListTile(
                   leading: const Icon(
                     Icons.camera_alt,
-                    color: Color(0xFF5B7CB5),
+                    color: AppColors.primary,
                   ),
                   title: const Text('Take a Photo'),
                   onTap: () {
@@ -140,7 +141,7 @@ class _SignupPageState extends State<SignupPage> {
                   ListTile(
                     leading: const Icon(
                       Icons.delete,
-                      color: Colors.red,
+                      color: AppColors.error,
                     ),
                     title: const Text('Remove Photo'),
                     onTap: () {
@@ -168,9 +169,9 @@ class _SignupPageState extends State<SignupPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF5B7CB5),
+              primary: AppColors.primary,
               onPrimary: Colors.white,
-              onSurface: Color(0xFF5B6B8C),
+              onSurface: AppColors.textPrimary,
             ),
           ),
           child: child!,
@@ -230,7 +231,7 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: BlocConsumer<SignupCubit, SignupState>(
         listener: (context, state) {
           if (state is SignupSuccess) {
@@ -240,7 +241,7 @@ class _SignupPageState extends State<SignupPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.error,
               ),
             );
           }
@@ -269,13 +270,13 @@ class _SignupPageState extends State<SignupPage> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: const Color(0xFF5B7CB5),
+                                  color: AppColors.primary,
                                   width: 2.5,
                                 ),
-                                color: Colors.white,
+                                color: AppColors.surface,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF5B7CB5)
+                                    color: AppColors.primary
                                         .withValues(alpha: 0.15),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
@@ -289,11 +290,11 @@ class _SignupPageState extends State<SignupPage> {
                                         fit: BoxFit.cover,
                                       )
                                     : Container(
-                                        color: const Color(0xFFF5F7FA),
+                                        color: AppColors.background,
                                         child: Icon(
                                           Icons.person,
                                           size: 50,
-                                          color: const Color(0xFF5B7CB5)
+                                          color: AppColors.primary
                                               .withValues(alpha: 0.5),
                                         ),
                                       ),
@@ -308,10 +309,10 @@ class _SignupPageState extends State<SignupPage> {
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF5B7CB5),
+                                    color: AppColors.primary,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white,
+                                      color: AppColors.surface,
                                       width: 2.5,
                                     ),
                                     boxShadow: [
@@ -344,7 +345,7 @@ class _SignupPageState extends State<SignupPage> {
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF5B6B8C),
+                          color: AppColors.textPrimary,
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -354,7 +355,7 @@ class _SignupPageState extends State<SignupPage> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
-                          color: const Color(0xFF5B6B8C).withValues(alpha: 0.6),
+                          color: AppColors.textSecondary.withValues(alpha: 0.6),
                           fontWeight: FontWeight.w400,
                         ),
                       ),
@@ -395,7 +396,7 @@ class _SignupPageState extends State<SignupPage> {
                             _obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
-                            color: const Color(0xFF5B7CB5),
+                            color: AppColors.primary,
                             size: 20,
                           ),
                           onPressed: () {
@@ -434,7 +435,7 @@ class _SignupPageState extends State<SignupPage> {
                                   onTap: () => _selectDate(context),
                                   suffixIcon: const Icon(
                                     Icons.calendar_today,
-                                    color: Color(0xFF5B7CB5),
+                                    color: AppColors.primary,
                                     size: 18,
                                   ),
                                 ),
@@ -463,14 +464,14 @@ class _SignupPageState extends State<SignupPage> {
                         child: ElevatedButton(
                           onPressed: isLoading ? null : _handleSignup,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5B7CB5),
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
                             disabledBackgroundColor:
-                                const Color(0xFF5B7CB5).withValues(alpha: 0.6),
+                                AppColors.primary.withValues(alpha: 0.6),
                           ),
                           child: isLoading
                               ? const SizedBox(
@@ -504,7 +505,7 @@ class _SignupPageState extends State<SignupPage> {
                             "Already have an account? ",
                             style: TextStyle(
                               fontSize: 13,
-                              color: const Color(0xFF5B6B8C)
+                              color: AppColors.textSecondary
                                   .withValues(alpha: 0.7),
                             ),
                           ),
@@ -514,7 +515,7 @@ class _SignupPageState extends State<SignupPage> {
                               "Log In",
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF5B7CB5),
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -540,7 +541,7 @@ class _SignupPageState extends State<SignupPage> {
       style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF5B6B8C).withValues(alpha: 0.8),
+        color: AppColors.textSecondary.withValues(alpha: 0.8),
       ),
     );
   }
@@ -566,44 +567,44 @@ class _SignupPageState extends State<SignupPage> {
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: TextStyle(
-          color: const Color(0xFF5B6B8C).withValues(alpha: 0.3),
+          color: AppColors.textSecondary.withValues(alpha: 0.3),
           fontSize: 14,
         ),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Color(0xFFE0E5EB),
+            color: AppColors.border,
             width: 1.5,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Color(0xFFE0E5EB),
+            color: AppColors.border,
             width: 1.5,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Color(0xFF5B7CB5),
+            color: AppColors.primary,
             width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Colors.red,
+            color: AppColors.error,
             width: 1.5,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Colors.red,
+            color: AppColors.error,
             width: 1.5,
           ),
         ),
@@ -623,7 +624,7 @@ class _SignupPageState extends State<SignupPage> {
       hint: Text(
         "Select",
         style: TextStyle(
-          color: const Color(0xFF5B6B8C).withValues(alpha: 0.3),
+          color: AppColors.textSecondary.withValues(alpha: 0.3),
           fontSize: 14,
         ),
       ),
@@ -644,39 +645,39 @@ class _SignupPageState extends State<SignupPage> {
       },
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Color(0xFFE0E5EB),
+            color: AppColors.border,
             width: 1.5,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Color(0xFFE0E5EB),
+            color: AppColors.border,
             width: 1.5,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Color(0xFF5B7CB5),
+            color: AppColors.primary,
             width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Colors.red,
+            color: AppColors.error,
             width: 1.5,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(
-            color: Colors.red,
+            color: AppColors.error,
             width: 1.5,
           ),
         ),
@@ -688,11 +689,11 @@ class _SignupPageState extends State<SignupPage> {
       ),
       icon: const Icon(
         Icons.arrow_drop_down,
-        color: Color(0xFF5B7CB5),
+        color: AppColors.primary,
       ),
-      dropdownColor: Colors.white,
+      dropdownColor: AppColors.surface,
       style: const TextStyle(
-        color: Color(0xFF5B6B8C),
+        color: AppColors.textSecondary,
         fontSize: 14,
       ),
     );

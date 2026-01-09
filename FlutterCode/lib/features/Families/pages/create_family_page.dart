@@ -1,4 +1,5 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Families/Cubits/create_family_cubit.dart';
 import 'package:famxpense/features/Families/Cubits/create_family_state.dart';
 import 'package:flutter/material.dart';
@@ -56,18 +57,18 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF5B6B8C)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           'Create Family',
           style: TextStyle(
-            color: Color(0xFF5B6B8C),
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -78,7 +79,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
                 margin: const EdgeInsets.all(16),
                 shape: RoundedRectangleBorder(
@@ -92,7 +93,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Family "${state.family.name}" created!'),
-                backgroundColor: const Color(0xFF27AE60),
+                backgroundColor: AppColors.success,
                 behavior: SnackBarBehavior.floating,
                 margin: const EdgeInsets.all(16),
                 shape: RoundedRectangleBorder(
@@ -121,33 +122,47 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5B7CB5).withValues(alpha: 0.1),
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: [
-                          const Icon(
-                            Icons.family_restroom,
-                            size: 48,
-                            color: Color(0xFF5B7CB5),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.family_restroom,
+                              size: 40,
+                              color: AppColors.primary,
+                            ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           const Text(
                             'Start Your Family Journey',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF5B6B8C),
+                              color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 8),
                           Text(
                             'Create a family to manage expenses together',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 13,
-                              color: const Color(0xFF5B6B8C)
-                                  .withValues(alpha: 0.7),
+                              fontSize: 14,
+                              color: AppColors.textSecondary.withOpacity(0.8),
                             ),
                           ),
                         ],
@@ -162,7 +177,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF5B6B8C).withValues(alpha: 0.8),
+                        color: AppColors.textPrimary.withOpacity(0.8),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -182,42 +197,42 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       decoration: InputDecoration(
                         hintText: 'The Smith Family',
                         hintStyle: TextStyle(
-                          color: const Color(0xFF5B6B8C).withValues(alpha: 0.3),
+                          color: AppColors.textSecondary.withOpacity(0.4),
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: AppColors.surface,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFFE0E5EB),
+                            color: AppColors.border,
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFFE0E5EB),
+                            color: AppColors.border,
                             width: 1.5,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF5B7CB5),
+                            color: AppColors.primary,
                             width: 1.5,
                           ),
                         ),
                         errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Colors.red,
+                            color: AppColors.error,
                             width: 1.5,
                           ),
                         ),
                         focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Colors.red,
+                            color: AppColors.error,
                             width: 1.5,
                           ),
                         ),
@@ -236,7 +251,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF5B6B8C).withValues(alpha: 0.8),
+                        color: AppColors.textPrimary.withOpacity(0.8),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -267,47 +282,47 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       decoration: InputDecoration(
                         hintText: '1000.00',
                         hintStyle: TextStyle(
-                          color: const Color(0xFF5B6B8C).withValues(alpha: 0.3),
+                          color: AppColors.textSecondary.withOpacity(0.4),
                         ),
                         prefixText: '\$ ',
                         prefixStyle: const TextStyle(
-                          color: Color(0xFF5B6B8C),
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: AppColors.surface,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFFE0E5EB),
+                            color: AppColors.border,
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFFE0E5EB),
+                            color: AppColors.border,
                             width: 1.5,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF5B7CB5),
+                            color: AppColors.primary,
                             width: 1.5,
                           ),
                         ),
                         errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Colors.red,
+                            color: AppColors.error,
                             width: 1.5,
                           ),
                         ),
                         focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Colors.red,
+                            color: AppColors.error,
                             width: 1.5,
                           ),
                         ),
@@ -326,7 +341,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF5B6B8C).withValues(alpha: 0.8),
+                        color: AppColors.textPrimary.withOpacity(0.8),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -339,28 +354,28 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       decoration: InputDecoration(
                         hintText: 'A short description of your family...',
                         hintStyle: TextStyle(
-                          color: const Color(0xFF5B6B8C).withValues(alpha: 0.3),
+                          color: AppColors.textSecondary.withOpacity(0.4),
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: AppColors.surface,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFFE0E5EB),
+                            color: AppColors.border,
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFFE0E5EB),
+                            color: AppColors.border,
                             width: 1.5,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF5B7CB5),
+                            color: AppColors.primary,
                             width: 1.5,
                           ),
                         ),
@@ -376,14 +391,14 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       child: ElevatedButton(
                         onPressed: isLoading ? null : _handleCreateFamily,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5B7CB5),
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           disabledBackgroundColor:
-                              const Color(0xFF5B7CB5).withValues(alpha: 0.6),
+                              AppColors.primary.withOpacity(0.5),
                         ),
                         child: isLoading
                             ? const SizedBox(
@@ -399,7 +414,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                             : const Text(
                                 'Create Family',
                                 style: TextStyle(
-                                  fontSize: 17,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.3,
                                 ),
@@ -407,32 +422,32 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
                     // Info text
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5B7CB5).withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(6),
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
                             Icons.info_outline,
-                            size: 16,
-                            color:
-                                const Color(0xFF5B7CB5).withValues(alpha: 0.7),
+                            size: 20,
+                            color: AppColors.textSecondary.withOpacity(0.8),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'You will be assigned as the parent of this family and can invite other members later.',
+                              'You will automatically become the admin of this family. You can invite other members from the family settings later.',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: const Color(0xFF5B6B8C)
-                                    .withValues(alpha: 0.7),
+                                fontSize: 13,
+                                height: 1.4,
+                                color: AppColors.textSecondary.withOpacity(0.8),
                               ),
                             ),
                           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 
 /// Displays a single family member card with profile information
@@ -38,8 +39,10 @@ class MemberCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -58,7 +61,7 @@ class MemberCard extends StatelessWidget {
             else
               CircleAvatar(
                 radius: 32,
-                backgroundColor: Colors.blue[300],
+                backgroundColor: AppColors.primary,
                 child: Text(
                   initials,
                   style: const TextStyle(
@@ -98,9 +101,9 @@ class MemberCard extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          backgroundColor: Colors.orange[100],
-                          side: BorderSide(
-                            color: Colors.orange[400]!,
+                          backgroundColor: AppColors.primary.withOpacity(0.1),
+                          side: const BorderSide(
+                            color: AppColors.primary,
                             width: 1,
                           ),
                           padding: const EdgeInsets.symmetric(
@@ -117,7 +120,7 @@ class MemberCard extends StatelessWidget {
                     Text(
                       '@${member.userName}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                           ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -130,13 +133,13 @@ class MemberCard extends StatelessWidget {
                         Icon(
                           Icons.cake,
                           size: 14,
-                          color: Colors.grey[500],
+                          color: AppColors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _formatBirthday(member.birthDate!),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
+                                color: AppColors.textSecondary,
                               ),
                         ),
                       ],

@@ -9,7 +9,8 @@
     <application
         android:label="famxpense"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">
 
         <!-- Default FCM notification channel -->
         <meta-data

@@ -88,15 +88,18 @@ class InvitationsRepository {
         queryParams['status'] = status;
       }
 
+      print('DEBUG: Fetching received invitations');
       final response = await _apiClient.dio.get(
         '/api/invitations/received',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
+      print('DEBUG: Received response: ${response.statusCode} - ${response.data}');
 
       if (response.statusCode == 200) {
         final invitations = (response.data as List)
             .map((inv) => Invitation.fromJson(inv as Map<String, dynamic>))
             .toList();
+        print('DEBUG: Parsed ${invitations.length} invitations');
         return ApiResult.success(invitations);
       }
 

@@ -1,3 +1,4 @@
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class TransactionTypeButton extends StatelessWidget {
@@ -191,17 +192,16 @@ class CategoryChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6C5CE7) : Colors.white,
+          color: isSelected ? AppColors.primary : AppColors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color:
-                isSelected ? const Color(0xFF6C5CE7) : const Color(0xFFDFE6E9),
+            color: isSelected ? AppColors.primary : AppColors.border,
             width: isSelected ? 0 : 1.5,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF6C5CE7).withOpacity(0.3),
+                    color: AppColors.primary.withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -213,7 +213,7 @@ class CategoryChip extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : const Color(0xFF2D3436),
+              color: isSelected ? Colors.white : AppColors.textPrimary,
               size: 20,
             ),
             const SizedBox(width: 8),
@@ -221,7 +221,7 @@ class CategoryChip extends StatelessWidget {
               child: Text(
                 categoryName,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : const Color(0xFF2D3436),
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),

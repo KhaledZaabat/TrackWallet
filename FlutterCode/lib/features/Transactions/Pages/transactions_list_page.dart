@@ -1,6 +1,7 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Transactions/Cubits/transaction_cubit.dart';
 import 'package:famxpense/features/Transactions/Cubits/transaction_state.dart';
 import 'package:famxpense/features/Transactions/Pages/filter.dart';
@@ -103,7 +104,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FA),
+      backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
       body: BlocConsumer<TransactionCubit, TransactionState>(
         listener: (context, state) {
@@ -137,7 +138,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
           if (state is TransactionLoading) {
             return const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6C5CE7)),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             );
           }
@@ -145,7 +146,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
           if (state is TransactionError) {
             return RefreshIndicator(
               onRefresh: _handleRefresh,
-              color: const Color(0xFF6C5CE7),
+              color: AppColors.primary,
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return SingleChildScrollView(
@@ -171,7 +172,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                   child: state.transactions.isEmpty
                       ? RefreshIndicator(
                           onRefresh: _handleRefresh,
-                          color: const Color(0xFF6C5CE7),
+                          color: AppColors.primary,
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               return SingleChildScrollView(
@@ -207,7 +208,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF2D3436),
+          color: AppColors.textPrimary,
         ),
       ),
       centerTitle: true,
@@ -229,8 +230,8 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                 IconButton(
                   icon: const Icon(Icons.filter_list_rounded),
                   color: hasFilters
-                      ? const Color(0xFF6C5CE7)
-                      : const Color(0xFF2D3436),
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
                   onPressed: () {
                     final currentFilters = state is TransactionLoaded
                         ? state.currentFilters
@@ -246,7 +247,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF6C5CE7),
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -266,17 +267,17 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF6C5CE7).withOpacity(0.1),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF6C5CE7).withOpacity(0.3),
+          color: AppColors.border,
         ),
       ),
       child: Row(
         children: [
           const Icon(
             Icons.filter_alt_rounded,
-            color: Color(0xFF6C5CE7),
+            color: AppColors.primary,
             size: 20,
           ),
           const SizedBox(width: 8),
@@ -286,7 +287,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF6C5CE7),
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -304,7 +305,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF6C5CE7),
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -346,7 +347,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C5CE7),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -379,7 +380,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                   ? Icons.filter_alt_off_rounded
                   : Icons.receipt_long_rounded,
               size: 80,
-              color: Colors.grey.shade300,
+              color: AppColors.lightGrey,
             ),
             const SizedBox(height: 20),
             Text(
@@ -387,7 +388,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: Colors.grey.shade700,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -398,7 +399,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade500,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -407,7 +408,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                 style: OutlinedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  side: const BorderSide(color: Color(0xFF6C5CE7)),
+                  side: const BorderSide(color: AppColors.primary),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -417,13 +418,13 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                 },
                 icon: const Icon(
                   Icons.clear_all_rounded,
-                  color: Color(0xFF6C5CE7),
+                  color: AppColors.primary,
                 ),
                 label: const Text(
                   'Clear Filters',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF6C5CE7),
+                    color: AppColors.primary,
                   ),
                 ),
               )
@@ -439,7 +440,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
 
     return RefreshIndicator(
       onRefresh: _handleRefresh,
-      color: const Color(0xFF6C5CE7),
+      color: AppColors.primary,
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
@@ -451,7 +452,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               padding: EdgeInsets.all(16),
               child: Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6C5CE7)),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
               ),
             );
@@ -475,7 +476,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2D3436),
+              color: AppColors.textPrimary,
             ),
           ),
         ),
@@ -519,7 +520,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
   Widget _buildFAB() {
     return FloatingActionButton(
       onPressed: _navigateToAddTransaction,
-      backgroundColor: const Color(0xFF6C5CE7),
+      backgroundColor: AppColors.primary,
       child: const Icon(Icons.add_rounded),
     );
   }

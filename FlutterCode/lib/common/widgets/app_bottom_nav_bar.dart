@@ -1,4 +1,5 @@
 
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class AppBottomNavBar extends StatelessWidget {
@@ -54,31 +55,34 @@ class AppBottomNavBar extends StatelessWidget {
       return BottomNavigationBar(
         currentIndex: navIndex,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B7CB5),
-        unselectedItemColor: const Color(0xFF5B6B8C).withValues(alpha: 0.6),
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.grey,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+        elevation: 8,
         onTap: (index) {
           onBranchTap(index);
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.dashboard_rounded),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
+            icon: Icon(Icons.mail_rounded),
             label: 'Invitations',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
+            icon: Icon(Icons.receipt_long_rounded),
             label: 'Transactions',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
+            icon: Icon(Icons.people_rounded),
             label: 'My Family',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.settings_rounded),
             label: 'Settings',
           ),
         ],
@@ -87,9 +91,10 @@ class AppBottomNavBar extends StatelessWidget {
       return BottomNavigationBar(
         currentIndex: navIndex,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF5B7CB5),
-        unselectedItemColor: const Color(0xFF5B6B8C).withValues(alpha: 0.6),
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.grey,
+        elevation: 8,
         onTap: (index) {
           if (index == 0) {
             onBranchTap(5); // Go to Select Family
@@ -99,11 +104,11 @@ class AppBottomNavBar extends StatelessWidget {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
+            icon: Icon(Icons.people_rounded),
             label: 'Families',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
+            icon: Icon(Icons.mail_rounded),
             label: 'Invitations',
           ),
         ],

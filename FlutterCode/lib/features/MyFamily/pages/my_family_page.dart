@@ -3,10 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/features/MyFamily/cubit/my_family_cubit.dart';
 import 'package:famxpense/features/MyFamily/cubit/my_family_state.dart';
+import 'package:famxpense/features/Transactions/Cubits/transaction_cubit.dart';
+import 'package:famxpense/features/Transactions/Cubits/transaction_state.dart';
 import 'package:famxpense/features/MyFamily/widgets/family_header.dart';
 import 'package:famxpense/features/MyFamily/widgets/members_list.dart';
 
@@ -61,14 +64,22 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<TransactionCubit, TransactionState>(
+      bloc: getIt<TransactionCubit>(),
+      listener: (context, state) {
+        if (state is TransactionOperationSuccess) {
+          context.read<MyFamilyCubit>().loadFamilyDetails();
+        }
+      },
+      child: Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Family Members'),
         centerTitle: false,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        foregroundColor: Colors.black87,
+        foregroundColor: AppColors.textPrimary,
       ),
       body: BlocConsumer<MyFamilyCubit, MyFamilyState>(
         listener: (context, state) {
@@ -76,7 +87,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red[400],
+                backgroundColor: AppColors.error,
                 duration: const Duration(seconds: 3),
               ),
             );
@@ -113,7 +124,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
                     Icon(
                       Icons.error_outline,
                       size: 64,
-                      color: Colors.red[300],
+                      color: AppColors.error,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -127,7 +138,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
                       state.message,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                           ),
                     ),
                     const SizedBox(height: 24),
@@ -136,7 +147,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
                         context.read<MyFamilyCubit>().loadFamilyDetails();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -154,6 +165,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
 
           return const SizedBox.shrink();
         },
+      ),
       ),
     );
   }

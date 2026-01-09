@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 
 /// Displays family header information including name, budget, and bio
@@ -26,9 +27,11 @@ class FamilyHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: AppColors.surface,
       margin: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -49,7 +52,7 @@ class FamilyHeader extends StatelessWidget {
               children: [
                 Icon(
                   Icons.account_balance_wallet,
-                  color: Colors.green[600],
+                  color: AppColors.success,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -69,7 +72,7 @@ class FamilyHeader extends StatelessWidget {
                   ? 'No family bio yet'
                   : familyDetails.familyBio!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                     fontStyle:
                         (familyDetails.familyBio?.isEmpty ?? true)
                             ? FontStyle.italic

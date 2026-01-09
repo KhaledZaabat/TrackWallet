@@ -1,7 +1,7 @@
 // presentation/profile/pages/profile_page.dart
 
 import 'dart:io';
-import 'package:famxpense/core/configs/theme/app_colors.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/domain/entities/user.dart';
 import 'package:famxpense/features/Profile/Cubits/profile_cubit.dart';
 import 'package:famxpense/features/Profile/Cubits/profile_state.dart';
@@ -74,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
             colorScheme: ColorScheme.light(
               primary: AppColors.primary,
               onPrimary: Colors.white,
-              onSurface: AppColors.mainBlackShade,
+              onSurface: AppColors.textPrimary,
             ),
           ),
           child: child!,
@@ -226,7 +226,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FA),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: BlocConsumer<ProfileCubit, ProfileState>(
           listener: _onStateChanged,
@@ -240,7 +240,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                    Icon(Icons.error_outline, size: 48, color: AppColors.error),
                     const SizedBox(height: 16),
                     Text(
                       state.error,
@@ -289,7 +289,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: Icon(
                               Icons.arrow_back,
                               size: 24,
-                              color: Colors.grey.shade700,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -299,6 +299,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               fontSize: 32,
                               fontWeight: FontWeight.w700,
                               fontFamily: GoogleFonts.inter().fontFamily,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -313,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               onTap: isUpdating ? null : _pickImage,
                               child: CircleAvatar(
                                 radius: 60,
-                                backgroundColor: AppColors.stroke,
+                                backgroundColor: AppColors.border,
                                 child: _selectedImage != null
                                     ? ClipOval(
                                         child: Image.file(
@@ -367,7 +368,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           user.email,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey.shade600,
+                            color: AppColors.textSecondary,
                             fontFamily: GoogleFonts.inter().fontFamily,
                           ),
                         ),
@@ -489,7 +490,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Text(
       text,
       style: TextStyle(
-        color: AppColors.mainBlackShade,
+        color: AppColors.textPrimary,
         fontSize: 16,
         fontWeight: FontWeight.w700,
         fontFamily: GoogleFonts.inter().fontFamily,
@@ -504,15 +505,15 @@ class _ProfilePageState extends State<ProfilePage> {
           icon != null ? Icon(icon, color: AppColors.primary, size: 20) : null,
       floatingLabelBehavior: FloatingLabelBehavior.never,
       labelStyle: TextStyle(
-        color: const Color(0xFF8B97A8),
+        color: AppColors.textSecondary,
         fontSize: 14,
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.surface,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: AppColors.stroke,
+          color: AppColors.border,
           width: 1.4,
         ),
       ),
@@ -526,20 +527,20 @@ class _ProfilePageState extends State<ProfilePage> {
       disabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: Colors.grey.shade300,
+          color: AppColors.lightGrey,
           width: 1.4,
         ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(
-          color: Colors.redAccent,
+          color: AppColors.error,
         ),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(
-          color: Colors.redAccent,
+          color: AppColors.error,
         ),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -559,7 +560,7 @@ class _ProfilePageState extends State<ProfilePage> {
       enabled: enabled,
       decoration: _inputDecoration(label, icon: icon),
       style: TextStyle(
-        color: enabled ? Colors.black : Colors.grey.shade600,
+        color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
       ),
     );
   }
@@ -568,7 +569,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Icon(
       Icons.person,
       size: 60,
-      color: Colors.grey.shade500,
+      color: AppColors.lightGrey,
     );
   }
 }

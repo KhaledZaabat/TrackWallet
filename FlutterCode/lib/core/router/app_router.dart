@@ -153,6 +153,7 @@ class AppRouter {
           
           GoRoute(
             path: Routes.createFamily,
+            parentNavigatorKey: _rootNavigatorKey,
             builder: (context, state) => const CreateFamilyPage(),
           ),
           

@@ -1,7 +1,7 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/services/category_service.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/data/repos/transaction_repository.dart';
-
 import 'package:famxpense/models/Transactions/transaction_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,7 +25,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
 
   // Filter state
   TransactionType? _selectedType;
-  String? _selectedCategoryGroup; // Changed from _selectedCategoryType
+  String? _selectedCategoryGroup;
   double? _minAmount;
   double? _maxAmount;
   String? _selectedCreatorId;
@@ -143,7 +143,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
       opacity: _fadeAnimation,
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
@@ -183,7 +183,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
         width: 48,
         height: 5,
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: AppColors.border,
           borderRadius: BorderRadius.circular(3),
         ),
       ),
@@ -200,7 +200,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2D3436),
+              color: AppColors.textPrimary,
             ),
           ),
           const Spacer(),
@@ -208,7 +208,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF6C5CE7).withOpacity(0.15),
+                color: AppColors.primary.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -216,7 +216,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF6C5CE7),
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -234,7 +234,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -253,7 +253,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
               child: _FilterChip(
                 label: 'Income',
                 icon: Icons.arrow_upward_rounded,
-                color: const Color(0xFF27AE60),
+                color: AppColors.success,
                 isSelected: _selectedType == TransactionType.Income,
                 onTap: () =>
                     setState(() => _selectedType = TransactionType.Income),
@@ -264,7 +264,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
               child: _FilterChip(
                 label: 'Expense',
                 icon: Icons.arrow_downward_rounded,
-                color: const Color(0xFFE74C3C),
+                color: AppColors.error,
                 isSelected: _selectedType == TransactionType.Expense,
                 onTap: () =>
                     setState(() => _selectedType = TransactionType.Expense),
@@ -277,7 +277,6 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
   }
 
   Widget _buildCategoryFilter() {
-    // Get unique category groups
     final categoryGroups = _getCategoryGroups();
 
     return Column(
@@ -288,7 +287,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -344,7 +343,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -366,7 +365,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Icon(
                 Icons.arrow_forward_rounded,
-                color: Colors.grey.shade400,
+                color: AppColors.textSecondary.withOpacity(0.5),
                 size: 20,
               ),
             ),
@@ -399,10 +398,10 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF636E72),
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 6),
@@ -411,9 +410,9 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: const Icon(Icons.attach_money_rounded, size: 20),
+            prefixIcon: Icon(Icons.attach_money_rounded, size: 20, color: AppColors.textSecondary),
             filled: true,
-            fillColor: const Color(0xFFF5F8FA),
+            fillColor: AppColors.background,
             contentPadding: const EdgeInsets.symmetric(vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -421,11 +420,11 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFDFE6E9)),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF6C5CE7), width: 2),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
           ),
           inputFormatters: [
@@ -446,39 +445,39 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
         if (_isLoadingUsers)
-          const Center(
+          Center(
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ),
           )
         else if (_familyUsers.isEmpty)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F8FA),
+              color: AppColors.background,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFDFE6E9)),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.info_outline_rounded,
-                  color: Colors.grey.shade400,
+                  color: AppColors.textSecondary.withOpacity(0.5),
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'No family members found',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Color(0xFF636E72),
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -514,7 +513,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -533,7 +532,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: const BorderSide(
-                      color: Color(0xFFDFE6E9),
+                      color: AppColors.border,
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(
@@ -547,7 +546,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                       Icon(
                         Icons.clear_all_rounded,
                         size: 20,
-                        color: Color(0xFF2D3436),
+                        color: AppColors.textPrimary,
                       ),
                       SizedBox(width: 8),
                       Text(
@@ -555,7 +554,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF2D3436),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -568,10 +567,10 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFF6C5CE7),
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  shadowColor: const Color(0xFF6C5CE7).withOpacity(0.4),
+                  shadowColor: AppColors.primary.withOpacity(0.4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -619,7 +618,7 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = color ?? const Color(0xFF6C5CE7);
+    final chipColor = color ?? AppColors.primary;
 
     return GestureDetector(
       onTap: onTap,
@@ -628,10 +627,10 @@ class _FilterChip extends StatelessWidget {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? chipColor : Colors.white,
+          color: isSelected ? chipColor : AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? chipColor : const Color(0xFFDFE6E9),
+            color: isSelected ? chipColor : AppColors.border,
             width: isSelected ? 0 : 1.5,
           ),
           boxShadow: isSelected
@@ -649,14 +648,14 @@ class _FilterChip extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : const Color(0xFF2D3436),
+              color: isSelected ? Colors.white : AppColors.textPrimary,
               size: 18,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : const Color(0xFF2D3436),
+                color: isSelected ? Colors.white : AppColors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),

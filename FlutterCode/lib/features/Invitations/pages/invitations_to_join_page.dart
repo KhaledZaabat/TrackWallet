@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:famxpense/models/Invitations/invitation_model.dart';
 
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
@@ -81,7 +82,7 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
           if (state is InvitationsLoaded) {
             // Only show received pending invitations
             final receivedPending = state.receivedInvitations
-                .where((inv) => inv.status.name == 'pending')
+                .where((inv) => inv.status == InvitationStatus.pending)
                 .toList();
 
             if (receivedPending.isEmpty) {

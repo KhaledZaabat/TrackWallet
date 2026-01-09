@@ -10,6 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'package:famxpense/core/services/notifications_service.dart';
 import 'package:famxpense/core/router/app_router.dart';
+import 'package:famxpense/core/theme/app_theme.dart';
 import 'dart:async';
 
 import 'package:go_router/go_router.dart';
@@ -78,10 +79,7 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp.router(
         title: 'FamXpense',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.lightTheme,
         routerConfig: _router,
       ),
     );

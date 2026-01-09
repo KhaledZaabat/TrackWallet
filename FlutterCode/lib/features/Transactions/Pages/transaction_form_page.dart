@@ -1,10 +1,10 @@
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/domain/entities/category.dart';
 import 'package:famxpense/features/Transactions/Cubits/transaction_cubit.dart';
 import 'package:famxpense/features/Transactions/Cubits/transaction_state.dart';
 import 'package:famxpense/features/Transactions/Pages/category_selector_sheet.dart';
-import 'package:famxpense/features/Transactions/Pages/transaction_type_button.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -155,7 +155,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const DeleteConfirmationDialog(),
+      builder: (context) => const _DeleteConfirmationDialog(),
     );
 
     if (confirmed == true && mounted) {
@@ -193,7 +193,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F8FA),
+        backgroundColor: AppColors.background,
         appBar: _buildAppBar(),
         body: _buildBody(),
         bottomNavigationBar: _buildBottomBar(),
@@ -203,11 +203,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 20, color: AppColors.textPrimary),
         onPressed: () => Navigator.of(context).pop(),
       ),
       centerTitle: true,
@@ -216,14 +217,14 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
         style: const TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 18,
-          color: Color(0xFF2D3436),
+          color: AppColors.textPrimary,
         ),
       ),
       actions: _isEditing
           ? [
               IconButton(
                 icon: const Icon(Icons.delete_outline_rounded),
-                color: Colors.red.shade400,
+                color: AppColors.error,
                 onPressed: _handleDelete,
               ),
             ]
@@ -234,26 +235,25 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   Widget _buildBody() {
     return BlocBuilder<TransactionCubit, TransactionState>(
       builder: (context, state) {
-        final isLoading = state is TransactionOperationInProgress;
-
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildTypeSelector(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 _buildAmountField(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 _buildTitleField(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 _buildCategorySelector(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 _buildDateSelector(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 _buildNotesField(),
+                const SizedBox(height: 80), // Extra space for scrolling
               ],
             ),
           ),
@@ -263,29 +263,37 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   Widget _buildTypeSelector() {
-    return Row(
-      children: [
-        Expanded(
-          child: TransactionTypeButton(
-            label: 'Expense',
-            icon: Icons.arrow_downward_rounded,
-            color: const Color(0xFFE74C3C),
-            isSelected: _selectedType == TransactionType.Expense,
-            onTap: () =>
-                setState(() => _selectedType = TransactionType.Expense),
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _TransactionTypeSegment(
+              label: 'Expense',
+              icon: Icons.arrow_downward_rounded,
+              color: AppColors.error,
+              isSelected: _selectedType == TransactionType.Expense,
+              onTap: () =>
+                  setState(() => _selectedType = TransactionType.Expense),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: TransactionTypeButton(
-            label: 'Income',
-            icon: Icons.arrow_upward_rounded,
-            color: const Color(0xFF27AE60),
-            isSelected: _selectedType == TransactionType.Income,
-            onTap: () => setState(() => _selectedType = TransactionType.Income),
+          Expanded(
+            child: _TransactionTypeSegment(
+              label: 'Income',
+              icon: Icons.arrow_upward_rounded,
+              color: AppColors.success,
+              isSelected: _selectedType == TransactionType.Income,
+              onTap: () =>
+                  setState(() => _selectedType = TransactionType.Income),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -293,44 +301,50 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Amount',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             fontSize: 14,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary.withOpacity(0.8),
           ),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: _amountController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
           decoration: InputDecoration(
             hintText: '0.00',
-            prefixIcon: const Icon(Icons.attach_money_rounded),
+            hintStyle: TextStyle(
+              color: AppColors.textSecondary.withOpacity(0.3),
+            ),
+            prefixIcon: const Icon(Icons.attach_money_rounded,
+                color: AppColors.textPrimary),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppColors.surface,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFDFE6E9)),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFDFE6E9)),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF6C5CE7), width: 2),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 20),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter an amount';
-            }
+            if (value == null || value.isEmpty) return 'Enter amount';
             final amount = double.tryParse(value);
-            if (amount == null || amount <= 0) {
-              return 'Please enter a valid amount';
-            }
+            if (amount == null || amount <= 0) return 'Invalid amount';
             return null;
           },
         ),
@@ -342,34 +356,21 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Title (Optional)',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             fontSize: 14,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary.withOpacity(0.8),
           ),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: _titleController,
-          decoration: InputDecoration(
-            hintText: 'What is this transaction?',
-            prefixIcon: const Icon(Icons.title_rounded),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFDFE6E9)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFDFE6E9)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF6C5CE7), width: 2),
-            ),
+          style: const TextStyle(color: AppColors.textPrimary),
+          decoration: _inputDecoration(
+            hint: 'What is this for?',
+            icon: Icons.title_rounded,
           ),
         ),
       ],
@@ -380,49 +381,60 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Category',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             fontSize: 14,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary.withOpacity(0.8),
           ),
         ),
         const SizedBox(height: 8),
         InkWell(
           onTap: _selectCategory,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFDFE6E9)),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
-                Icon(
-                  _selectedCategory?.icon ?? Icons.category_outlined,
-                  color: const Color(0xFF6C5CE7),
-                  size: 24,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _selectedCategory != null
+                        ? AppColors.primary.withOpacity(0.1)
+                        : AppColors.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _selectedCategory?.icon ?? Icons.category_outlined,
+                    color: _selectedCategory != null
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                    size: 20,
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     _selectedCategory?.displayName ?? 'Select Category',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 15,
+                      fontSize: 16,
                       color: _selectedCategory != null
-                          ? const Color(0xFF2D3436)
-                          : const Color(0xFFB2BEC3),
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary.withOpacity(0.5),
                     ),
                   ),
                 ),
                 const Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: Color(0xFFB2BEC3),
+                  color: AppColors.textSecondary,
                 ),
               ],
             ),
@@ -436,42 +448,54 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Date',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             fontSize: 14,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary.withOpacity(0.8),
           ),
         ),
         const SizedBox(height: 8),
         InkWell(
           onTap: _selectDate,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFDFE6E9)),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.calendar_today_rounded,
-                  color: Color(0xFF6C5CE7),
-                  size: 22,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.calendar_today_rounded,
+                    color: AppColors.textPrimary,
+                    size: 20,
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     DateFormat('EEE, MMM d, yyyy').format(_selectedDate),
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: Color(0xFF2D3436),
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
                     ),
                   ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
                 ),
               ],
             ),
@@ -485,34 +509,23 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Notes (Optional)',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             fontSize: 14,
-            color: Color(0xFF2D3436),
+            color: AppColors.textPrimary.withOpacity(0.8),
           ),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: _notesController,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: 'Add any additional details...',
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFDFE6E9)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFDFE6E9)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF6C5CE7), width: 2),
-            ),
+          maxLines: 3,
+          style: const TextStyle(color: AppColors.textPrimary),
+          decoration: _inputDecoration(
+            hint: 'Add any additional details...',
+            icon: Icons.notes_rounded,
+            isMultiLine: true,
           ),
         ),
       ],
@@ -524,17 +537,26 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
       builder: (context, state) {
         final isLoading = state is TransactionOperationInProgress;
 
-        return SafeArea(
-          minimum: const EdgeInsets.all(16),
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
           child: SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C5CE7),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shadowColor: const Color(0xFF6C5CE7).withOpacity(0.4),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -549,30 +571,197 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _isEditing
-                              ? Icons.check_circle_outline_rounded
-                              : Icons.add_circle_outline_rounded,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _isEditing ? 'Update Transaction' : 'Add Transaction',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ],
+                  : Text(
+                      _isEditing ? 'Update Transaction' : 'Save Transaction',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                      ),
                     ),
             ),
           ),
         );
       },
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String hint,
+    required IconData icon,
+    bool isMultiLine = false,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+        color: AppColors.textSecondary.withOpacity(0.4),
+      ),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary),
+      prefixIconConstraints: const BoxConstraints(minWidth: 56),
+      filled: true,
+      fillColor: AppColors.surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+      contentPadding: isMultiLine
+          ? const EdgeInsets.all(16)
+          : const EdgeInsets.symmetric(horizontal: 16),
+    );
+  }
+}
+
+class _TransactionTypeSegment extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TransactionTypeSegment({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteConfirmationDialog extends StatelessWidget {
+  const _DeleteConfirmationDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      contentPadding: const EdgeInsets.all(28),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.delete_outline_rounded,
+              size: 48,
+              color: AppColors.error,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Delete Transaction?',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This action cannot be undone. The transaction will be permanently deleted.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary.withOpacity(0.8),
+            ),
+          ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(
+                      color: AppColors.border,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

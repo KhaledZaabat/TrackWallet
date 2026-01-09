@@ -1,18 +1,12 @@
+import 'package:famxpense/core/theme/app_colors.dart';
+import 'package:famxpense/models/Invitations/invitation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:famxpense/models/Invitations/invitation_model.dart';
 
 /// Reusable card widget displaying a single invitation with appropriate action buttons
 ///
 /// This widget is used in both ReceivedInvitationsTab and SentInvitationsTab to display
 /// invitation details and handle user actions (accept, decline, cancel).
-///
-/// Props:
-/// - [invitation]: The invitation data to display
-/// - [onAccept]: Callback when accept button is tapped (null if sent tab or non-pending)
-/// - [onDecline]: Callback when decline button is tapped (null if sent tab)
-/// - [onCancel]: Callback when cancel button is tapped (null if received tab)
-/// - [isLoading]: Whether this invitation's action is currently processing
 class InvitationCard extends StatelessWidget {
   final Invitation invitation;
   final VoidCallback? onAccept;
@@ -21,6 +15,7 @@ class InvitationCard extends StatelessWidget {
   final bool isLoading;
 
   const InvitationCard({
+    super.key,
     required this.invitation,
     this.onAccept,
     this.onDecline,
@@ -30,162 +25,258 @@ class InvitationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Determine if this is a Sent invitation (no accept/decline actions OR has cancel action)
     final isSent = onCancel != null || (onAccept == null && onDecline == null);
     final statusColor = _getStatusColor(invitation.status);
 
-    return Card(
-      margin: const EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.border,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04), // Subtle shadow
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header: Invitation title + status badge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    isSent
-                        ? 'Invited ${invitation.inviteeEmail}'
-                        : 'Invited by ${invitation.inviterName}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isSent
+                            ? 'To: ${invitation.inviteeEmail}'
+                            : 'From: ${invitation.inviterName}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
-                    overflow: TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Join ${invitation.familyName}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Chip(
-                  label: Text(
-                    invitation.status.name.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: statusColor.withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
-                  backgroundColor: statusColor.withOpacity(0.2),
-                  side: BorderSide(color: statusColor, width: 1),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Text(
+                    invitation.status.name.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-
-            // Family and role information
-            Text(
-              'To join ${invitation.familyName} as ${invitation.isParent ? 'parent' : 'member'}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[700],
-                  ),
+            
+            const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Divider(height: 1, color: AppColors.border),
             ),
-            const SizedBox(height: 4),
 
-            // Date information
-            Text(
-              'Sent on ${_getFormattedDate(invitation.sentAtUtc)}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[500],
+            // Role and Date Info
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline_rounded, 
+                  size: 16, 
+                  color: AppColors.textSecondary.withOpacity(0.7)
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  invitation.isParent ? 'Role: Parent' : 'Role: Member',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary.withOpacity(0.8),
+                    fontWeight: FontWeight.w500,
                   ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.access_time_rounded, 
+                  size: 16, 
+                  color: AppColors.textSecondary.withOpacity(0.7)
+                ),
+                 const SizedBox(width: 6),
+                Text(
+                  _getFormattedDate(invitation.sentAtUtc),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary.withOpacity(0.8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
 
             // Action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Accept button (only for received invitations)
-                if (onAccept != null) ...[
-                  ElevatedButton(
-                    onPressed: isLoading ? null : onAccept,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      disabledBackgroundColor: Colors.grey[300],
-                    ),
-                    child: isLoading
-                        ? SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(
-                                Colors.grey[600],
-                              ),
-                            ),
-                          )
-                        : const Text(
-                            'Accept',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
+            if (onAccept != null || onDecline != null || (onCancel != null && invitation.status == InvitationStatus.pending)) ...[
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // Cancel button (only for sent pending invitations)
+                  if (onCancel != null && invitation.status == InvitationStatus.pending)
+                     Expanded(child: _buildActionButton(
+                      context,
+                      label: 'Cancel Invite',
+                      onPressed: onCancel!,
+                      isPrimary: false,
+                      isLoading: isLoading,
+                      color: AppColors.error,
+                      icon: Icons.close_rounded,
+                    )),
 
-                // Decline button (only for received invitations)
-                if (onDecline != null) ...[
-                  OutlinedButton(
-                    onPressed: isLoading ? null : onDecline,
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: isLoading ? Colors.grey[300]! : Colors.red,
-                      ),
-                      disabledForegroundColor: Colors.grey[400],
-                    ),
-                    child: const Text('Decline'),
-                  ),
-                  const SizedBox(width: 8),
-                ],
+                  // Decline button (only for received invitations)
+                  if (onDecline != null) ...[
+                     Expanded(child: _buildActionButton(
+                      context,
+                      label: 'Decline',
+                      onPressed: onDecline!,
+                      isPrimary: false,
+                      isLoading: isLoading,
+                      color: AppColors.textSecondary, 
+                      icon: Icons.close_rounded,
+                    )),
+                    const SizedBox(width: 12),
+                  ],
 
-                // Cancel button (only for sent pending invitations)
-                if (onCancel != null && invitation.status == InvitationStatus.pending) ...[
-                  OutlinedButton(
-                    onPressed: isLoading ? null : onCancel,
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: isLoading ? Colors.grey[300]! : Colors.orange,
-                      ),
-                      disabledForegroundColor: Colors.grey[400],
-                    ),
-                    child: isLoading
-                        ? SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(
-                                Colors.grey[600],
-                              ),
-                            ),
-                          )
-                        : const Text('Cancel'),
-                  ),
+                  // Accept button (only for received invitations)
+                  if (onAccept != null)
+                     Expanded(child: _buildActionButton(
+                      context,
+                      label: 'Accept',
+                      onPressed: onAccept!,
+                      isPrimary: true,
+                      isLoading: isLoading,
+                      color: AppColors.success,
+                      icon: Icons.check_rounded,
+                    )),
+                  
                 ],
-              ],
-            ),
+              ),
+            ]
           ],
         ),
       ),
     );
   }
 
-  /// Get color for status badge based on invitation status
+  Widget _buildActionButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onPressed,
+    required bool isPrimary,
+    required bool isLoading,
+    required Color color,
+    required IconData icon,
+  }) {
+    return SizedBox(
+      height: 44,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isPrimary ? AppColors.primary : Colors.white,
+          foregroundColor: isPrimary ? Colors.white : AppColors.textPrimary,
+          elevation: isPrimary ? 2 : 0,
+          shadowColor: isPrimary ? AppColors.primary.withOpacity(0.3) : Colors.transparent,
+          side: isPrimary 
+              ? BorderSide.none 
+              : BorderSide(color: AppColors.border, width: 1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: EdgeInsets.zero,
+        ),
+        child: isLoading
+            ? SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(
+                    isPrimary ? Colors.white : AppColors.textSecondary,
+                  ),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (!isPrimary) ...[
+                      Icon(icon, size: 18, color: color),
+                       const SizedBox(width: 8),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isPrimary ? Colors.white : color,
+                    ),
+                  ),
+                   if (isPrimary) ...[
+                       const SizedBox(width: 8),
+                      Icon(icon, size: 18, color: Colors.white),
+                  ],
+                ],
+              ),
+      ),
+    );
+  }
+
+  
   Color _getStatusColor(InvitationStatus status) {
     switch (status) {
       case InvitationStatus.pending:
-        return Colors.orange;
+        return Colors.orange.shade700;
       case InvitationStatus.accepted:
-        return Colors.green;
+        return AppColors.success;
       case InvitationStatus.declined:
-        return Colors.red;
+        return AppColors.error;
       case InvitationStatus.cancelled:
-        return Colors.grey;
+        return AppColors.textSecondary;
     }
   }
 
-  /// Format date for display as "MMM dd, yyyy" in local timezone
   String _getFormattedDate(DateTime utcDateTime) {
     final localDateTime = utcDateTime.toLocal();
     return DateFormat('MMM dd, yyyy').format(localDateTime);

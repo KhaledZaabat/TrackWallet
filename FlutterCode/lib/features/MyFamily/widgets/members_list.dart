@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 import 'package:famxpense/features/MyFamily/widgets/member_card.dart';
 
@@ -31,20 +32,20 @@ class MembersListWidget extends StatelessWidget {
               Icon(
                 Icons.people_outline,
                 size: 64,
-                color: Colors.grey[400],
+                color: AppColors.lightGrey,
               ),
               const SizedBox(height: 16),
               Text(
                 'No family members yet',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                     ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Invite members to see them here',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[500],
+                      color: AppColors.textSecondary,
                     ),
               ),
             ],
