@@ -16,4 +16,13 @@ public sealed record DomainError(DomainErrorCode DomainErrorCode, string Type, s
         new(DomainErrorCode.Unexpected, "Domain.Unexpected", detail);
     public static DomainError Forbidden(string detail) =>
      new(DomainErrorCode.Forbidden, "Domain.Forbidden", detail);
+
+    public static DomainError Forbidden(string entity, string detail) =>
+        new(DomainErrorCode.Forbidden, $"Domain.{entity}.Forbidden", detail);
+
+    public static DomainError NotFound(string entity, string detail) =>
+        new(DomainErrorCode.NotFound, $"Domain.{entity}.NotFound", detail);
+
+    public static DomainError BusinessRule(string entity, string detail) =>
+        new(DomainErrorCode.InvalidState, $"Domain.{entity}.BusinessRule", detail);
 }
