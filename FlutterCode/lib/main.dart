@@ -38,6 +38,11 @@ Future<void> main() async {
     _firebaseMessagingBackgroundHandler,
   );
 
+  // Initialize HydratedBloc storage for persisting cubit states
+  HydratedBloc.storage = await HydratedStorage.build(
+    storageDirectory: await getApplicationDocumentsDirectory(),
+  );
+
   await NotificationService.initialize();
   await setupDependencyInjection();
   await getIt<CategoryService>().initialize();

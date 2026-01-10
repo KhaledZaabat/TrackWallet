@@ -125,6 +125,8 @@ class FamilyRepository {
     try {
       final deviceInfo = await _deviceManager.getDeviceInfo();
 
+      AppLogger.info('FamilyRepository', 'Selecting family: $familyId');
+
       final response = await _apiClient.dio.post(
         '/api/families/select',
         data: {
@@ -136,11 +138,17 @@ class FamilyRepository {
       if (response.statusCode == 200) {
         final data = response.data;
 
+        final newJwt = data['jwtToken']['token'] as String;
+        final newRefresh = data['refreshToken']['token'] as String;
+
+        AppLogger.info('FamilyRepository', 'Received new JWT token (${newJwt.length} chars)');
+
         // Save new auth tokens
-        await _localStorage.saveAuthTokens(
-          data['jwtToken']['token'],
-          data['refreshToken']['token'],
-        );
+        await _localStorage.saveAuthTokens(newJwt, newRefresh);
+
+        // Verify token was saved correctly
+        final savedToken = await _localStorage.getJwtToken();
+        AppLogger.info('FamilyRepository', 'Verified saved JWT (${savedToken?.length ?? 0} chars), match: ${savedToken == newJwt}');
 
         // Save selected family ID
         await _localStorage.saveSelectedFamilyId(familyId);
@@ -150,6 +158,7 @@ class FamilyRepository {
 
       return SelectFamilyResult.failure('Failed to select family');
     } on DioException catch (e) {
+      AppLogger.error('FamilyRepository', 'DioException selecting family', error: e);
       if (e.response?.statusCode == 404) {
         return SelectFamilyResult.failure('Family not found');
       } else if (e.response?.statusCode == 401) {
@@ -159,10 +168,12 @@ class FamilyRepository {
         return SelectFamilyResult.failure(error);
       }
       return SelectFamilyResult.failure('Network error. Please try again.');
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.error('FamilyRepository', 'Error selecting family', error: e, stackTrace: stackTrace);
       return SelectFamilyResult.failure('An unexpected error occurred');
     }
   }
+
 
   /// Get selected family ID from local storage
   Future<String?> getSelectedFamilyId() async {

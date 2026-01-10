@@ -1,5 +1,6 @@
 // core/network/api_client.dart
 import 'package:dio/dio.dart';
+import 'package:famxpense/core/app_logger.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 
 class ApiClient {
@@ -23,14 +24,18 @@ class ApiClient {
           final token = await _localStorage.getJwtToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            AppLogger.info('ApiClient', 'Request to ${options.path} with token (${token.length} chars)');
+          } else {
+            AppLogger.info('ApiClient', 'Request to ${options.path} WITHOUT token');
           }
           return handler.next(options);
         },
+
         onError: (error, handler) async {
           final isRefreshCall =
               error.requestOptions.path.contains('/api/identity/refresh');
 
-          if (error.response?.statusCode == 401 && !isRefreshCall) {
+          if ((error.response?.statusCode == 401 || error.response?.statusCode == 403)&& !isRefreshCall) {
             // If already refreshing, queue this request
             if (_isRefreshing) {
               // Wait for refresh to complete, then retry
