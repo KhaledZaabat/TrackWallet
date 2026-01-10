@@ -129,9 +129,11 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
               Navigator.pop(dialogContext);
               final success = await context.read<MyFamilyCubit>().leaveFamily();
               if (success && mounted) {
-                // Refresh families list before navigating
-                getIt<SelectFamilyCubit>().loadFamilies();
-                context.go(Routes.selectFamily);
+                // Wait for families list to refresh before navigating
+                await getIt<SelectFamilyCubit>().loadFamilies();
+                if (mounted) {
+                  context.go(Routes.selectFamily);
+                }
               }
             },
             style: ElevatedButton.styleFrom(

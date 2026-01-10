@@ -166,124 +166,132 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
 
           if (state is SelectFamilyFamiliesLoaded) {
             return SafeArea(
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Select a Family',
-                                      style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                        letterSpacing: -0.5,
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await context.read<SelectFamilyCubit>().loadFamilies();
+                  await _loadCurrentFamilyId();
+                },
+                color: AppColors.primary,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Select a Family',
+                                        style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                          letterSpacing: -0.5,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      state.families.isEmpty
-                                          ? 'Create your first family'
-                                          : 'Choose a family to continue',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: AppColors.textSecondary.withValues(alpha: 0.6),
-                                        fontWeight: FontWeight.w400,
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        state.families.isEmpty
+                                            ? 'Create your first family'
+                                            : 'Choose a family to continue',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: AppColors.textSecondary.withValues(alpha: 0.6),
+                                          fontWeight: FontWeight.w400,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              // Create Family Button (only show when there are families)
-                              if (state.families.isNotEmpty)
-                                Material(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                  elevation: 4,
-                                  shadowColor: AppColors.primary.withValues(alpha: 0.3),
-                                  child: InkWell(
-                                    onTap: () async {
-                                      final result = await context.push(
-                                        Routes.createFamily,
-                                      );
-
-                                      // Reload families if a family was created
-                                      if (result == true && context.mounted) {
-                                        context
-                                            .read<SelectFamilyCubit>()
-                                            .loadFamilies();
-                                      }
-                                    },
+                                // Create Family Button (only show when there are families)
+                                if (state.families.isNotEmpty)
+                                  Material(
+                                    color: AppColors.primary,
                                     borderRadius: BorderRadius.circular(12),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(12),
-                                      child: Icon(
-                                        Icons.add,
-                                        color: Colors.white,
-                                        size: 24,
+                                    elevation: 4,
+                                    shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                                    child: InkWell(
+                                      onTap: () async {
+                                        final result = await context.push(
+                                          Routes.createFamily,
+                                        );
+
+                                        // Reload families if a family was created
+                                        if (result == true && context.mounted) {
+                                          context
+                                              .read<SelectFamilyCubit>()
+                                              .loadFamilies();
+                                        }
+                                      },
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(12),
+                                        child: Icon(
+                                          Icons.add,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (state.families.isEmpty)
-                    const SliverFillRemaining(
-                      child: _EmptyFamiliesView(),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final family = state.families[index];
-                            final isCurrentFamily = family.id == _currentFamilyId;
-                            
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: _FamilyCard(
-                                family: family,
-                                isSelected: isCurrentFamily,
-                                onTap: () {
-                                  if (isCurrentFamily) {
-                                    if (context.canPop()) {
-                                      context.pop();
-                                    } else {
-                                      context.go(Routes.dashboard);
-                                    }
-                                  } else {
-                                    context
-                                      .read<SelectFamilyCubit>()
-                                      .selectFamily(family.id);
-                                  }
-                                },
-                                onDelete: () => _showDeleteFamilyDialog(family),
-                              ),
-                            );
-                          },
-                          childCount: state.families.length,
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 24),
-                  ),
-                ],
+                    if (state.families.isEmpty)
+                      const SliverFillRemaining(
+                        child: _EmptyFamiliesView(),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final family = state.families[index];
+                              final isCurrentFamily = family.id == _currentFamilyId;
+                              
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: _FamilyCard(
+                                  family: family,
+                                  isSelected: isCurrentFamily,
+                                  onTap: () {
+                                    if (isCurrentFamily) {
+                                      if (context.canPop()) {
+                                        context.pop();
+                                      } else {
+                                        context.go(Routes.dashboard);
+                                      }
+                                    } else {
+                                      context
+                                        .read<SelectFamilyCubit>()
+                                        .selectFamily(family.id);
+                                    }
+                                  },
+                                  onDelete: () => _showDeleteFamilyDialog(family),
+                                ),
+                              );
+                            },
+                            childCount: state.families.length,
+                          ),
+                        ),
+                      ),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: 24),
+                    ),
+                  ],
+                ),
               ),
             );
           }
