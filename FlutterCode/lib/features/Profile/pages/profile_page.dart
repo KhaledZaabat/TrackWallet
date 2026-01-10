@@ -5,6 +5,7 @@ import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/domain/entities/user.dart';
 import 'package:famxpense/features/Profile/Cubits/profile_cubit.dart';
 import 'package:famxpense/features/Profile/Cubits/profile_state.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -91,6 +92,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _pickImage() async {
+    final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: Colors.white,
@@ -103,12 +105,12 @@ class _ProfilePageState extends State<ProfilePage> {
             ListTile(
               leading:
                   const Icon(Icons.photo_library, color: AppColors.primary),
-              title: const Text('Choose from Gallery'),
+              title: Text(l10n.chooseFromGallery),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt, color: AppColors.primary),
-              title: const Text('Take a Photo'),
+              title: Text(l10n.takePhoto),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
           ],
@@ -133,6 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _onSubmit() {
+    final l10n = AppLocalizations.of(context)!;
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) return;
@@ -141,7 +144,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final state = cubit.state;
 
     if (state is! ProfileLoaded && state is! ProfileError) {
-      _showSnackBar('Cannot update profile at this time');
+      _showSnackBar(l10n.cannotUpdateProfileNow);
       return;
     }
 
@@ -186,25 +189,28 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   String? _validateFullName(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) {
-      return 'Full name is required';
+      return l10n.fullNameRequired;
     }
     if (value.trim().length < 3) {
-      return 'Full name must be at least 3 characters';
+      return l10n.fullNameMinLength;
     }
     return null;
   }
 
   String? _validateDob(String? _) {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedDob == null) {
-      return 'Please select your birth date';
+      return l10n.pleaseSelectBirthDate;
     }
     return null;
   }
 
   String? _validateGender(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) {
-      return 'Please select gender';
+      return l10n.pleaseSelectGender;
     }
     return null;
   }
@@ -225,6 +231,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -252,7 +260,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       onPressed: () =>
                           context.read<ProfileCubit>().loadProfile(),
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(l10n.retry),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -266,7 +274,7 @@ class _ProfilePageState extends State<ProfilePage> {
             final user = _getUserFromState(state);
 
             if (user == null) {
-              return const Center(child: Text('No user data available'));
+              return Center(child: Text(l10n.noUserData));
             }
 
             final isUpdating = state is ProfileUpdating;
@@ -294,7 +302,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            "Profile",
+                            l10n.profile,
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.w700,
@@ -376,11 +384,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 32),
 
                       // Personal Information Section
-                      _sectionLabel("Personal Information"),
+                      _sectionLabel(l10n.personalInformation),
                       const SizedBox(height: 16),
 
                       _textField(
-                        label: "Full Name",
+                        label: l10n.fullName,
                         controller: _fullNameController,
                         validator: _validateFullName,
                         enabled: !isUpdating,
@@ -395,17 +403,17 @@ class _ProfilePageState extends State<ProfilePage> {
                               value: _selectedGender,
                               validator: _validateGender,
                               decoration: _inputDecoration(
-                                "Gender",
+                                l10n.gender,
                                 icon: Icons.wc,
                               ),
-                              items: const [
+                              items: [
                                 DropdownMenuItem(
                                   value: "Male",
-                                  child: Text("Male"),
+                                  child: Text(l10n.male),
                                 ),
                                 DropdownMenuItem(
                                   value: "Female",
-                                  child: Text("Female"),
+                                  child: Text(l10n.female),
                                 ),
                               ],
                               onChanged: isUpdating
@@ -426,7 +434,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               validator: _validateDob,
                               onTap: isUpdating ? null : _selectDate,
                               decoration: _inputDecoration(
-                                "Date of Birth",
+                                l10n.dateOfBirth,
                                 icon: Icons.calendar_today,
                               ).copyWith(
                                 suffixIcon: const Icon(
@@ -465,8 +473,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                 )
-                              : const Text(
-                                  "Update Profile",
+                              : Text(
+                                  l10n.updateProfile,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,

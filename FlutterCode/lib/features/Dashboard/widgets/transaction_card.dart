@@ -2,6 +2,7 @@ import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -17,6 +18,7 @@ class TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final categoryService = getIt<CategoryService>();
     final category =
         categoryService.getCategoryById(transaction.category.categoryId);
@@ -46,7 +48,6 @@ class TransactionCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Category Icon
             Container(
               width: 48,
               height: 48,
@@ -71,7 +72,7 @@ class TransactionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    transaction.title ?? category?.displayName ?? 'Transaction',
+                    transaction.title ?? category?.displayName ?? l10n.transaction,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -109,7 +110,7 @@ class TransactionCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
-                          transaction.creator.fullName ?? 'Unknown',
+                          transaction.creator.fullName ?? l10n.unknown,
                           style: TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary.withOpacity(0.6),

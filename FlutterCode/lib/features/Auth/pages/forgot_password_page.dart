@@ -4,6 +4,7 @@ import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/reset_password_state.dart';
 import 'package:famxpense/features/Auth/pages/validation_patterns.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,6 +38,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -76,7 +78,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     children: [
                       SizedBox(height: size.height * 0.08),
 
-                      // Icon
                       Container(
                         width: 80,
                         height: 80,
@@ -93,11 +94,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                       const SizedBox(height: 32),
 
-                      // Title
-                      const Text(
-                        "Forgot Password?",
+                      Text(
+                        l10n.forgotPassword,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF5B6B8C),
@@ -107,9 +107,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                       const SizedBox(height: 12),
 
-                      // Subtitle
                       Text(
-                        "Don't worry! Enter your email and we'll send you a verification code to reset your password.",
+                        l10n.forgotPasswordInstructions,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 15,
@@ -121,9 +120,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                       SizedBox(height: size.height * 0.06),
 
-                      // Email label
                       Text(
-                        "Email",
+                        l10n.email,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -132,13 +130,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       const SizedBox(height: 8),
 
-                      // Email field
                       TextFormField(
                         controller: _emailController,
                         validator: ValidationPatterns.validateEmail,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          hintText: "example@gmail.com",
+                          hintText: l10n.emailPlaceholder,
                           hintStyle: TextStyle(
                             color:
                                 const Color(0xFF5B6B8C).withValues(alpha: 0.3),
@@ -191,7 +188,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                       SizedBox(height: size.height * 0.04),
 
-                      // Send Code button
                       SizedBox(
                         height: 54,
                         child: ElevatedButton(
@@ -217,9 +213,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                     ),
                                   ),
                                 )
-                              : const Text(
-                                  "Send Code",
-                                  style: TextStyle(
+                              : Text(
+                                  l10n.sendCode,
+                                  style: const TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.3,
@@ -230,12 +226,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                       const SizedBox(height: 24),
 
-                      // Back to login
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Remember your password? ",
+                            "${l10n.rememberPassword} ",
                             style: TextStyle(
                               fontSize: 14,
                               color: const Color(0xFF5B6B8C)
@@ -244,9 +239,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           ),
                           GestureDetector(
                             onTap: () => context.pop(),
-                            child: const Text(
-                              "Log In",
-                              style: TextStyle(
+                            child: Text(
+                              l10n.logIn,
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: Color(0xFF5B7CB5),
                                 fontWeight: FontWeight.w700,

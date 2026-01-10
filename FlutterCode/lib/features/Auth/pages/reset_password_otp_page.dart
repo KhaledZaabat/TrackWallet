@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/reset_password_state.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -88,14 +89,11 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
   void _handleResend() {
     if (!_canResend) return;
 
-    // Clear OTP fields
     for (var controller in _otpControllers) {
       controller.clear();
     }
-    // Focus first field
     _focusNodes[0].requestFocus();
 
-    // Restart timer
     _startTimer();
 
     context.read<ResetPasswordCubit>().resendOtp(email: widget.email);
@@ -104,6 +102,7 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -159,7 +158,6 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
                   children: [
                     SizedBox(height: size.height * 0.08),
 
-                    // Icon
                     Container(
                       width: 80,
                       height: 80,
@@ -176,11 +174,10 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
 
                     const SizedBox(height: 32),
 
-                    // Title
-                    const Text(
-                      "Enter Verification Code",
+                    Text(
+                      l10n.enterVerificationCode,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF5B6B8C),
@@ -190,9 +187,8 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
 
                     const SizedBox(height: 12),
 
-                    // Subtitle
                     Text(
-                      "We've sent a 4-digit code to",
+                      l10n.weSentCodeTo,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
@@ -213,7 +209,6 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
 
                     SizedBox(height: size.height * 0.06),
 
-                    // OTP Input Fields
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: List.generate(
@@ -224,7 +219,6 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
 
                     SizedBox(height: size.height * 0.06),
 
-                    // Verify button
                     SizedBox(
                       height: 54,
                       child: ElevatedButton(
@@ -252,9 +246,9 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
                                   ),
                                 ),
                               )
-                            : const Text(
-                                "Verify Code",
-                                style: TextStyle(
+                            : Text(
+                                l10n.verifyCode,
+                                style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.3,
@@ -265,11 +259,10 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
 
                     const SizedBox(height: 24),
 
-                    // Timer and Resend
                     if (!_canResend)
                       Center(
                         child: Text(
-                          "Resend code in $_remainingSeconds seconds",
+                          l10n.resendCodeIn(_remainingSeconds),
                           style: TextStyle(
                             fontSize: 15,
                             color:
@@ -300,7 +293,7 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    "Resending...",
+                                    l10n.resending,
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
@@ -310,9 +303,9 @@ class _ResetPasswordOtpPageState extends State<ResetPasswordOtpPage> {
                                   ),
                                 ],
                               )
-                            : const Text(
-                                "Didn't receive the code? Resend",
-                                style: TextStyle(
+                            : Text(
+                                l10n.didntReceiveCode,
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                 ),

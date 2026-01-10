@@ -2,6 +2,7 @@ import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -19,6 +20,7 @@ class TransactionListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final categoryService = getIt<CategoryService>();
     final category =
         categoryService.getCategoryById(transaction.category.categoryId);
@@ -49,9 +51,9 @@ class TransactionListItem extends StatelessWidget {
           children: [
             _buildIcon(category?.icon, isIncome),
             const SizedBox(width: 14),
-            Expanded(child: _buildTransactionInfo()),
+            Expanded(child: _buildTransactionInfo(l10n)),
             const SizedBox(width: 12),
-            _buildAmount(isIncome),
+            _buildAmount(l10n, isIncome),
           ],
         ),
       ),
@@ -76,7 +78,7 @@ class TransactionListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionInfo() {
+  Widget _buildTransactionInfo(AppLocalizations l10n) {
     final categoryService = getIt<CategoryService>();
     final category =
         categoryService.getCategoryById(transaction.category.categoryId);
@@ -85,7 +87,7 @@ class TransactionListItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          transaction.title ?? category?.displayName ?? 'Transaction',
+          transaction.title ?? category?.displayName ?? l10n.transaction,
           style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 15,
@@ -150,7 +152,7 @@ class TransactionListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildAmount(bool isIncome) {
+  Widget _buildAmount(AppLocalizations l10n, bool isIncome) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -180,7 +182,7 @@ class TransactionListItem extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          transaction.creator.fullName ?? 'Unknown',
+          transaction.creator.fullName ?? l10n.unknown,
           style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,

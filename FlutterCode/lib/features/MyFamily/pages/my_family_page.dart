@@ -15,6 +15,7 @@ import 'package:famxpense/features/MyFamily/widgets/members_list.dart';
 import 'package:famxpense/features/MyFamily/widgets/edit_family_dialog.dart';
 import 'package:famxpense/features/Families/Cubits/select_family_cubit.dart';
 import 'package:famxpense/core/router/routes.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 /// MyFamily page displays all members of the currently selected family
 ///
@@ -79,6 +80,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
   }
 
   void _showLeaveFamilyDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -96,7 +98,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Leave Family',
+                l10n.leaveFamily,
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
                   fontSize: 18,
@@ -106,7 +108,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
           ],
         ),
         content: Text(
-          'Are you sure you want to leave this family?\n\nYour transactions will remain with the family for historical data.',
+          l10n.leaveFamilyConfirmMessage,
           style: GoogleFonts.inter(
             fontSize: 14,
             color: AppColors.textSecondary,
@@ -117,7 +119,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              'Cancel',
+              l10n.cancel,
               style: GoogleFonts.inter(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
@@ -143,7 +145,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
             child: Text(
-              'Leave',
+              l10n.leave,
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
               ),
@@ -156,6 +158,8 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return BlocListener<TransactionCubit, TransactionState>(
       bloc: getIt<TransactionCubit>(),
       listener: (context, state) {
@@ -167,7 +171,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
         backgroundColor: AppColors.background,
         appBar: AppBar(
           title: Text(
-            'My Family',
+            l10n.myFamily,
             style: GoogleFonts.inter(
               fontWeight: FontWeight.w700,
             ),
@@ -271,7 +275,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
                           ),
                           icon: const Icon(Icons.exit_to_app_rounded),
                           label: Text(
-                            'Leave Family',
+                            l10n.leaveFamily,
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
@@ -300,7 +304,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Failed to load family',
+                        l10n.failedToLoadFamily,
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -333,7 +337,7 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
                           ),
                         ),
                         icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Retry'),
+                        label: Text(l10n.retry),
                       ),
                     ],
                   ),

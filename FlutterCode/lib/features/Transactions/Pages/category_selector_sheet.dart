@@ -3,6 +3,7 @@ import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/domain/entities/category.dart';
 import 'package:famxpense/features/Transactions/Pages/transaction_type_button.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class CategorySelectorSheet extends StatefulWidget {
@@ -89,6 +90,8 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -98,10 +101,10 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildHandle(),
-          _buildHeader(),
-          _buildSearchBar(),
-          _buildGroupFilters(),
-          _buildCategoryGrid(),
+          _buildHeader(l10n),
+          _buildSearchBar(l10n),
+          _buildGroupFilters(l10n),
+          _buildCategoryGrid(l10n),
         ],
       ),
     );
@@ -121,12 +124,12 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
     );
   }
 
-  Widget _buildHeader() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+  Widget _buildHeader(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Text(
-        'Select Category',
-        style: TextStyle(
+        l10n.selectCategory,
+        style: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
@@ -135,7 +138,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: TextField(
@@ -154,7 +157,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
                   },
                 )
               : null,
-          hintText: 'Search category',
+          hintText: l10n.searchCategory,
           hintStyle: TextStyle(
             color: AppColors.textSecondary.withOpacity(0.5),
           ),
@@ -175,7 +178,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
     );
   }
 
-  Widget _buildGroupFilters() {
+  Widget _buildGroupFilters(AppLocalizations l10n) {
     return SizedBox(
       height: 48,
       child: ListView.builder(
@@ -185,10 +188,11 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
         itemBuilder: (context, index) {
           final group = _getGroupNames()[index];
           final isSelected = _selectedGroup == group;
+          final displayName = group == 'All' ? l10n.all : group;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
-              label: Text(group),
+              label: Text(displayName),
               selected: isSelected,
               onSelected: (_) => _filterByGroup(group),
               backgroundColor: AppColors.white,
@@ -211,10 +215,10 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
     );
   }
 
-  Widget _buildCategoryGrid() {
+  Widget _buildCategoryGrid(AppLocalizations l10n) {
     return Flexible(
       child: _filteredCategories.isEmpty
-          ? _buildEmptyState()
+          ? _buildEmptyState(l10n)
           : Padding(
               padding: const EdgeInsets.all(20),
               child: GridView.builder(
@@ -243,7 +247,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -256,9 +260,9 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
               color: AppColors.textSecondary.withOpacity(0.3),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'No categories found',
-              style: TextStyle(
+            Text(
+              l10n.noCategoriesFound,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -266,7 +270,7 @@ class _CategorySelectorSheetState extends State<CategorySelectorSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Try searching with different keywords',
+              l10n.tryDifferentKeywords,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

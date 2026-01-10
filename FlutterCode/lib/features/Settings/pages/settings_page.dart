@@ -7,6 +7,8 @@ import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/features/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/Settings/Cubits/settings_cubit.dart';
 import 'package:famxpense/features/Settings/Cubits/settings_state.dart';
+import 'package:famxpense/features/Settings/Cubits/locale_cubit.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -71,6 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _showChangePasswordDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
@@ -101,6 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _showLogoutDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -117,9 +121,9 @@ class _SettingsPageState extends State<SettingsPage> {
               size: 28,
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Logout',
+                l10n.logoutConfirmTitle,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 20,
@@ -129,7 +133,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
         content: Text(
-          'Are you sure you want to logout? You will need to sign in again to access your account.',
+          l10n.logoutConfirmMessage,
           style: TextStyle(
             fontSize: 15,
             color: AppColors.textSecondary,
@@ -140,7 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(
-              'Cancel',
+              l10n.cancel,
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
@@ -158,8 +162,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: const Text(
-              'Logout',
+            child: Text(
+              l10n.logout,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
@@ -184,17 +188,125 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _showLanguageDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    final localeCubit = context.read<LocaleCubit>();
+    final currentLocale = localeCubit.currentLocale;
+
+    final selectedLocale = await showDialog<Locale>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          l10n.selectLanguage,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            fontFamily: GoogleFonts.inter().fontFamily,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLanguageOption(
+              context: dialogContext,
+              locale: const Locale('en'),
+              name: l10n.english,
+              flag: '🇬🇧',
+              isSelected: currentLocale.languageCode == 'en',
+            ),
+            const SizedBox(height: 8),
+            _buildLanguageOption(
+              context: dialogContext,
+              locale: const Locale('fr'),
+              name: l10n.french,
+              flag: '🇫🇷',
+              isSelected: currentLocale.languageCode == 'fr',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              l10n.cancel,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (selectedLocale != null && mounted) {
+      localeCubit.setLocale(selectedLocale);
+    }
+  }
+
+  Widget _buildLanguageOption({
+    required BuildContext context,
+    required Locale locale,
+    required String name,
+    required String flag,
+    required bool isSelected,
+  }) {
+    return InkWell(
+      onTap: () => Navigator.pop(context, locale),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontFamily: GoogleFonts.inter().fontFamily,
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+                size: 24,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ✅ Validation: Check if trying to disable both notifications
   void _handleNotificationToggle({
     required bool newEmailValue,
     required bool currentPushValue,
     required bool isEmailToggle,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     // If trying to disable both notifications
     if (!newEmailValue && !currentPushValue) {
       _showValidationDialog(
-        'Cannot Disable All Notifications',
-        'At least one notification method must remain enabled. You cannot disable both email and push notifications.',
+        l10n.cannotDisableAllNotifications,
+        l10n.cannotDisableAllNotificationsMessage,
       );
       return;
     }
@@ -207,6 +319,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showValidationDialog(String title, String message) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -252,7 +365,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Got it'),
+            child: Text(l10n.gotIt),
           ),
         ],
       ),
@@ -272,8 +385,16 @@ class _SettingsPageState extends State<SettingsPage> {
     return null;
   }
 
+  String _getCurrentLanguageName(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = context.read<LocaleCubit>().currentLocale;
+    return locale.languageCode == 'fr' ? l10n.french : l10n.english;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -301,7 +422,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       onPressed: () =>
                           context.read<SettingsCubit>().loadSettings(),
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(l10n.retry),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -315,7 +436,7 @@ class _SettingsPageState extends State<SettingsPage> {
             final user = _getUserFromState(state);
 
             if (user == null) {
-              return const Center(child: Text('No user data available'));
+              return Center(child: Text(l10n.noUserData));
             }
 
             final isUpdating = state is SettingsUpdating;
@@ -329,7 +450,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     // Header
                     Text(
-                      'Settings',
+                      l10n.settings,
                       style: TextStyle(
                         fontSize: 32,
                         fontFamily: GoogleFonts.inter().fontFamily,
@@ -344,22 +465,37 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 24),
 
                     // View Profile Button
-                    _buildProfileButton(context),
+                    _buildProfileButton(context, l10n),
+                    const SizedBox(height: 32),
+
+                    // Language Section
+                    _sectionHeader(l10n.language),
+                    const SizedBox(height: 12),
+                    BlocBuilder<LocaleCubit, LocaleState>(
+                      builder: (context, localeState) {
+                        return _buildSettingTile(
+                          icon: Icons.language,
+                          title: l10n.language,
+                          subtitle: _getCurrentLanguageName(context),
+                          onTap: isUpdating ? null : _showLanguageDialog,
+                        );
+                      },
+                    ),
                     const SizedBox(height: 32),
 
                     // Security Section
-                    _sectionHeader('Security'),
+                    _sectionHeader(l10n.security),
                     const SizedBox(height: 12),
                     _buildSettingTile(
                       icon: Icons.lock_outline,
-                      title: 'Change Password',
-                      subtitle: 'Update your account password',
+                      title: l10n.changePassword,
+                      subtitle: l10n.changePasswordSubtitle,
                       onTap: isUpdating ? null : _showChangePasswordDialog,
                     ),
                     const SizedBox(height: 32),
 
                     // Notifications Section
-                    _sectionHeader('Notifications'),
+                    _sectionHeader(l10n.notifications),
                     const SizedBox(height: 8),
 
                     // ✅ Important Note
@@ -386,7 +522,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'At least one notification method must be enabled',
+                              l10n.notificationRequirement,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.textPrimary,
@@ -402,8 +538,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
                     _buildNotificationTile(
                       icon: Icons.email_outlined,
-                      title: 'Email Notifications',
-                      subtitle: 'Receive notifications via email',
+                      title: l10n.emailNotifications,
+                      subtitle: l10n.emailNotificationsSubtitle,
                       value: user.emailNotifications,
                       onChanged: isUpdating
                           ? null
@@ -418,8 +554,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 12),
                     _buildNotificationTile(
                       icon: Icons.notifications_outlined,
-                      title: 'Push Notifications',
-                      subtitle: 'Receive push notifications',
+                      title: l10n.pushNotifications,
+                      subtitle: l10n.pushNotificationsSubtitle,
                       value: user.pushNotifications,
                       onChanged: isUpdating
                           ? null
@@ -427,8 +563,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               // Check if trying to disable both
                               if (!value && !user.emailNotifications) {
                                 _showValidationDialog(
-                                  'Cannot Disable All Notifications',
-                                  'At least one notification method must remain enabled. You cannot disable both email and push notifications.',
+                                  l10n.cannotDisableAllNotifications,
+                                  l10n.cannotDisableAllNotificationsMessage,
                                 );
                                 return;
                               }
@@ -445,12 +581,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 32),
 
                     // Account Section
-                    _sectionHeader('Account'),
+                    _sectionHeader(l10n.account),
                     const SizedBox(height: 12),
                     _buildSettingTile(
                       icon: Icons.logout_rounded,
-                      title: 'Logout',
-                      subtitle: 'Sign out of your account',
+                      title: l10n.logout,
+                      subtitle: l10n.logoutSubtitle,
                       onTap: isUpdating ? null : _showLogoutDialog,
                       iconColor: AppColors.error,
                       isDestructive: true,
@@ -537,7 +673,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildProfileButton(BuildContext context) {
+  Widget _buildProfileButton(BuildContext context, AppLocalizations l10n) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -553,7 +689,7 @@ class _SettingsPageState extends State<SettingsPage> {
           context.push(Routes.profile);
         },
         child: Text(
-          'View Profile',
+          l10n.viewProfile,
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -722,13 +858,15 @@ class _PasswordDialogState extends State<_PasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return AlertDialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       title: Text(
-        'Change Password',
+        l10n.changePassword,
         style: TextStyle(
           fontFamily: GoogleFonts.inter().fontFamily,
           fontWeight: FontWeight.w700,
@@ -745,7 +883,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                 controller: widget.currentPasswordController,
                 obscureText: obscureCurrentPassword,
                 decoration: InputDecoration(
-                  labelText: 'Current Password',
+                  labelText: l10n.currentPassword,
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -773,7 +911,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your current password';
+                    return l10n.pleaseEnterCurrentPassword;
                   }
                   return null;
                 },
@@ -783,7 +921,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                 controller: widget.newPasswordController,
                 obscureText: obscureNewPassword,
                 decoration: InputDecoration(
-                  labelText: 'New Password',
+                  labelText: l10n.newPassword,
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -811,10 +949,10 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a new password';
+                    return l10n.pleaseEnterNewPassword;
                   }
                   if (value.length < 8) {
-                    return 'Password must be at least 8 characters';
+                    return l10n.passwordMinLength;
                   }
                   final hasUpperCase = value.contains(RegExp(r'[A-Z]'));
                   final hasLowerCase = value.contains(RegExp(r'[a-z]'));
@@ -836,7 +974,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                 controller: widget.confirmPasswordController,
                 obscureText: obscureConfirmPassword,
                 decoration: InputDecoration(
-                  labelText: 'Confirm Password',
+                  labelText: l10n.confirmPassword,
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -864,10 +1002,10 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
+                    return l10n.pleaseConfirmPassword;
                   }
                   if (value != widget.newPasswordController.text) {
-                    return 'Passwords do not match';
+                    return l10n.passwordsDoNotMatch;
                   }
                   return null;
                 },
@@ -880,7 +1018,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context, false),
           child: Text(
-            'Cancel',
+            l10n.cancel,
             style: TextStyle(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
@@ -900,7 +1038,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          child: const Text('Update'),
+          child: Text(l10n.update),
         ),
       ],
     );

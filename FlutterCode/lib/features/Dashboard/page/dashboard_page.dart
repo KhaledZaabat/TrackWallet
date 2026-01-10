@@ -12,6 +12,7 @@ import 'package:famxpense/features/Transactions/Cubits/transaction_state.dart';
 import 'package:famxpense/common/widgets/models/point_pair.dart';
 import 'package:famxpense/models/Family/family_models.dart'
     hide TransactionItem;
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -43,7 +44,6 @@ class _DashboardViewState extends State<_DashboardView> {
   void initState() {
     super.initState();
 
-    // Load dashboard data when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<DashboardCubit>().loadDashboard();
@@ -51,8 +51,6 @@ class _DashboardViewState extends State<_DashboardView> {
     });
   }
 
-  /// Filters budget history to only include entries from the current month
-  /// and converts them to PointPair format compatible with LineChartCard
   List<PointPair> _filterCurrentMonthBudgetHistory(
     List<BudgetHistoryItem> history,
   ) {
@@ -60,7 +58,6 @@ class _DashboardViewState extends State<_DashboardView> {
     final currentMonth = now.month;
     final currentYear = now.year;
 
-    // Filter to only include current month entries
     final currentMonthHistory = history.where((item) {
       final date = item.recordedAtUtc.toLocal();
       return date.month == currentMonth && date.year == currentYear;
@@ -68,12 +65,10 @@ class _DashboardViewState extends State<_DashboardView> {
 
     if (currentMonthHistory.isEmpty) return [];
 
-    // Convert to PointPair - daysBack is calculated from TODAY
     final points = currentMonthHistory.map((item) {
       final date = item.recordedAtUtc.toLocal();
       final budget = item.budget.toDouble();
 
-      // Calculate days back from TODAY (not from end of month)
       final daysBack = now.difference(date).inDays.toDouble();
 
       return PointPair(
@@ -83,9 +78,8 @@ class _DashboardViewState extends State<_DashboardView> {
       );
     }).toList()
       ..sort((a, b) =>
-          b.x.compareTo(a.x)); // Sort by x descending (most recent first)
+          b.x.compareTo(a.x));
 
-    // SAFETY: fl_chart hates single-point charts
     if (points.length == 1) {
       points.insert(
         0,
@@ -100,6 +94,8 @@ class _DashboardViewState extends State<_DashboardView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return BlocListener<TransactionCubit, TransactionState>(
       bloc: getIt<TransactionCubit>(),
       listener: (context, state) {
@@ -166,7 +162,7 @@ class _DashboardViewState extends State<_DashboardView> {
                         ),
                       ),
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(l10n.retry),
                     ),
                   ],
                 ),
@@ -175,7 +171,6 @@ class _DashboardViewState extends State<_DashboardView> {
           }
 
           if (state is DashboardLoaded) {
-            // Filter budget history for current month only
             final currentMonthBudgetPoints =
                 _filterCurrentMonthBudgetHistory(state.budgetHistory);
 
@@ -210,9 +205,9 @@ class _DashboardViewState extends State<_DashboardView> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Budget This Month',
-                                  style: TextStyle(
+                                Text(
+                                  l10n.budgetThisMonth,
+                                  style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.textPrimary,
@@ -238,9 +233,9 @@ class _DashboardViewState extends State<_DashboardView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Recent Transactions',
-                                style: TextStyle(
+                              Text(
+                                l10n.recentTransactions,
+                                style: const TextStyle(
                                   fontSize: 20,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.textPrimary,
@@ -250,9 +245,9 @@ class _DashboardViewState extends State<_DashboardView> {
                                 onPressed: () {
                                   context.go(Routes.transactions);
                                 },
-                                child: const Text(
-                                  'View All',
-                                  style: TextStyle(
+                                child: Text(
+                                  l10n.viewAll,
+                                  style: const TextStyle(
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -275,7 +270,7 @@ class _DashboardViewState extends State<_DashboardView> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'No transactions yet',
+                                      l10n.noTransactionsYetDashboard,
                                       style: TextStyle(
                                         color: const Color(0xFF5B6B8C)
                                             .withOpacity(0.6),
@@ -311,8 +306,8 @@ class _DashboardViewState extends State<_DashboardView> {
             );
           }
 
-          return const Center(
-            child: Text('Something went wrong'),
+          return Center(
+            child: Text(l10n.somethingWentWrong),
           );
         },
       ),

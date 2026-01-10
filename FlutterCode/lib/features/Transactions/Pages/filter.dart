@@ -3,6 +3,7 @@ import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/data/repos/transaction_repository.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -23,22 +24,18 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // Filter state
   TransactionType? _selectedType;
   String? _selectedCategoryGroup;
   double? _minAmount;
   double? _maxAmount;
   String? _selectedCreatorId;
 
-  // Controllers
   final _minAmountController = TextEditingController();
   final _maxAmountController = TextEditingController();
 
-  // Data
   List<FamilyUser> _familyUsers = [];
   bool _isLoadingUsers = false;
 
-  // Category service
   late final CategoryService _categoryService;
 
   @override
@@ -139,6 +136,8 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
@@ -150,26 +149,26 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildHandle(),
-            _buildHeader(),
+            _buildHeader(l10n),
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTransactionTypeFilter(),
+                    _buildTransactionTypeFilter(l10n),
                     const SizedBox(height: 24),
-                    _buildCategoryFilter(),
+                    _buildCategoryFilter(l10n),
                     const SizedBox(height: 24),
-                    _buildAmountRangeFilter(),
+                    _buildAmountRangeFilter(l10n),
                     const SizedBox(height: 24),
-                    _buildCreatorFilter(),
+                    _buildCreatorFilter(l10n),
                     const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
-            _buildBottomActions(),
+            _buildBottomActions(l10n),
           ],
         ),
       ),
@@ -190,14 +189,14 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
-          const Text(
-            'Filter Transactions',
-            style: TextStyle(
+          Text(
+            l10n.filterTransactions,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -212,7 +211,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '$_activeFilterCount active',
+                l10n.filtersActive(_activeFilterCount),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -225,13 +224,13 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     );
   }
 
-  Widget _buildTransactionTypeFilter() {
+  Widget _buildTransactionTypeFilter(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Transaction Type',
-          style: TextStyle(
+        Text(
+          l10n.transactionType,
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -242,7 +241,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           children: [
             Expanded(
               child: _FilterChip(
-                label: 'All',
+                label: l10n.all,
                 icon: Icons.all_inclusive_rounded,
                 isSelected: _selectedType == null,
                 onTap: () => setState(() => _selectedType = null),
@@ -251,7 +250,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             const SizedBox(width: 12),
             Expanded(
               child: _FilterChip(
-                label: 'Income',
+                label: l10n.income,
                 icon: Icons.arrow_upward_rounded,
                 color: AppColors.success,
                 isSelected: _selectedType == TransactionType.Income,
@@ -262,7 +261,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             const SizedBox(width: 12),
             Expanded(
               child: _FilterChip(
-                label: 'Expense',
+                label: l10n.expense,
                 icon: Icons.arrow_downward_rounded,
                 color: AppColors.error,
                 isSelected: _selectedType == TransactionType.Expense,
@@ -276,15 +275,15 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     );
   }
 
-  Widget _buildCategoryFilter() {
+  Widget _buildCategoryFilter(AppLocalizations l10n) {
     final categoryGroups = _getCategoryGroups();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Category Group',
-          style: TextStyle(
+        Text(
+          l10n.categoryGroup,
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -296,7 +295,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
           runSpacing: 8,
           children: [
             _FilterChip(
-              label: 'All Categories',
+              label: l10n.allCategories,
               icon: Icons.category_outlined,
               isSelected: _selectedCategoryGroup == null,
               onTap: () => setState(() => _selectedCategoryGroup = null),
@@ -334,13 +333,13 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     ];
   }
 
-  Widget _buildAmountRangeFilter() {
+  Widget _buildAmountRangeFilter(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Amount Range',
-          style: TextStyle(
+        Text(
+          l10n.amountRange,
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -352,7 +351,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             Expanded(
               child: _buildAmountField(
                 controller: _minAmountController,
-                label: 'Min',
+                label: l10n.min,
                 hint: '0.00',
                 onChanged: (value) {
                   setState(() {
@@ -372,7 +371,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             Expanded(
               child: _buildAmountField(
                 controller: _maxAmountController,
-                label: 'Max',
+                label: l10n.max,
                 hint: '0.00',
                 onChanged: (value) {
                   setState(() {
@@ -436,13 +435,13 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     );
   }
 
-  Widget _buildCreatorFilter() {
+  Widget _buildCreatorFilter(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Created By',
-          style: TextStyle(
+        Text(
+          l10n.createdBy,
+          style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -474,7 +473,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'No family members found',
+                    l10n.noFamilyMembersFound,
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,
@@ -490,7 +489,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
             runSpacing: 8,
             children: [
               _FilterChip(
-                label: 'All Members',
+                label: l10n.allMembers,
                 icon: Icons.people_outline_rounded,
                 isSelected: _selectedCreatorId == null,
                 onTap: () => setState(() => _selectedCreatorId = null),
@@ -509,7 +508,7 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
     );
   }
 
-  Widget _buildBottomActions() {
+  Widget _buildBottomActions(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -542,16 +541,16 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                   onPressed: _clearAllFilters,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(
+                    children: [
+                      const Icon(
                         Icons.clear_all_rounded,
                         size: 20,
                         color: AppColors.textPrimary,
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
-                        'Clear All',
-                        style: TextStyle(
+                        l10n.clearAll,
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -583,8 +582,8 @@ class _TransactionFilterSheetState extends State<TransactionFilterSheet>
                     const SizedBox(width: 8),
                     Text(
                       _activeFilterCount > 0
-                          ? 'Apply Filters ($_activeFilterCount)'
-                          : 'Show All',
+                          ? l10n.applyFiltersCount(_activeFilterCount)
+                          : l10n.showAll,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,

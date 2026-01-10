@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Family/family_models.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 /// Displays a single family member card with profile information
 /// Includes kick button for parent users (to remove non-parent members)
@@ -41,6 +42,7 @@ class MemberCard extends StatelessWidget {
   bool get _canBeKicked => isCurrentUserParent && !member.isParent && !isCurrentUser;
 
   void _showKickConfirmation(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -58,7 +60,7 @@ class MemberCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Remove Member',
+                l10n.removeMember,
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
                   fontSize: 18,
@@ -68,7 +70,7 @@ class MemberCard extends StatelessWidget {
           ],
         ),
         content: Text(
-          'Are you sure you want to remove ${member.fullName} from the family?\n\nTheir transactions will remain with the family.',
+          l10n.removeMemberConfirmMessage(member.fullName),
           style: GoogleFonts.inter(
             fontSize: 14,
             color: AppColors.textSecondary,
@@ -79,7 +81,7 @@ class MemberCard extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              'Cancel',
+              l10n.cancel,
               style: GoogleFonts.inter(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
@@ -100,7 +102,7 @@ class MemberCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
             child: Text(
-              'Remove',
+              l10n.remove,
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
               ),
@@ -113,6 +115,7 @@ class MemberCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final initials = _getInitials(member.fullName);
 
     return Container(
@@ -169,7 +172,7 @@ class MemberCard extends StatelessWidget {
                         border: Border.all(color: AppColors.surface, width: 2),
                       ),
                       child: Text(
-                        'You',
+                        l10n.you,
                         style: GoogleFonts.inter(
                           color: Colors.white,
                           fontSize: 8,
@@ -215,7 +218,7 @@ class MemberCard extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            'Parent',
+                            l10n.parent,
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -286,7 +289,7 @@ class MemberCard extends StatelessWidget {
                         color: AppColors.error,
                         size: 20,
                       ),
-                      tooltip: 'Remove member',
+                      tooltip: l10n.removeMember,
                     ),
             ],
           ],

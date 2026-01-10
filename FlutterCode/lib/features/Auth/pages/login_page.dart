@@ -4,6 +4,7 @@ import 'package:famxpense/features/Auth/cubit/auth_state.dart';
 import 'package:famxpense/features/Auth/pages/google_sign_in_button.dart';
 import 'package:famxpense/features/Auth/pages/login_form.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -41,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showVerifyAccountDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final emailController = TextEditingController();
 
     showDialog(
@@ -49,9 +51,9 @@ class _LoginPageState extends State<LoginPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        title: const Text(
-          'Verify Account',
-          style: TextStyle(
+        title: Text(
+          l10n.verifyAccount,
+          style: const TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
             fontSize: 20,
@@ -60,9 +62,9 @@ class _LoginPageState extends State<LoginPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Enter your email to resend verification code',
-              style: TextStyle(
+            Text(
+              l10n.resendVerificationCode,
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
               ),
@@ -72,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                hintText: "example@email.com",
+                hintText: l10n.emailPlaceholder,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: const BorderSide(
@@ -105,9 +107,9 @@ class _LoginPageState extends State<LoginPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF5B6B8C)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: Color(0xFF5B6B8C)),
             ),
           ),
           ElevatedButton(
@@ -125,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
-            child: const Text('Continue'),
+            child: Text(l10n.continueButton),
           ),
         ],
       ),
@@ -133,6 +135,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showForgotPasswordDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final emailController = TextEditingController();
 
     showDialog(
@@ -141,9 +144,9 @@ class _LoginPageState extends State<LoginPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        title: const Text(
-          'Reset Password',
-          style: TextStyle(
+        title: Text(
+          l10n.resetPassword,
+          style: const TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
             fontSize: 20,
@@ -152,9 +155,9 @@ class _LoginPageState extends State<LoginPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Enter your email to receive password reset instructions',
-              style: TextStyle(
+            Text(
+              l10n.resetPasswordInstructions,
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
               ),
@@ -164,7 +167,7 @@ class _LoginPageState extends State<LoginPage> {
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                hintText: "example@email.com",
+                hintText: l10n.emailPlaceholder,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: const BorderSide(
@@ -197,9 +200,9 @@ class _LoginPageState extends State<LoginPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF5B6B8C)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: Color(0xFF5B6B8C)),
             ),
           ),
           ElevatedButton(
@@ -217,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
-            child: const Text('Send Reset Link'),
+            child: Text(l10n.sendResetLink),
           ),
         ],
       ),
@@ -227,12 +230,12 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
-          // Show error messages
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -248,7 +251,6 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
 
-          // Navigate on successful authentication
           if (state is AuthAuthenticated) {
             context.go('/select-family');
           }
@@ -265,7 +267,6 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     SizedBox(height: size.height * 0.08),
 
-                    // Decorative top border
                     Container(
                       height: 4,
                       margin: const EdgeInsets.symmetric(horizontal: 60),
@@ -280,11 +281,10 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 32),
 
-                    // Title
-                    const Text(
-                      "Good to see you!",
+                    Text(
+                      l10n.goodToSeeYou,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -293,7 +293,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      "Let's continue the journey.",
+                      l10n.letsContinueJourney,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -304,7 +304,6 @@ class _LoginPageState extends State<LoginPage> {
 
                     SizedBox(height: size.height * 0.06),
 
-                    // Login Form
                     if (isLoading)
                       const Center(
                         child: Padding(
@@ -325,7 +324,6 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 28),
 
-                    // Divider with "OR"
                     Row(
                       children: [
                         Expanded(
@@ -337,7 +335,7 @@ class _LoginPageState extends State<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            "OR",
+                            l10n.or,
                             style: TextStyle(
                               fontSize: 13,
                               color: AppColors.textSecondary.withOpacity(0.5),
@@ -356,7 +354,6 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 28),
 
-                    // Google Sign In button
                     GoogleSignInButton(
                       onPressed: () => _handleGoogleLogin(context),
                       isLoading: isLoading,
@@ -365,12 +362,11 @@ class _LoginPageState extends State<LoginPage> {
 
                     const SizedBox(height: 32),
 
-                    // Sign up text
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          "${l10n.dontHaveAccount} ",
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary.withOpacity(0.7),
@@ -381,7 +377,7 @@ class _LoginPageState extends State<LoginPage> {
                               ? null
                               : () => context.push(Routes.signup),
                           child: Text(
-                            "Sign Up",
+                            l10n.signUp,
                             style: TextStyle(
                               fontSize: 14,
                               color: isLoading
@@ -395,12 +391,11 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Verify Account text
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Need to verify your account? ",
+                          "${l10n.needToVerifyAccount} ",
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary.withOpacity(0.7),
@@ -411,7 +406,7 @@ class _LoginPageState extends State<LoginPage> {
                               ? null
                               : () => _showVerifyAccountDialog(context),
                           child: Text(
-                            "Verify",
+                            l10n.verify,
                             style: TextStyle(
                               fontSize: 14,
                               color: isLoading

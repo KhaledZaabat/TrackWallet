@@ -2,22 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:famxpense/models/Invitations/invitation_model.dart';
-
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_state.dart';
 import 'package:famxpense/features/Invitations/widgets/invitation_card.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 /// Page for users to view and accept/decline invitations to JOIN families
-///
-/// This is shown before family selection, allowing users to:
-/// - View pending invitations from families
-/// - Accept to join a family
-/// - Decline invitations
-///
-/// Only shows received pending invitations (not sent).
-/// Has 2-item navbar (Families, Invitations To Join)
 class InvitationsToJoinPage extends StatelessWidget {
   const InvitationsToJoinPage({super.key});
 
@@ -41,7 +33,6 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
   @override
   void initState() {
     super.initState();
-    // Load invitations when page opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<InvitationsCubit>().loadAll();
@@ -51,9 +42,11 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Invitations'),
+        title: Text(l10n.invitations),
         centerTitle: false,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -80,7 +73,6 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
           }
 
           if (state is InvitationsLoaded) {
-            // Only show received pending invitations
             final receivedPending = state.receivedInvitations
                 .where((inv) => inv.status == InvitationStatus.pending)
                 .toList();
@@ -99,14 +91,14 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No pending invitations',
+                        l10n.noPendingInvitations,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Check back later for family invitations',
+                        l10n.checkBackLater,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -158,7 +150,7 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Failed to load invitations',
+                      l10n.failedToLoadInvitations,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -185,7 +177,7 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
                         ),
                       ),
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(l10n.retry),
                     ),
                   ],
                 ),
@@ -196,12 +188,11 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
           return const SizedBox.shrink();
         },
       ),
-      bottomNavigationBar: _buildNavBar(context),
+      bottomNavigationBar: _buildNavBar(context, l10n),
     );
   }
 
-  /// Build 2-item navbar (Families, Invitations To Join)
-  BottomNavigationBar _buildNavBar(BuildContext context) {
+  BottomNavigationBar _buildNavBar(BuildContext context, AppLocalizations l10n) {
     final location = GoRouterState.of(context).uri.path;
     final currentIndex =
         location.startsWith(Routes.invitationsToJoin) ? 1 : 0;
@@ -222,14 +213,14 @@ class _InvitationsToJoinViewState extends State<_InvitationsToJoinView> {
             break;
         }
       },
-      items: const [
+      items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.people),
-          label: 'Families',
+          icon: const Icon(Icons.people),
+          label: l10n.families,
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.mail),
-          label: 'Invitations',
+          icon: const Icon(Icons.mail),
+          label: l10n.invitations,
         ),
       ],
     );

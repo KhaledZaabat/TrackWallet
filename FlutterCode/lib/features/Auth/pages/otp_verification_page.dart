@@ -1,5 +1,6 @@
 import 'package:famxpense/features/Auth/cubit/signup_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/signup_state.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,11 +53,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   }
 
   void _handleResend() {
-    // Clear OTP fields
     for (var controller in _otpControllers) {
       controller.clear();
     }
-    // Focus first field
     _focusNodes[0].requestFocus();
 
     context.read<SignupCubit>().resendOtp(email: widget.email);
@@ -65,6 +64,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -79,14 +79,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       body: BlocConsumer<SignupCubit, SignupState>(
         listener: (context, state) {
           if (state is OtpVerificationSuccess) {
-            // Show success message
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Account verified successfully!'),
+              SnackBar(
+                content: Text(l10n.accountVerifiedSuccess),
                 backgroundColor: Colors.green,
               ),
             );
-            // Navigate to login
             context.go('/login');
           }
           if (state is OtpVerificationError) {
@@ -128,7 +126,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   children: [
                     SizedBox(height: size.height * 0.08),
 
-                    // Icon
                     Container(
                       width: 80,
                       height: 80,
@@ -145,11 +142,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
                     const SizedBox(height: 32),
 
-                    // Title
-                    const Text(
-                      "Verify Your Email",
+                    Text(
+                      l10n.verifyYourEmail,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF5B6B8C),
@@ -159,9 +155,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
                     const SizedBox(height: 12),
 
-                    // Subtitle
                     Text(
-                      "We've sent a 4-digit verification code to",
+                      l10n.otpSentTo,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
@@ -182,7 +177,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
                     SizedBox(height: size.height * 0.06),
 
-                    // OTP Input Fields
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: List.generate(
@@ -193,7 +187,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
                     SizedBox(height: size.height * 0.06),
 
-                    // Verify button
                     SizedBox(
                       height: 54,
                       child: ElevatedButton(
@@ -221,9 +214,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                                   ),
                                 ),
                               )
-                            : const Text(
-                                "Verify",
-                                style: TextStyle(
+                            : Text(
+                                l10n.verify,
+                                style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.3,
@@ -234,7 +227,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
                     const SizedBox(height: 24),
 
-                    // Resend button
                     TextButton(
                       onPressed: isLoading ? null : _handleResend,
                       style: TextButton.styleFrom(
@@ -256,7 +248,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  "Resending...",
+                                  l10n.resending,
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -266,9 +258,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                                 ),
                               ],
                             )
-                          : const Text(
-                              "Didn't receive the code? Resend",
-                              style: TextStyle(
+                          : Text(
+                              l10n.didntReceiveCode,
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -318,20 +310,17 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         ],
         onChanged: (value) {
           if (value.isNotEmpty) {
-            // Move to next field
             if (index < 3) {
               _focusNodes[index + 1].requestFocus();
             } else {
-              // Last field - unfocus to hide keyboard
               _focusNodes[index].unfocus();
             }
           } else {
-            // Move to previous field on backspace
             if (index > 0) {
               _focusNodes[index - 1].requestFocus();
             }
           }
-          setState(() {}); // Update button state
+          setState(() {});
         },
       ),
     );

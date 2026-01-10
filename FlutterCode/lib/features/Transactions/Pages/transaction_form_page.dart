@@ -6,6 +6,7 @@ import 'package:famxpense/features/Transactions/Cubits/transaction_cubit.dart';
 import 'package:famxpense/features/Transactions/Cubits/transaction_state.dart';
 import 'package:famxpense/features/Transactions/Pages/category_selector_sheet.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -49,7 +50,6 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
       _selectedType = tx.type;
       _selectedDate = tx.transactedOn;
 
-      // Load category
       final categoryService = getIt<CategoryService>();
       _selectedCategory =
           categoryService.getCategoryById(tx.category.categoryId);
@@ -105,15 +105,17 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   void _handleSubmit() {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategory == null) {
-      _showSnackBar('Please select a category', isError: true);
+      _showSnackBar(l10n.pleaseSelectCategory, isError: true);
       return;
     }
 
     final amount = double.tryParse(_amountController.text) ?? 0;
     if (amount <= 0) {
-      _showSnackBar('Amount must be greater than zero', isError: true);
+      _showSnackBar(l10n.amountGreaterThanZero, isError: true);
       return;
     }
 
@@ -179,13 +181,15 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return BlocListener<TransactionCubit, TransactionState>(
       listener: (context, state) {
         if (state is TransactionOperationSuccess) {
           _showSnackBar(
             _isEditing
-                ? 'Transaction updated successfully'
-                : 'Transaction created successfully',
+                ? l10n.transactionUpdated
+                : l10n.transactionCreated,
           );
           Navigator.of(context).pop(true);
         } else if (state is TransactionOperationError) {
@@ -194,14 +198,14 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: _buildAppBar(),
-        body: _buildBody(),
-        bottomNavigationBar: _buildBottomBar(),
+        appBar: _buildAppBar(l10n),
+        body: _buildBody(l10n),
+        bottomNavigationBar: _buildBottomBar(l10n),
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(AppLocalizations l10n) {
     return AppBar(
       backgroundColor: AppColors.surface,
       elevation: 0,
@@ -213,7 +217,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
       ),
       centerTitle: true,
       title: Text(
-        _isEditing ? 'Edit Transaction' : 'New Transaction',
+        _isEditing ? l10n.editTransaction : l10n.newTransaction,
         style: const TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 18,
@@ -232,7 +236,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l10n) {
     return BlocBuilder<TransactionCubit, TransactionState>(
       builder: (context, state) {
         return SingleChildScrollView(
@@ -242,18 +246,18 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTypeSelector(),
+                _buildTypeSelector(l10n),
                 const SizedBox(height: 32),
-                _buildAmountField(),
+                _buildAmountField(l10n),
                 const SizedBox(height: 24),
-                _buildTitleField(),
+                _buildTitleField(l10n),
                 const SizedBox(height: 24),
-                _buildCategorySelector(),
+                _buildCategorySelector(l10n),
                 const SizedBox(height: 24),
-                _buildDateSelector(),
+                _buildDateSelector(l10n),
                 const SizedBox(height: 24),
-                _buildNotesField(),
-                const SizedBox(height: 80), // Extra space for scrolling
+                _buildNotesField(l10n),
+                const SizedBox(height: 80),
               ],
             ),
           ),
@@ -262,7 +266,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildTypeSelector() {
+  Widget _buildTypeSelector(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -274,7 +278,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
         children: [
           Expanded(
             child: _TransactionTypeSegment(
-              label: 'Expense',
+              label: l10n.expense,
               icon: Icons.arrow_downward_rounded,
               color: AppColors.error,
               isSelected: _selectedType == TransactionType.Expense,
@@ -284,7 +288,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
           ),
           Expanded(
             child: _TransactionTypeSegment(
-              label: 'Income',
+              label: l10n.income,
               icon: Icons.arrow_upward_rounded,
               color: AppColors.success,
               isSelected: _selectedType == TransactionType.Income,
@@ -297,12 +301,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildAmountField() {
+  Widget _buildAmountField(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Amount',
+          l10n.amount,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
@@ -342,9 +346,9 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
             contentPadding: const EdgeInsets.symmetric(vertical: 20),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Enter amount';
+            if (value == null || value.isEmpty) return l10n.enterAmount;
             final amount = double.tryParse(value);
-            if (amount == null || amount <= 0) return 'Invalid amount';
+            if (amount == null || amount <= 0) return l10n.invalidAmount;
             return null;
           },
         ),
@@ -352,12 +356,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildTitleField() {
+  Widget _buildTitleField(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Title (Optional)',
+          l10n.titleOptional,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
@@ -369,7 +373,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
           controller: _titleController,
           style: const TextStyle(color: AppColors.textPrimary),
           decoration: _inputDecoration(
-            hint: 'What is this for?',
+            hint: l10n.whatIsThisFor,
             icon: Icons.title_rounded,
           ),
         ),
@@ -377,12 +381,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildCategorySelector() {
+  Widget _buildCategorySelector(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Category',
+          l10n.category,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
@@ -421,7 +425,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    _selectedCategory?.displayName ?? 'Select Category',
+                    _selectedCategory?.displayName ?? l10n.selectCategory,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
@@ -444,12 +448,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildDateSelector() {
+  Widget _buildDateSelector(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Date',
+          l10n.date,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
@@ -505,12 +509,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildNotesField() {
+  Widget _buildNotesField(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Notes (Optional)',
+          l10n.notesOptional,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
@@ -523,7 +527,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
           maxLines: 3,
           style: const TextStyle(color: AppColors.textPrimary),
           decoration: _inputDecoration(
-            hint: 'Add any additional details...',
+            hint: l10n.addAdditionalDetails,
             icon: Icons.notes_rounded,
             isMultiLine: true,
           ),
@@ -532,7 +536,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(AppLocalizations l10n) {
     return BlocBuilder<TransactionCubit, TransactionState>(
       builder: (context, state) {
         final isLoading = state is TransactionOperationInProgress;
@@ -572,7 +576,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                       ),
                     )
                   : Text(
-                      _isEditing ? 'Update Transaction' : 'Save Transaction',
+                      _isEditing ? l10n.updateTransaction : l10n.saveTransaction,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -673,6 +677,8 @@ class _DeleteConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return AlertDialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
@@ -695,9 +701,9 @@ class _DeleteConfirmationDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Delete Transaction?',
-            style: TextStyle(
+          Text(
+            l10n.deleteTransaction,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -705,7 +711,7 @@ class _DeleteConfirmationDialog extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'This action cannot be undone. The transaction will be permanently deleted.',
+            l10n.deleteTransactionMessage,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -728,9 +734,9 @@ class _DeleteConfirmationDialog extends StatelessWidget {
                     ),
                   ),
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.cancel,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
@@ -750,9 +756,9 @@ class _DeleteConfirmationDialog extends StatelessWidget {
                     ),
                   ),
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text(
-                    'Delete',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.delete,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                     ),
                   ),

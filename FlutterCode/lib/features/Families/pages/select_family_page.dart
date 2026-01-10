@@ -8,6 +8,7 @@ import 'package:famxpense/features/MyFamily/cubit/my_family_cubit.dart';
 import 'package:famxpense/features/Families/Cubits/SelectFamilyState.dart';
 import 'package:famxpense/features/Families/Cubits/select_family_cubit.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +19,6 @@ class SelectFamilyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use BlocProvider.value since SelectFamilyCubit is a singleton
     return BlocProvider.value(
       value: getIt<SelectFamilyCubit>(),
       child: const _SelectFamilyView(),
@@ -42,9 +42,6 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
   void initState() {
     super.initState();
     _loadCurrentFamilyId();
-    // Refresh families data when the page becomes visible
-    // This is needed because StatefulShellRoute preserves the widget,
-    // so BlocProvider.create doesn't re-run on subsequent navigations.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<SelectFamilyCubit>().loadFamilies();
@@ -62,6 +59,8 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
   }
 
   void _showDeleteFamilyDialog(dynamic family) {
+    final l10n = AppLocalizations.of(context)!;
+    
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -77,10 +76,10 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
               size: 28,
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Delete Family',
-                style: TextStyle(
+                l10n.deleteFamily,
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 18,
                 ),
@@ -89,7 +88,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
           ],
         ),
         content: Text(
-          'Are you sure you want to permanently delete "${family.name}"?\n\nThis will remove all members and cancel pending invitations. Transactions will be preserved for historical data.',
+          l10n.deleteFamilyConfirmMessage(family.name),
           style: TextStyle(
             fontSize: 14,
             color: AppColors.textSecondary,
@@ -100,7 +99,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              'Cancel',
+              l10n.cancel,
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
@@ -120,9 +119,9 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
-            child: const Text(
-              'Delete',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -132,18 +131,26 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: BlocConsumer<SelectFamilyCubit, SelectFamilyState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is SelectFamilySuccess) {
-            // Reset cubits to clear cached data from previous family
+      
+            await Future.delayed(const Duration(milliseconds: 100));
+            
+            // Load data after family selection (with new tokens)
             getIt<InvitationsCubit>().loadAll();
-            getIt<DashboardCubit>().loadDashboard();
             getIt<MyFamilyCubit>().loadFamilyDetails();
-
-            // Navigate to dashboard
-            context.go('/dashboard');
+            
+            // Load dashboard first, then navigate
+            await getIt<DashboardCubit>().loadDashboard();
+            
+            if (context.mounted) {
+              context.go(Routes.dashboard);
+            }
           }
           if (state is SelectFamilyError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -155,6 +162,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
             );
           }
         },
+
         builder: (context, state) {
           if (state is SelectFamilyLoading) {
             return const Center(
@@ -187,9 +195,9 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'Select a Family',
-                                      style: TextStyle(
+                                    Text(
+                                      l10n.selectAFamily,
+                                      style: const TextStyle(
                                         fontSize: 28,
                                         fontWeight: FontWeight.w700,
                                         color: AppColors.textPrimary,
@@ -199,8 +207,8 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                     const SizedBox(height: 8),
                                     Text(
                                       state.families.isEmpty
-                                          ? 'Create your first family'
-                                          : 'Choose a family to continue',
+                                          ? l10n.createYourFirstFamily
+                                          : l10n.chooseFamily,
                                       style: TextStyle(
                                         fontSize: 15,
                                         color: AppColors.textSecondary.withValues(alpha: 0.6),
@@ -210,7 +218,6 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                   ],
                                 ),
                               ),
-                              // Create Family Button (only show when there are families)
                               if (state.families.isNotEmpty)
                                 Material(
                                   color: AppColors.primary,
@@ -223,7 +230,6 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                         Routes.createFamily,
                                       );
 
-                                      // Reload families if a family was created
                                       if (result == true && context.mounted) {
                                         context
                                             .read<SelectFamilyCubit>()
@@ -248,8 +254,8 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                     ),
                   ),
                   if (state.families.isEmpty)
-                    const SliverFillRemaining(
-                      child: _EmptyFamiliesView(),
+                    SliverFillRemaining(
+                      child: _EmptyFamiliesView(l10n: l10n),
                     )
                   else
                     SliverPadding(
@@ -265,6 +271,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                               child: _FamilyCard(
                                 family: family,
                                 isSelected: isCurrentFamily,
+                                l10n: l10n,
                                 onTap: () {
                                   if (isCurrentFamily) {
                                     if (context.canPop()) {
@@ -295,7 +302,6 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
             );
           }
 
-          // Handle initial state - trigger load
           if (state is SelectFamilyInitial) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
@@ -309,7 +315,6 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
             );
           }
 
-          // Handle error state with retry button
           if (state is SelectFamilyError) {
             return SafeArea(
               child: Center(
@@ -324,9 +329,9 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                         color: AppColors.error.withOpacity(0.6),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Failed to load families',
-                        style: TextStyle(
+                      Text(
+                        l10n.failedToLoadFamilies,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -358,7 +363,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                           ),
                         ),
                         icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Retry'),
+                        label: Text(l10n.retry),
                       ),
                     ],
                   ),
@@ -367,7 +372,6 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
             );
           }
 
-          // Handle success state - should navigate away, but if still here reload
           if (state is SelectFamilySuccess) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
@@ -381,47 +385,11 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
             );
           }
 
-          return const Center(
-            child: Text('Something went wrong'),
+          return Center(
+            child: Text(l10n.somethingWentWrong),
           );
         },
       ),
-      // Only show bottom bar for navigation to Invitations
-      // Using a simplified navigation bar manually since we are in the shell or not?
-      // Wait, if we are in the shell, the shell handles the bottom bar.
-      // But if AppRouter doesn't consistently show it for SelectFamily, we might need a button.
-      // However, if we are in Branch 5, the SHELL should show it.
-      // IF SelectFamilyPage is used OUTSIDE the shell (routes: ... GoRoute(path: Routes.manageFamilies...)), then no shell.
-      //
-      // BUT, checking AppRouter:
-      // Branch 5 -> GoRoute(path: Routes.selectFamily ... builder: SelectFamilyPage)
-      // Root -> GoRoute(path: Routes.manageFamilies ... builder: SelectFamilyPage)
-      //
-      // If user is redirected to Routes.selectFamily, they are in the SHELL.
-      // So the shell SHOULD show the bottom bar.
-      // Why didn't I see it in my mental model? 
-      // Because `ScaffoldWithNestedNavigation` logic for `currentIndex == 5` sets `isFamilySelected = false`.
-      // `AppBottomNavBar` with `isFamilySelected = false` shows: [Families, Invitations].
-      //
-      // If the user navigates to `Routes.selectFamily`, the shell should render ScaffolWithNestedNavigation -> Scaffold -> body: SelectFamilyPage, bottomBar: AppBottomNavBar.
-      // SelectFamilyPage ALSO returns a Scaffold.
-      // Nested Scaffolds are okay.
-      //
-      // So... the bottom bar SHOULD be there.
-      //
-      // One possibility: User is at `Routes.manageFamilies` (ROOT route), NOT `Routes.selectFamily` (SHELL route).
-      //
-      // AppRouter redirect:
-      // if (requiresFamilySelection && no family) -> return Routes.selectFamily; (Shell route!)
-      //
-      // So they ARE in the shell.
-      //
-      // Maybe I should assume the bottom bar IS showing, but the user didn't notice "Invitations" tab?
-      // Or maybe the icons are confusing?
-      //
-      // But adding a direct link in `_EmptyFamiliesView` is safe.
-      // "Check Invitations" button.
-      
     );
   }
 }
@@ -431,12 +399,14 @@ class _FamilyCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onDelete;
   final bool isSelected;
+  final AppLocalizations l10n;
 
   const _FamilyCard({
     required this.family,
     required this.onTap,
     this.onDelete,
     this.isSelected = false,
+    required this.l10n,
   });
 
   @override
@@ -498,7 +468,6 @@ class _FamilyCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Delete button
                     if (onDelete != null)
                       IconButton(
                         onPressed: onDelete,
@@ -511,7 +480,7 @@ class _FamilyCard extends StatelessWidget {
                           color: AppColors.error,
                           size: 20,
                         ),
-                        tooltip: 'Delete family',
+                        tooltip: l10n.deleteFamily,
                       ),
                     const SizedBox(width: 8),
                     const Icon(
@@ -544,7 +513,7 @@ class _FamilyCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '$memberCount ${memberCount == 1 ? 'Member' : 'Members'}',
+                      l10n.memberCount(memberCount),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -563,7 +532,9 @@ class _FamilyCard extends StatelessWidget {
 }
 
 class _EmptyFamiliesView extends StatelessWidget {
-  const _EmptyFamiliesView();
+  final AppLocalizations l10n;
+  
+  const _EmptyFamiliesView({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -587,9 +558,9 @@ class _EmptyFamiliesView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'No Families Yet',
-              style: TextStyle(
+            Text(
+              l10n.noFamiliesYet,
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -597,7 +568,7 @@ class _EmptyFamiliesView extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Create your first family to start managing expenses together.',
+              l10n.createFirstFamilyHint,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -612,7 +583,6 @@ class _EmptyFamiliesView extends StatelessWidget {
                 onPressed: () async {
                   final result = await context.push(Routes.createFamily);
 
-                  // Reload families if a family was created
                   if (result == true && context.mounted) {
                     context.read<SelectFamilyCubit>().loadFamilies();
                   }
@@ -626,9 +596,9 @@ class _EmptyFamiliesView extends StatelessWidget {
                   ),
                 ),
                 icon: const Icon(Icons.add),
-                label: const Text(
-                  'Create Your First Family',
-                  style: TextStyle(
+                label: Text(
+                  l10n.createYourFirstFamilyButton,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),

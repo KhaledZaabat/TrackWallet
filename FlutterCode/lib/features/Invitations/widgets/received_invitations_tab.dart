@@ -1,23 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:famxpense/models/Invitations/invitation_model.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'invitation_card.dart';
 
 /// Display received invitations with Accept/Decline buttons
-///
-/// This tab shows all received invitations filtered to Pending status only.
-/// Users can accept or decline each invitation with real-time loading feedback.
-///
-/// Props:
-/// - [invitations]: All received invitations from cubit state
-/// - [loadingInvitationId]: ID of invitation being processed (null when idle)
-/// - [onAccept]: Callback when accept button tapped (receives invitation ID)
-/// - [onDecline]: Callback when decline button tapped (receives invitation ID)
-///
-/// Loading State Control:
-/// - Each card receives isLoading = (loadingInvitationId == invitation.id)
-/// - Only the card being acted on shows loading state
-/// - Other invitations remain interactive
 class ReceivedInvitationsTab extends StatelessWidget {
   final List<Invitation> invitations;
   final String? loadingInvitationId;
@@ -35,11 +22,11 @@ class ReceivedInvitationsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Filter to Pending invitations only
+    final l10n = AppLocalizations.of(context)!;
+    
     final pending = invitations
         .where((inv) => inv.status == InvitationStatus.pending)
         .toList()
-        // Sort by sentAtUtc descending (newest first)
         ..sort((a, b) => b.sentAtUtc.compareTo(a.sentAtUtc));
 
     return RefreshIndicator(
@@ -63,7 +50,7 @@ class ReceivedInvitationsTab extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No pending invitations',
+                          l10n.noPendingInvitations,
                           style: TextStyle(
                             fontSize: 16,
                             color: AppColors.textSecondary.withOpacity(0.6),
@@ -72,7 +59,7 @@ class ReceivedInvitationsTab extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                          Text(
-                          'Pull to refresh',
+                          l10n.checkBackLater,
                           style: TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary.withOpacity(0.4),
@@ -95,9 +82,7 @@ class ReceivedInvitationsTab extends StatelessWidget {
                 return InvitationCard(
                   invitation: invitation,
                   isLoading: isLoading,
-                  // Received tab: show Accept button
                   onAccept: () => onAccept(invitation.invitationId),
-                  // Received tab: show Decline button
                   onDecline: () => onDecline(invitation.invitationId),
                 );
               },

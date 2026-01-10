@@ -1,6 +1,7 @@
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 /// Dialog for editing family name and bio
 /// Only visible to parent users
@@ -53,6 +54,8 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
@@ -83,7 +86,7 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Edit Family',
+                    l10n.editFamily,
                     style: GoogleFonts.inter(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -96,7 +99,7 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
 
               // Family Name Field
               Text(
-                'Family Name',
+                l10n.familyName,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -107,7 +110,7 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  hintText: 'Enter family name',
+                  hintText: l10n.enterFamilyName,
                   filled: true,
                   fillColor: AppColors.background,
                   border: OutlineInputBorder(
@@ -129,10 +132,10 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Family name is required';
+                    return l10n.familyNameRequired;
                   }
                   if (value.trim().length < 2) {
-                    return 'Name must be at least 2 characters';
+                    return l10n.familyNameMinLength;
                   }
                   return null;
                 },
@@ -141,7 +144,7 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
 
               // Family Bio Field
               Text(
-                'Family Bio (Optional)',
+                l10n.familyBioOptional,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -153,7 +156,7 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
                 controller: _bioController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: 'Describe your family...',
+                  hintText: l10n.describeFamilyHint,
                   filled: true,
                   fillColor: AppColors.background,
                   border: OutlineInputBorder(
@@ -187,7 +190,7 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        l10n.cancel,
                         style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -220,7 +223,7 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
                               ),
                             )
                           : Text(
-                              'Save Changes',
+                              l10n.saveChanges,
                               style: GoogleFonts.inter(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,

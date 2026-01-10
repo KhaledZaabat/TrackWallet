@@ -1,5 +1,6 @@
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +21,7 @@ class DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final currency = NumberFormat.simpleCurrency();
 
     return Container(
@@ -63,7 +65,7 @@ class DashboardHeader extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Welcome back,',
+                          l10n.welcomeBack,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.9),
@@ -82,19 +84,17 @@ class DashboardHeader extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Settings icon
                   IconButton(
                     onPressed: () => context.push(Routes.settings),
                     icon: const Icon(
                       Icons.settings_outlined,
                       color: Colors.white,
                     ),
-                    tooltip: 'Settings',
+                    tooltip: l10n.settings,
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              // Family switch card - fully clickable
               InkWell(
                 onTap: () => context.push(Routes.manageFamilies),
                 borderRadius: BorderRadius.circular(12),

@@ -3,6 +3,7 @@
 import 'package:famxpense/features/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/reset_password_state.dart';
 import 'package:famxpense/features/Auth/pages/validation_patterns.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,11 +37,12 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   }
 
   String? _validateConfirmPassword(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+      return l10n.pleaseConfirmPassword;
     }
     if (value != _passwordController.text) {
-      return 'Passwords do not match';
+      return l10n.passwordsDoNotMatch;
     }
     return null;
   }
@@ -57,6 +59,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -72,12 +75,11 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
         listener: (context, state) {
           if (state is PasswordResetSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Password reset successfully!'),
+              SnackBar(
+                content: Text(l10n.passwordResetSuccess),
                 backgroundColor: Colors.green,
               ),
             );
-            // Navigate to login
             context.go('/login');
           }
           if (state is ResetPasswordError) {
@@ -103,7 +105,6 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                     children: [
                       SizedBox(height: size.height * 0.08),
 
-                      // Icon
                       Container(
                         width: 80,
                         height: 80,
@@ -120,11 +121,10 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
 
                       const SizedBox(height: 32),
 
-                      // Title
-                      const Text(
-                        "Create New Password",
+                      Text(
+                        l10n.createNewPassword,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF5B6B8C),
@@ -134,9 +134,8 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
 
                       const SizedBox(height: 12),
 
-                      // Subtitle
                       Text(
-                        "Your new password must be different from previously used passwords.",
+                        l10n.newPasswordInstructions,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 15,
@@ -148,9 +147,8 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
 
                       SizedBox(height: size.height * 0.06),
 
-                      // New Password label
                       Text(
-                        "New Password",
+                        l10n.newPassword,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -159,7 +157,6 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                       ),
                       const SizedBox(height: 8),
 
-                      // New Password field
                       TextFormField(
                         controller: _passwordController,
                         validator: ValidationPatterns.validatePassword,
@@ -232,9 +229,8 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
 
                       const SizedBox(height: 20),
 
-                      // Confirm Password label
                       Text(
-                        "Confirm Password",
+                        l10n.confirmPassword,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -243,7 +239,6 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                       ),
                       const SizedBox(height: 8),
 
-                      // Confirm Password field
                       TextFormField(
                         controller: _confirmPasswordController,
                         validator: _validateConfirmPassword,
@@ -317,7 +312,6 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
 
                       SizedBox(height: size.height * 0.04),
 
-                      // Reset Password button
                       SizedBox(
                         height: 54,
                         child: ElevatedButton(
@@ -343,9 +337,9 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                                     ),
                                   ),
                                 )
-                              : const Text(
-                                  "Reset Password",
-                                  style: TextStyle(
+                              : Text(
+                                  l10n.resetPassword,
+                                  style: const TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.3,

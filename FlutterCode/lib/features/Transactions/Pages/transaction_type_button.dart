@@ -1,4 +1,5 @@
 import 'package:famxpense/core/theme/app_colors.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class TransactionTypeButton extends StatelessWidget {
@@ -66,13 +67,13 @@ class TransactionTypeButton extends StatelessWidget {
   }
 }
 
-// features/transactions/presentation/widgets/delete_confirmation_dialog.dart
-
 class DeleteConfirmationDialog extends StatelessWidget {
   const DeleteConfirmationDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return AlertDialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
@@ -95,19 +96,19 @@ class DeleteConfirmationDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Delete Transaction?',
-            style: TextStyle(
+          Text(
+            l10n.deleteTransaction,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: Color(0xFF2D3436),
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'This action cannot be undone. The transaction will be permanently deleted.',
+          Text(
+            l10n.deleteTransactionMessage,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF636E72),
             ),
@@ -128,9 +129,9 @@ class DeleteConfirmationDialog extends StatelessWidget {
                     ),
                   ),
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.cancel,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF2D3436),
                     ),
@@ -150,9 +151,9 @@ class DeleteConfirmationDialog extends StatelessWidget {
                     ),
                   ),
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text(
-                    'Delete',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.delete,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -165,8 +166,6 @@ class DeleteConfirmationDialog extends StatelessWidget {
     );
   }
 }
-
-// features/transactions/presentation/widgets/category_chip.dart
 
 class CategoryChip extends StatelessWidget {
   final String categoryId;

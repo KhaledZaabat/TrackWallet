@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Family/family_models.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 /// Displays family header information including name, budget, bio, and member count
 /// Includes edit button for parent users
@@ -25,6 +26,9 @@ class FamilyHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final memberCount = familyDetails.members.length;
+    
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -77,7 +81,7 @@ class FamilyHeader extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${familyDetails.members.length} member${familyDetails.members.length != 1 ? 's' : ''}',
+                        l10n.memberCount(memberCount),
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: AppColors.textSecondary,
@@ -133,7 +137,7 @@ class FamilyHeader extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Current Budget',
+                        l10n.currentBudget,
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           color: AppColors.textSecondary,
@@ -210,7 +214,7 @@ class FamilyHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Add family bio',
+                        l10n.addFamilyBio,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: AppColors.textSecondary,

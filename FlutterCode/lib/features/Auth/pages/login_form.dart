@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Auth/pages/validation_patterns.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 /// Reusable login form widget containing email and password fields
 class LoginForm extends StatefulWidget {
@@ -30,14 +31,15 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Form(
       key: widget.formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Email label
           Text(
-            "Email",
+            l10n.email,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -46,7 +48,6 @@ class _LoginFormState extends State<LoginForm> {
           ),
           const SizedBox(height: 8),
 
-          // Email field
           TextFormField(
             controller: widget.emailController,
             keyboardType: TextInputType.emailAddress,
@@ -54,14 +55,13 @@ class _LoginFormState extends State<LoginForm> {
             enabled: widget.isEnabled,
             style: const TextStyle(fontSize: 15),
             decoration: _buildInputDecoration(
-              hintText: "example@email.com",
+              hintText: l10n.emailPlaceholder,
             ),
           ),
           const SizedBox(height: 20),
 
-          // Password label
           Text(
-            "Password",
+            l10n.password,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -70,7 +70,6 @@ class _LoginFormState extends State<LoginForm> {
           ),
           const SizedBox(height: 8),
 
-          // Password field
           TextFormField(
             controller: widget.passwordController,
             obscureText: _obscurePassword,
@@ -96,13 +95,12 @@ class _LoginFormState extends State<LoginForm> {
 
           const SizedBox(height: 12),
 
-          // Forgot Password
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
               onTap: widget.isEnabled ? widget.onForgotPassword : null,
               child: Text(
-                "Forgot Password?",
+                l10n.forgotPassword,
                 style: TextStyle(
                   fontSize: 13,
                   color: widget.isEnabled
@@ -116,7 +114,6 @@ class _LoginFormState extends State<LoginForm> {
 
           const SizedBox(height: 32),
 
-          // Log In button
           SizedBox(
             height: 52,
             child: ElevatedButton(
@@ -131,9 +128,9 @@ class _LoginFormState extends State<LoginForm> {
                 disabledBackgroundColor:
                     AppColors.primary.withOpacity(0.6),
               ),
-              child: const Text(
-                "Log In",
-                style: TextStyle(
+              child: Text(
+                l10n.logIn,
+                style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.3,

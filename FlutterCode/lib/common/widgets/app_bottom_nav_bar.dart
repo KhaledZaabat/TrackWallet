@@ -1,5 +1,6 @@
 
 import 'package:famxpense/core/theme/app_colors.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class AppBottomNavBar extends StatelessWidget {
@@ -16,38 +17,21 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mapping Logic:
-    // Branches:
-    // 0: Dashboard
-    // 1: Invitations
-    // 2: Transactions
-    // 3: MyFamily
-    // 4: Settings
-    // 5: SelectFamily
-
+    final l10n = AppLocalizations.of(context)!;
+    
     int navIndex = 0;
     if (isFamilySelected) {
-      // Family Mode (5 items):
-      // 0->0 (Dashboard)
-      // 1->1 (Invitations)
-      // 2->2 (Transactions)
-      // 3->3 (MyFamily)
-      // 4->4 (Settings)
       navIndex = currentBranchIndex;
-      // Safety check if we somehow ended up on SelectFamily (5) while "Family Selected" is true
       if (navIndex > 4) navIndex = 0; 
     } else {
-      // No Family Mode (2 items):
-      // 0->5 (SelectFamily -> Families tab)
-      // 1->1 (Invitations -> Invitations tab)
       if (currentBranchIndex == 5) {
-        navIndex = 0; // Families tab
+        navIndex = 0;
       } else if (currentBranchIndex == 1) {
-        navIndex = 1; // Invitations tab
+        navIndex = 1;
       } else if (currentBranchIndex == 6) {
-        navIndex = 1; // Invitations tab (Guest)
+        navIndex = 1;
       } else {
-        navIndex = 0; // Default
+        navIndex = 0;
       }
     }
 
@@ -64,26 +48,26 @@ class AppBottomNavBar extends StatelessWidget {
         onTap: (index) {
           onBranchTap(index);
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_rounded),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_rounded),
+            label: l10n.dashboard,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.mail_rounded),
-            label: 'Invitations',
+            icon: const Icon(Icons.mail_rounded),
+            label: l10n.invitations,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_rounded),
-            label: 'Transactions',
+            icon: const Icon(Icons.receipt_long_rounded),
+            label: l10n.transactions,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people_rounded),
-            label: 'My Family',
+            icon: const Icon(Icons.people_rounded),
+            label: l10n.myFamily,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_rounded),
-            label: 'Settings',
+            icon: const Icon(Icons.settings_rounded),
+            label: l10n.settings,
           ),
         ],
       );
@@ -97,19 +81,19 @@ class AppBottomNavBar extends StatelessWidget {
         elevation: 8,
         onTap: (index) {
           if (index == 0) {
-            onBranchTap(5); // Go to Select Family
+            onBranchTap(5);
           } else {
-            onBranchTap(6); // Go to Guest Invitations
+            onBranchTap(6);
           }
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.people_rounded),
-            label: 'Families',
+            icon: const Icon(Icons.people_rounded),
+            label: l10n.families,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.mail_rounded),
-            label: 'Invitations',
+            icon: const Icon(Icons.mail_rounded),
+            label: l10n.invitations,
           ),
         ],
       );

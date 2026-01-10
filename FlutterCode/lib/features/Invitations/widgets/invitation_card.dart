@@ -1,12 +1,10 @@
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Invitations/invitation_model.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Reusable card widget displaying a single invitation with appropriate action buttons
-///
-/// This widget is used in both ReceivedInvitationsTab and SentInvitationsTab to display
-/// invitation details and handle user actions (accept, decline, cancel).
 class InvitationCard extends StatelessWidget {
   final Invitation invitation;
   final VoidCallback? onAccept;
@@ -25,7 +23,7 @@ class InvitationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine if this is a Sent invitation (no accept/decline actions OR has cancel action)
+    final l10n = AppLocalizations.of(context)!;
     final isSent = onCancel != null || (onAccept == null && onDecline == null);
     final statusColor = _getStatusColor(invitation.status);
 
@@ -40,7 +38,7 @@ class InvitationCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04), // Subtle shadow
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -51,7 +49,6 @@ class InvitationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: Invitation title + status badge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,8 +59,8 @@ class InvitationCard extends StatelessWidget {
                     children: [
                       Text(
                         isSent
-                            ? 'To: ${invitation.inviteeEmail}'
-                            : 'From: ${invitation.inviterName}',
+                            ? l10n.toLabel(invitation.inviteeEmail)
+                            : l10n.fromLabel(invitation.inviterName),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -73,7 +70,7 @@ class InvitationCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Join ${invitation.familyName}',
+                        l10n.joinFamily(invitation.familyName),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -113,7 +110,6 @@ class InvitationCard extends StatelessWidget {
                 child: Divider(height: 1, color: AppColors.border),
             ),
 
-            // Role and Date Info
             Row(
               children: [
                 Icon(
@@ -123,7 +119,7 @@ class InvitationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  invitation.isParent ? 'Role: Parent' : 'Role: Member',
+                  invitation.isParent ? l10n.roleParent : l10n.roleMember,
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary.withOpacity(0.8),
@@ -148,17 +144,15 @@ class InvitationCard extends StatelessWidget {
               ],
             ),
 
-            // Action buttons
             if (onAccept != null || onDecline != null || (onCancel != null && invitation.status == InvitationStatus.pending)) ...[
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // Cancel button (only for sent pending invitations)
                   if (onCancel != null && invitation.status == InvitationStatus.pending)
                      Expanded(child: _buildActionButton(
                       context,
-                      label: 'Cancel Invite',
+                      label: l10n.cancelInvite,
                       onPressed: onCancel!,
                       isPrimary: false,
                       isLoading: isLoading,
@@ -166,11 +160,10 @@ class InvitationCard extends StatelessWidget {
                       icon: Icons.close_rounded,
                     )),
 
-                  // Decline button (only for received invitations)
                   if (onDecline != null) ...[
                      Expanded(child: _buildActionButton(
                       context,
-                      label: 'Decline',
+                      label: l10n.decline,
                       onPressed: onDecline!,
                       isPrimary: false,
                       isLoading: isLoading,
@@ -180,11 +173,10 @@ class InvitationCard extends StatelessWidget {
                     const SizedBox(width: 12),
                   ],
 
-                  // Accept button (only for received invitations)
                   if (onAccept != null)
                      Expanded(child: _buildActionButton(
                       context,
-                      label: 'Accept',
+                      label: l10n.accept,
                       onPressed: onAccept!,
                       isPrimary: true,
                       isLoading: isLoading,

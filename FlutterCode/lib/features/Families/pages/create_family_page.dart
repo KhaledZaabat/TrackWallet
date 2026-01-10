@@ -2,6 +2,7 @@ import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Families/Cubits/create_family_cubit.dart';
 import 'package:famxpense/features/Families/Cubits/create_family_state.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,6 +57,8 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -65,9 +68,9 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Create Family',
-          style: TextStyle(
+        title: Text(
+          l10n.createFamily,
+          style: const TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w700,
           ),
@@ -92,7 +95,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
           if (state is CreateFamilySuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Family "${state.family.name}" created!'),
+                content: Text(l10n.familyCreatedSuccess(state.family.name)),
                 backgroundColor: AppColors.success,
                 behavior: SnackBarBehavior.floating,
                 margin: const EdgeInsets.all(16),
@@ -102,9 +105,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
               ),
             );
 
-            // Navigate back to select family page
-            // The select family page will reload families
-            context.pop(true); // Return true to indicate success
+            context.pop(true);
           }
         },
         builder: (context, state) {
@@ -118,7 +119,6 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Header
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -148,9 +148,9 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'Start Your Family Journey',
-                            style: TextStyle(
+                          Text(
+                            l10n.startFamilyJourney,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
@@ -158,7 +158,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Create a family to manage expenses together',
+                            l10n.createFamilyDescription,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
@@ -171,9 +171,8 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
 
                     const SizedBox(height: 32),
 
-                    // Family Name
                     Text(
-                      'Family Name *',
+                      '${l10n.familyName} *',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -187,15 +186,15 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       textCapitalization: TextCapitalization.words,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a family name';
+                          return l10n.familyNameRequired2;
                         }
                         if (value.trim().length < 2) {
-                          return 'Family name must be at least 2 characters';
+                          return l10n.familyNameMinLength;
                         }
                         return null;
                       },
                       decoration: InputDecoration(
-                        hintText: 'The Smith Family',
+                        hintText: l10n.familyNameHint,
                         hintStyle: TextStyle(
                           color: AppColors.textSecondary.withOpacity(0.4),
                         ),
@@ -245,9 +244,8 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
 
                     const SizedBox(height: 24),
 
-                    // Initial Budget
                     Text(
-                      'Initial Budget *',
+                      '${l10n.initialBudget} *',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -268,14 +266,14 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       ],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter an initial budget';
+                          return l10n.enterInitialBudget;
                         }
                         final budget = double.tryParse(value.trim());
                         if (budget == null) {
-                          return 'Please enter a valid number';
+                          return l10n.enterValidNumber;
                         }
                         if (budget < 0) {
-                          return 'Budget cannot be negative';
+                          return l10n.budgetCannotBeNegative;
                         }
                         return null;
                       },
@@ -335,9 +333,8 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
 
                     const SizedBox(height: 24),
 
-                    // Family Bio (Optional)
                     Text(
-                      'Family Bio (Optional)',
+                      l10n.familyBioOptional,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -352,7 +349,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                       maxLength: 200,
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
-                        hintText: 'A short description of your family...',
+                        hintText: l10n.shortFamilyDescription,
                         hintStyle: TextStyle(
                           color: AppColors.textSecondary.withOpacity(0.4),
                         ),
@@ -385,7 +382,6 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
 
                     const SizedBox(height: 32),
 
-                    // Create Button
                     SizedBox(
                       height: 52,
                       child: ElevatedButton(
@@ -411,9 +407,9 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                                   ),
                                 ),
                               )
-                            : const Text(
-                                'Create Family',
-                                style: TextStyle(
+                            : Text(
+                                l10n.createFamily,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.3,
@@ -424,7 +420,6 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
 
                     const SizedBox(height: 24),
 
-                    // Info text
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -443,7 +438,7 @@ class _CreateFamilyViewState extends State<_CreateFamilyView> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'You will automatically become the admin of this family. You can invite other members from the family settings later.',
+                              l10n.createFamilyInfo,
                               style: TextStyle(
                                 fontSize: 13,
                                 height: 1.4,

@@ -4,6 +4,7 @@ import 'package:famxpense/features/Auth/cubit/signup_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/signup_state.dart';
 import 'package:famxpense/features/Auth/pages/validation_patterns.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -20,14 +21,12 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _fullNameController = TextEditingController();
   final _dobController = TextEditingController();
 
-  // State variables
   String? _selectedGender;
   DateTime? _selectedDate;
   bool _obscurePassword = true;
@@ -45,6 +44,7 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _pickImage() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -61,7 +61,7 @@ class _SignupPageState extends State<SignupPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to pick image: $e'),
+          content: Text('${l10n.failedToPickImage}: $e'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -69,6 +69,7 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _takePhoto() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.camera,
@@ -85,7 +86,7 @@ class _SignupPageState extends State<SignupPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to take photo: $e'),
+          content: Text('${l10n.failedToTakePhoto}: $e'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -93,6 +94,7 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   void _showImageSourceDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -120,7 +122,7 @@ class _SignupPageState extends State<SignupPage> {
                       Icons.photo_library,
                       color: AppColors.primary,
                     ),
-                  title: const Text('Choose from Gallery'),
+                  title: Text(l10n.chooseFromGallery),
                   onTap: () {
                     Navigator.pop(context);
                     _pickImage();
@@ -131,7 +133,7 @@ class _SignupPageState extends State<SignupPage> {
                     Icons.camera_alt,
                     color: AppColors.primary,
                   ),
-                  title: const Text('Take a Photo'),
+                  title: Text(l10n.takePhoto),
                   onTap: () {
                     Navigator.pop(context);
                     _takePhoto();
@@ -143,7 +145,7 @@ class _SignupPageState extends State<SignupPage> {
                       Icons.delete,
                       color: AppColors.error,
                     ),
-                    title: const Text('Remove Photo'),
+                    title: Text(l10n.removePhoto),
                     onTap: () {
                       Navigator.pop(context);
                       setState(() {
@@ -188,28 +190,31 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   String? _validateFullName(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) {
-      return 'Full name is required';
+      return l10n.fullNameRequired;
     }
     if (value.trim().length < 3) {
-      return 'Full name must be at least 3 characters';
+      return l10n.fullNameMinLength;
     }
     return null;
   }
 
   String? _validateDOB(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) {
-      return 'Date of birth is required';
+      return l10n.pleaseSelectBirthDate;
     }
     if (_selectedDate == null) {
-      return 'Please select a valid date';
+      return l10n.pleaseSelectBirthDate;
     }
     return null;
   }
 
   String? _validateGender(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) {
-      return 'Please select a gender';
+      return l10n.pleaseSelectGender;
     }
     return null;
   }
@@ -230,6 +235,8 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: BlocConsumer<SignupCubit, SignupState>(
@@ -260,7 +267,6 @@ class _SignupPageState extends State<SignupPage> {
                     children: [
                       const SizedBox(height: 24),
 
-                      // Profile Image Upload Section - More Compact
                       Center(
                         child: Stack(
                           children: [
@@ -338,11 +344,10 @@ class _SignupPageState extends State<SignupPage> {
 
                       const SizedBox(height: 20),
 
-                      // Title - More Compact
-                      const Text(
-                        "Create Account",
+                      Text(
+                        l10n.createAccount,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -351,7 +356,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Fill in your details to get started",
+                        l10n.fillDetailsToStart,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
@@ -362,29 +367,26 @@ class _SignupPageState extends State<SignupPage> {
 
                       const SizedBox(height: 24),
 
-                      // Username field
-                      _buildLabel("Username"),
+                      _buildLabel(l10n.username),
                       const SizedBox(height: 6),
                       _buildTextField(
                         controller: _usernameController,
-                        hintText: "ExpenseTracker1",
+                        hintText: l10n.usernameHint,
                         validator: ValidationPatterns.validateUsername,
                       ),
                       const SizedBox(height: 16),
 
-                      // Email field
-                      _buildLabel("Email"),
+                      _buildLabel(l10n.email),
                       const SizedBox(height: 6),
                       _buildTextField(
                         controller: _emailController,
-                        hintText: "example@gmail.com",
+                        hintText: l10n.emailPlaceholder,
                         keyboardType: TextInputType.emailAddress,
                         validator: ValidationPatterns.validateEmail,
                       ),
                       const SizedBox(height: 16),
 
-                      // Password field
-                      _buildLabel("Password"),
+                      _buildLabel(l10n.password),
                       const SizedBox(height: 6),
                       _buildTextField(
                         controller: _passwordController,
@@ -408,8 +410,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Full Name field
-                      _buildLabel("Full Name"),
+                      _buildLabel(l10n.fullName),
                       const SizedBox(height: 6),
                       _buildTextField(
                         controller: _fullNameController,
@@ -418,18 +419,17 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Date of Birth and Gender in a Row
                       Row(
                         children: [
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel("Date of Birth"),
+                                _buildLabel(l10n.dateOfBirth),
                                 const SizedBox(height: 6),
                                 _buildTextField(
                                   controller: _dobController,
-                                  hintText: "Select date",
+                                  hintText: l10n.selectDateHint,
                                   readOnly: true,
                                   validator: _validateDOB,
                                   onTap: () => _selectDate(context),
@@ -447,9 +447,9 @@ class _SignupPageState extends State<SignupPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel("Gender"),
+                                _buildLabel(l10n.gender),
                                 const SizedBox(height: 6),
-                                _buildGenderDropdown(),
+                                _buildGenderDropdown(l10n),
                               ],
                             ),
                           ),
@@ -458,7 +458,6 @@ class _SignupPageState extends State<SignupPage> {
 
                       const SizedBox(height: 24),
 
-                      // Sign Up button
                       SizedBox(
                         height: 50,
                         child: ElevatedButton(
@@ -484,9 +483,9 @@ class _SignupPageState extends State<SignupPage> {
                                     ),
                                   ),
                                 )
-                              : const Text(
-                                  "Sign Up",
-                                  style: TextStyle(
+                              : Text(
+                                  l10n.signUp,
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.3,
@@ -497,12 +496,11 @@ class _SignupPageState extends State<SignupPage> {
 
                       const SizedBox(height: 20),
 
-                      // Already have account
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Already have an account? ",
+                            "${l10n.alreadyHaveAccount} ",
                             style: TextStyle(
                               fontSize: 13,
                               color: AppColors.textSecondary
@@ -511,9 +509,9 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                           GestureDetector(
                             onTap: () => context.push(Routes.login),
-                            child: const Text(
-                              "Log In",
-                              style: TextStyle(
+                            child: Text(
+                              l10n.logIn,
+                              style: const TextStyle(
                                 fontSize: 13,
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
@@ -617,25 +615,25 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  Widget _buildGenderDropdown() {
+  Widget _buildGenderDropdown(AppLocalizations l10n) {
     return DropdownButtonFormField<String>(
       value: _selectedGender,
       validator: _validateGender,
       hint: Text(
-        "Select",
+        l10n.selectGender,
         style: TextStyle(
           color: AppColors.textSecondary.withValues(alpha: 0.3),
           fontSize: 14,
         ),
       ),
-      items: const [
+      items: [
         DropdownMenuItem(
           value: "Male",
-          child: Text("Male"),
+          child: Text(l10n.male),
         ),
         DropdownMenuItem(
           value: "Female",
-          child: Text("Female"),
+          child: Text(l10n.female),
         ),
       ],
       onChanged: (value) {

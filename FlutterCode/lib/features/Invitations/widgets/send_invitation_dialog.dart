@@ -1,20 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 /// Stateful widget for creating and sending new family invitations
-///
-/// This dialog handles:
-/// - Email input with validation (format + self-invite prevention)
-/// - Parent/Member role selection
-/// - Form submission to cubit
-/// - Success/error feedback through cubit listener
-///
-/// The dialog closes automatically on success (handled by page listener)
-/// and stays open on validation errors for user correction.
-///
-/// Constructor parameters:
-/// - [currentUserEmail]: Email of the currently logged-in user (for self-invite validation)
-/// - [cubit]: InvitationsCubit instance for sending invitations
 class SendInvitationDialog extends StatefulWidget {
   final String currentUserEmail;
   final InvitationsCubit cubit;
@@ -46,47 +34,44 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
     super.dispose();
   }
 
-  /// Validate email format using basic regex pattern
   String? _validateEmail(String? value) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (value == null || value.isEmpty) {
-      return 'Email is required';
+      return l10n.emailRequired;
     }
 
-    // Basic email validation pattern
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
 
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
+      return l10n.invalidEmail;
     }
 
-    // Prevent self-invite (case-insensitive comparison)
     if (value.toLowerCase() == widget.currentUserEmail.toLowerCase()) {
-      return 'Cannot invite yourself';
+      return l10n.cannotInviteYourself;
     }
 
     return null;
   }
 
-  /// Handle send button press
   void _handleSendInvitation() {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text.trim();
 
-      // Call cubit to send invitation
       widget.cubit.sendInvitation(email, _isParent);
 
-      // Close dialog on success
-      // The page listener will handle showing success snackbar
       Navigator.of(context).pop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return AlertDialog(
-      title: const Text('Send Family Invitation'),
+      title: Text(l10n.sendFamilyInvitation),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -97,12 +82,11 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Email input field
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email Address',
-                  hintText: 'user@example.com',
+                  labelText: l10n.emailAddress,
+                  hintText: l10n.emailPlaceholder,
                   prefixIcon: const Icon(Icons.email_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -126,16 +110,14 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
                 validator: _validateEmail,
                 textInputAction: TextInputAction.next,
                 onChanged: (_) {
-                  // Trigger validation on changes
                   _formKey.currentState?.validate();
                 },
               ),
               const SizedBox(height: 24),
 
-              // Parent/Member role toggle
               CheckboxListTile(
-                title: const Text('Invite as family parent'),
-                subtitle: const Text('Parents can manage family invitations'),
+                title: Text(l10n.inviteAsParent),
+                subtitle: Text(l10n.parentsCanManage),
                 value: _isParent,
                 onChanged: (newValue) {
                   setState(() {
@@ -150,16 +132,14 @@ class _SendInvitationDialogState extends State<SendInvitationDialog> {
         ),
       ),
       actions: [
-        // Cancel button
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
 
-        // Send button
         ElevatedButton(
           onPressed: _handleSendInvitation,
-          child: const Text('Send'),
+          child: Text(l10n.send),
         ),
       ],
     );

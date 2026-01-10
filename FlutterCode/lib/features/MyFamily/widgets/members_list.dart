@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 import 'package:famxpense/features/MyFamily/widgets/member_card.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 
 /// Displays a list of family members using MemberCard widgets
 /// Includes section header and handles empty state
@@ -24,6 +25,8 @@ class MembersListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     // Handle empty state
     if (members.isEmpty) {
       return Center(
@@ -39,7 +42,7 @@ class MembersListWidget extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'No family members yet',
+                l10n.noFamilyMembersYet,
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -48,7 +51,7 @@ class MembersListWidget extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Invite members to see them here',
+                l10n.inviteMembersToSeeHere,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: AppColors.textSecondary.withOpacity(0.7),
@@ -83,7 +86,7 @@ class MembersListWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Members',
+                l10n.members,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

@@ -22,6 +22,7 @@ import 'package:famxpense/features/Families/Cubits/create_family_cubit.dart';
 import 'package:famxpense/features/Families/Cubits/select_family_cubit.dart';
 import 'package:famxpense/features/Profile/Cubits/profile_cubit.dart';
 import 'package:famxpense/features/Settings/Cubits/settings_cubit.dart';
+import 'package:famxpense/features/Settings/Cubits/locale_cubit.dart';
 import 'package:famxpense/features/Transactions/Cubits/transaction_cubit.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -152,6 +153,11 @@ Future<void> setupDependencyInjection() async {
   // Settings Cubit - Singleton
   getIt.registerLazySingleton<SettingsCubit>(
     () => SettingsCubit(getIt<UserRepository>()),
+  );
+
+  // Locale Cubit - Singleton (for language persistence)
+  getIt.registerLazySingleton<LocaleCubit>(
+    () => LocaleCubit(),
   );
 
   // Factory Cubits (new instance each time)

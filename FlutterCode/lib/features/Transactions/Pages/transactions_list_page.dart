@@ -8,6 +8,7 @@ import 'package:famxpense/features/Transactions/Pages/filter.dart';
 import 'package:famxpense/features/Transactions/Pages/transaction_list_item.dart';
 import 'package:famxpense/features/Transactions/Pages/transaction_type_button.dart';
 import 'package:famxpense/models/Transactions/transaction_models.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -103,15 +104,17 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(l10n),
       body: BlocConsumer<TransactionCubit, TransactionState>(
         listener: (context, state) {
           if (state is TransactionOperationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(_getSuccessMessage(state.operationType)),
+                content: Text(_getSuccessMessage(l10n, state.operationType)),
                 backgroundColor: Colors.green.shade400,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
@@ -155,7 +158,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                       constraints: BoxConstraints(
                         minHeight: constraints.maxHeight,
                       ),
-                      child: _buildErrorState(state.message),
+                      child: _buildErrorState(l10n, state.message),
                     ),
                   );
                 },
@@ -167,7 +170,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
             return Column(
               children: [
                 if (state.currentFilters.hasActiveFilters)
-                  _buildActiveFiltersBar(state.currentFilters),
+                  _buildActiveFiltersBar(l10n, state.currentFilters),
                 Expanded(
                   child: state.transactions.isEmpty
                       ? RefreshIndicator(
@@ -181,14 +184,14 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                                   constraints: BoxConstraints(
                                     minHeight: constraints.maxHeight,
                                   ),
-                                  child: _buildEmptyState(
+                                  child: _buildEmptyState(l10n,
                                       state.currentFilters.hasActiveFilters),
                                 ),
                               );
                             },
                           ),
                         )
-                      : _buildTransactionsList(state),
+                      : _buildTransactionsList(l10n, state),
                 ),
               ],
             );
@@ -201,11 +204,11 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(AppLocalizations l10n) {
     return AppBar(
-      title: const Text(
-        'Transactions',
-        style: TextStyle(
+      title: Text(
+        l10n.transactions,
+        style: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
@@ -258,7 +261,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     );
   }
 
-  Widget _buildActiveFiltersBar(TransactionFilters filters) {
+  Widget _buildActiveFiltersBar(AppLocalizations l10n, TransactionFilters filters) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(16),
@@ -280,7 +283,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '${filters.activeFilterCount} filter${filters.activeFilterCount > 1 ? 's' : ''} active',
+              l10n.filtersActive(filters.activeFilterCount),
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -297,9 +300,9 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text(
-              'Clear',
-              style: TextStyle(
+            child: Text(
+              l10n.clear,
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: AppColors.primary,
@@ -311,7 +314,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     );
   }
 
-  Widget _buildErrorState(String message) {
+  Widget _buildErrorState(AppLocalizations l10n, String message) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -325,7 +328,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Oops! Something went wrong',
+              l10n.somethingWentWrong,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -354,9 +357,9 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
               ),
               onPressed: _handleRefresh,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text(
-                'Try Again',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              label: Text(
+                l10n.tryAgain,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -365,7 +368,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     );
   }
 
-  Widget _buildEmptyState(bool hasFilters) {
+  Widget _buildEmptyState(AppLocalizations l10n, bool hasFilters) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -381,7 +384,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
             ),
             const SizedBox(height: 20),
             Text(
-              hasFilters ? 'No Matching Transactions' : 'No Transactions Yet',
+              hasFilters ? l10n.noMatchingTransactions : l10n.noTransactionsYet,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -391,8 +394,8 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
             const SizedBox(height: 8),
             Text(
               hasFilters
-                  ? 'Try adjusting your filters to see more results'
-                  : 'Start tracking your expenses by adding your first transaction',
+                  ? l10n.adjustFiltersHint
+                  : l10n.startTrackingHint,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -417,9 +420,9 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
                   Icons.clear_all_rounded,
                   color: AppColors.primary,
                 ),
-                label: const Text(
-                  'Clear Filters',
-                  style: TextStyle(
+                label: Text(
+                  l10n.clearFilters,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
                   ),
@@ -432,8 +435,8 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     );
   }
 
-  Widget _buildTransactionsList(TransactionLoaded state) {
-    final grouped = _groupTransactionsByDate(state.transactions);
+  Widget _buildTransactionsList(AppLocalizations l10n, TransactionLoaded state) {
+    final grouped = _groupTransactionsByDate(l10n, state.transactions);
 
     return RefreshIndicator(
       onRefresh: _handleRefresh,
@@ -493,7 +496,7 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
   }
 
   Map<String, List<TransactionItem>> _groupTransactionsByDate(
-      List<TransactionItem> transactions) {
+      AppLocalizations l10n, List<TransactionItem> transactions) {
     final Map<String, List<TransactionItem>> grouped = {};
     final today = DateUtils.dateOnly(DateTime.now());
     final yesterday = DateUtils.dateOnly(
@@ -503,9 +506,9 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     for (final tx in transactions) {
       final date = DateUtils.dateOnly(tx.transactedOn);
       final label = DateUtils.isSameDay(date, today)
-          ? 'Today'
+          ? l10n.today
           : DateUtils.isSameDay(date, yesterday)
-              ? 'Yesterday'
+              ? l10n.yesterday
               : DateFormat('EEEE, MMM d').format(date);
 
       grouped.putIfAbsent(label, () => []).add(tx);
@@ -522,14 +525,14 @@ class _TransactionsListPageState extends State<TransactionsListPage> {
     );
   }
 
-  String _getSuccessMessage(TransactionOperationType type) {
+  String _getSuccessMessage(AppLocalizations l10n, TransactionOperationType type) {
     switch (type) {
       case TransactionOperationType.create:
-        return 'Transaction created successfully';
+        return l10n.transactionCreated;
       case TransactionOperationType.update:
-        return 'Transaction updated successfully';
+        return l10n.transactionUpdated;
       case TransactionOperationType.delete:
-        return 'Transaction deleted successfully';
+        return l10n.transactionDeleted;
     }
   }
 }

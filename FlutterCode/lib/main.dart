@@ -1,21 +1,29 @@
-import 'package:famxpense/core/di/setup_dependency_injection.dart';
-import 'package:famxpense/core/services/category_service.dart';
-import 'package:famxpense/core/services/device_manager.dart';
-import 'package:famxpense/features/Auth/cubit/auth_cubit.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-import 'package:famxpense/core/services/notifications_service.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
+
+import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/app_router.dart';
+import 'package:famxpense/core/services/category_service.dart';
+import 'package:famxpense/core/services/device_manager.dart';
+import 'package:famxpense/core/services/notifications_service.dart';
 import 'package:famxpense/core/theme/app_theme.dart';
-import 'dart:async';
 
-import 'package:go_router/go_router.dart';
+import 'package:famxpense/features/Auth/cubit/auth_cubit.dart';
+import 'package:famxpense/features/Settings/Cubits/locale_cubit.dart';
 
-///  Background FCM handler
+import 'package:famxpense/l10n/app_localizations.dart';
+
+/// Background FCM handler
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -53,16 +61,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final AuthCubit _authCubit;
+  late final LocaleCubit _localeCubit;
   late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
-    // Get the singleton AuthCubit instance
     _authCubit = getIt<AuthCubit>();
-    // Create router with the same AuthCubit instance
+    _localeCubit = getIt<LocaleCubit>();
     _router = AppRouter.createRouter(_authCubit);
-    // Start auth check
     _authCubit.checkAuthStatus();
   }
 
@@ -74,13 +81,31 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _authCubit,
-      child: MaterialApp.router(
-        title: 'FamXpense',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        routerConfig: _router,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _authCubit),
+        BlocProvider.value(value: _localeCubit),
+      ],
+      child: BlocBuilder<LocaleCubit, LocaleState>(
+        builder: (context, localeState) {
+          return MaterialApp.router(
+            title: 'FamXpense',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            routerConfig: _router,
+            locale: localeState.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('fr'),
+            ],
+          );
+        },
       ),
     );
   }
