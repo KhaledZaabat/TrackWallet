@@ -293,13 +293,19 @@ class AuthRepository {
   /// Google login (mobile)
   Future<AuthResult> loginWithGoogle(String idToken) async {
     try {
-      AppLogger.info(_tag, '🔐 Starting Google login');
-      AppLogger.info(_tag, 'ID Token length: ${idToken.length} characters');
+      AppLogger.step(_tag, 1, '🔐 AUTH REPO: Starting Google login API call');
+      AppLogger.debug(_tag, 'ID Token info:', data: {
+        'length': idToken.length,
+        'preview': '${idToken.substring(0, 50)}...',
+      });
 
+      AppLogger.step(_tag, 2, 'Getting device info');
       final deviceInfo = await _deviceManager.getDeviceInfo();
-      AppLogger.info(_tag, 'Device ID: ${deviceInfo.deviceId}');
-      AppLogger.info(_tag,
-          'FCM Token: ${deviceInfo.fcmToken != null ? "Present" : "Missing"}');
+      AppLogger.debug(_tag, 'Device info:', data: {
+        'deviceId': deviceInfo.deviceId,
+        'hasFcmToken': deviceInfo.fcmToken != null,
+        'fcmTokenLength': deviceInfo.fcmToken?.length ?? 0,
+      });
 
       final requestData = {
         'idToken': idToken,
@@ -307,34 +313,45 @@ class AuthRepository {
         'fcmToken': deviceInfo.fcmToken,
       };
 
-      AppLogger.info(
-          _tag, 'Sending request to: /api/identity/login/google/mobile');
+      AppLogger.step(_tag, 3, 'Sending POST to /api/identity/login/google/mobile');
+      AppLogger.debug(_tag, 'Request payload (excluding token):', data: {
+        'deviceId': deviceInfo.deviceId,
+        'hasFcmToken': deviceInfo.fcmToken != null,
+      });
 
       final response = await _apiClient.dio.post(
         '/api/identity/login/google/mobile',
         data: requestData,
       );
 
-      AppLogger.info(
-          _tag, '✅ Google login response - Status: ${response.statusCode}');
-      AppLogger.info(_tag, 'Response data: ${response.data}');
+      AppLogger.step(_tag, 4, 'Response received');
+      AppLogger.debug(_tag, 'Response details:', data: {
+        'statusCode': response.statusCode,
+        'hasData': response.data != null,
+        'dataType': response.data?.runtimeType.toString(),
+      });
 
       if (response.statusCode == 200) {
         final data = response.data;
-
+        AppLogger.success(_tag, '🎉 Google login API call SUCCESSFUL');
+        
+        AppLogger.step(_tag, 5, 'Saving auth tokens');
         await _localStorage.saveAuthTokens(
           data['jwtToken']['token'],
           data['refreshToken']['token'],
         );
+        AppLogger.success(_tag, 'Auth tokens saved');
 
         await _localStorage.saveUserId(data['userId']);
+        AppLogger.success(_tag, 'User ID saved: ${data['userId']}');
 
-        AppLogger.info(
-            _tag, '🎉 Google login successful - User ID: ${data['userId']}');
-        AppLogger.info(_tag, 'Email: ${data['email']}');
-        AppLogger.info(_tag, 'Full Name: ${data['fullName']}');
-        AppLogger.info(
-            _tag, 'Families: ${(data['families'] as List?)?.length ?? 0}');
+        AppLogger.debug(_tag, 'User data from backend:', data: {
+          'userId': data['userId'],
+          'email': data['email'],
+          'fullName': data['fullName'],
+          'hasProfileImage': data['profileImageUrl'] != null,
+          'familiesCount': (data['families'] as List?)?.length ?? 0,
+        });
 
         return AuthResult.success(
           userId: data['userId'],
@@ -347,30 +364,38 @@ class AuthRepository {
         );
       }
 
-      AppLogger.error(
-          _tag, '❌ Google login failed - Status: ${response.statusCode}');
+      AppLogger.error(_tag, '❌ Google login failed - Status: ${response.statusCode}');
+      AppLogger.debug(_tag, 'Response body: ${response.data}');
       return AuthResult.failure('Google login failed');
     } on DioException catch (e, stackTrace) {
-      AppLogger.error(
-        _tag,
-        '❌ Google login DioException - Status: ${e.response?.statusCode}',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      AppLogger.error(_tag, 'Response data: ${e.response?.data}');
-      AppLogger.error(_tag, 'Response headers: ${e.response?.headers}');
-      AppLogger.error(_tag, 'Request data: ${e.requestOptions.data}');
-
+      AppLogger.error(_tag, '❌ DioException during Google login', error: e, stackTrace: stackTrace);
+      AppLogger.debug(_tag, 'DioException details:', data: {
+        'statusCode': e.response?.statusCode,
+        'type': e.type.toString(),
+        'message': e.message,
+      });
+      AppLogger.debug(_tag, 'Response data: ${e.response?.data}');
+      AppLogger.debug(_tag, 'Response headers: ${e.response?.headers}');
+      
+      // Decode error message from backend
+      String errorMessage = 'Network error. Please try again.';
       if (e.response?.statusCode == 401) {
-        return AuthResult.failure('Invalid Google token');
+        errorMessage = 'Invalid Google token - backend could not verify';
+        AppLogger.warning(_tag, 'HINT: Check if backend is using the correct Google Client ID');
       } else if (e.response?.statusCode == 400) {
-        final error = e.response?.data['detail'] ?? 'Invalid request';
-        return AuthResult.failure(error);
+        errorMessage = e.response?.data['detail'] ?? 'Invalid request';
+        AppLogger.warning(_tag, 'HINT: Request payload may be malformed');
+      } else if (e.response?.statusCode == 500) {
+        errorMessage = 'Server error during Google authentication';
+        AppLogger.warning(_tag, 'HINT: Check backend logs for the error');
+        if (e.response?.data != null) {
+          AppLogger.debug(_tag, 'Server error details: ${e.response?.data}');
+        }
       }
-      return AuthResult.failure('Network error. Please try again.');
+      
+      return AuthResult.failure(errorMessage);
     } catch (e, stackTrace) {
-      AppLogger.error(_tag, '❌ Google login unexpected error',
-          error: e, stackTrace: stackTrace);
+      AppLogger.error(_tag, '❌ Unexpected error during Google login', error: e, stackTrace: stackTrace);
       return AuthResult.failure('An unexpected error occurred');
     }
   }

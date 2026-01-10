@@ -93,49 +93,61 @@ class AuthCubit extends Cubit<AuthState> {
 
   /// Login with Google
   Future<void> loginWithGoogle() async {
+    AppLogger.step(_tag, 1, '🔐 AUTH CUBIT: Starting Google Login Flow');
     emit(AuthLoading());
 
     try {
-      AppLogger.info(_tag, 'Starting Google Sign-In flow');
-
+      AppLogger.step(_tag, 2, 'Calling GoogleSignInService.signIn()');
+      
       // Get ID token from Google
       final idToken = await _googleSignInService.signIn();
 
+      AppLogger.step(_tag, 3, 'GoogleSignInService returned');
+      AppLogger.debug(_tag, 'ID Token result:', data: {
+        'hasToken': idToken != null,
+        'tokenLength': idToken?.length ?? 0,
+      });
+
       if (idToken == null) {
         // User cancelled the sign-in
-        AppLogger.info(_tag, 'Google Sign-In cancelled by user');
+        AppLogger.warning(_tag, 'Google Sign-In cancelled - returning to unauthenticated state');
         emit(AuthUnauthenticated());
         return;
       }
 
       // Authenticate with backend
-      AppLogger.info(_tag, 'Authenticating with backend');
+      AppLogger.step(_tag, 4, 'Sending ID token to backend for authentication');
+      AppLogger.info(_tag, 'Token preview: ${idToken.substring(0, 30)}...');
+      
       final result = await _authRepository.loginWithGoogle(idToken);
+
+      AppLogger.step(_tag, 5, 'Backend response received');
+      AppLogger.debug(_tag, 'Backend result:', data: {
+        'isSuccess': result.isSuccess,
+        'hasData': result.data != null,
+        'errorMessage': result.errorMessage,
+      });
 
       if (result.isSuccess && result.data != null) {
         final data = result.data!;
-        AppLogger.info(_tag, 'Google login successful for user: ${data.email}');
+        AppLogger.success(_tag, '🎉 GOOGLE LOGIN SUCCESSFUL');
+        AppLogger.debug(_tag, 'User data:', data: {
+          'email': data.email,
+          'fullName': data.fullName,
+          'userId': data.userId,
+          'familiesCount': data.families?.length ?? 0,
+        });
         _emitAuthenticatedState(data);
       } else {
-        AppLogger.error(
-            _tag, 'Backend authentication failed: ${result.errorMessage}');
+        AppLogger.error(_tag, '❌ BACKEND AUTHENTICATION FAILED');
+        AppLogger.error(_tag, 'Error message: ${result.errorMessage}');
         _emitErrorAndReset(result.errorMessage ?? 'Google login failed');
       }
     } on GoogleSignInException catch (e, stackTrace) {
-      AppLogger.error(
-        _tag,
-        'Google Sign-In exception',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      AppLogger.error(_tag, '❌ GoogleSignInException caught', error: e, stackTrace: stackTrace);
       _emitErrorAndReset('Failed to sign in with Google. Please try again.');
     } catch (e, stackTrace) {
-      AppLogger.error(
-        _tag,
-        'Unexpected error during Google login',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      AppLogger.error(_tag, '❌ UNEXPECTED ERROR in loginWithGoogle', error: e, stackTrace: stackTrace);
       _emitErrorAndReset('An unexpected error occurred');
     }
   }

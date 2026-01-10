@@ -450,7 +450,7 @@ class _DashboardHeader extends StatelessWidget {
                     ),
                     IconButton(
                       onPressed: () {
-                        context.push(Routes.manageFamilies);
+                        context.go(Routes.selectFamily);
                       },
                       icon: const Icon(
                         Icons.swap_horiz,

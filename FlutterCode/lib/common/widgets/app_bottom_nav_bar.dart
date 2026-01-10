@@ -37,15 +37,16 @@ class AppBottomNavBar extends StatelessWidget {
       // Safety check if we somehow ended up on SelectFamily (5) while "Family Selected" is true
       if (navIndex > 4) navIndex = 0; 
     } else {
-      // No Family Mode (2 items):
+      // No Family Mode (3 items):
       // 0->5 (SelectFamily -> Families tab)
-      // 1->1 (Invitations -> Invitations tab)
+      // 1->6 (Guest Invitations -> Invitations tab)
+      // 2->4 (Settings -> Settings tab)
       if (currentBranchIndex == 5) {
         navIndex = 0; // Families tab
-      } else if (currentBranchIndex == 1) {
-        navIndex = 1; // Invitations tab
-      } else if (currentBranchIndex == 6) {
+      } else if (currentBranchIndex == 1 || currentBranchIndex == 6) {
         navIndex = 1; // Invitations tab (Guest)
+      } else if (currentBranchIndex == 4) {
+        navIndex = 2; // Settings tab
       } else {
         navIndex = 0; // Default
       }
@@ -94,12 +95,16 @@ class AppBottomNavBar extends StatelessWidget {
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.grey,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
         elevation: 8,
         onTap: (index) {
           if (index == 0) {
             onBranchTap(5); // Go to Select Family
-          } else {
+          } else if (index == 1) {
             onBranchTap(6); // Go to Guest Invitations
+          } else {
+            onBranchTap(4); // Go to Settings
           }
         },
         items: const [
@@ -110,6 +115,10 @@ class AppBottomNavBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.mail_rounded),
             label: 'Invitations',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings_rounded),
+            label: 'Settings',
           ),
         ],
       );

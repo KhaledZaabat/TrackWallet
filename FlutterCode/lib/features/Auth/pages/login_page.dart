@@ -1,3 +1,4 @@
+import 'package:famxpense/core/app_logger.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/Auth/cubit/auth_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/auth_state.dart';
@@ -16,6 +17,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  static const String _tag = 'LoginPage';
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -37,6 +39,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleGoogleLogin(BuildContext context) {
+    AppLogger.info(_tag, '🔘 Google Sign-In button pressed');
+    AppLogger.debug(_tag, 'Current auth state: ${context.read<AuthCubit>().state.runtimeType}');
     context.read<AuthCubit>().loginWithGoogle();
   }
 
@@ -232,8 +236,11 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: AppColors.background,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
+          AppLogger.info(_tag, '📊 Auth state changed: ${state.runtimeType}');
+          
           // Show error messages
           if (state is AuthError) {
+            AppLogger.error(_tag, '❌ AuthError received: ${state.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -250,7 +257,21 @@ class _LoginPageState extends State<LoginPage> {
 
           // Navigate on successful authentication
           if (state is AuthAuthenticated) {
+            AppLogger.success(_tag, '✅ AuthAuthenticated - Navigating to /select-family');
+            AppLogger.debug(_tag, 'Authenticated user:', data: {
+              'email': state.email,
+              'userId': state.userId,
+              'familiesCount': state.families.length,
+            });
             context.go('/select-family');
+          }
+          
+          if (state is AuthLoading) {
+            AppLogger.info(_tag, '⏳ AuthLoading - Waiting for response...');
+          }
+          
+          if (state is AuthUnauthenticated) {
+            AppLogger.info(_tag, '🔓 AuthUnauthenticated - User not logged in');
           }
         },
         builder: (context, state) {
