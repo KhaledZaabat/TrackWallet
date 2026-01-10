@@ -6,6 +6,7 @@ namespace Expense_Tracker.Contracts.Reponses.Transaction;
 public sealed record TransactionItem(
     Guid TransactionId,
     string Title,
+    string Notes,
     decimal Amount,
     TransactionType Type,
     DateOnly TransactedOn,

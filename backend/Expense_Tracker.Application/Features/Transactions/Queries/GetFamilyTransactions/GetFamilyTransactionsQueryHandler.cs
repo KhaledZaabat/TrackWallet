@@ -79,6 +79,7 @@ public sealed class GetFamilyTransactionsQueryHandler(
             .Select(t => new TransactionItem(
                 TransactionId: t.Id,
                 Title: t.Title,
+                Notes: t.Notes,
                 Amount: t.Amount,
                 Type: t.Type,
                 TransactedOn: t.TransactedOn,
