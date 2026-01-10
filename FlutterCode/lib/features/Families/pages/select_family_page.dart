@@ -166,8 +166,14 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
 
           if (state is SelectFamilyFamiliesLoaded) {
             return SafeArea(
-              child: CustomScrollView(
-                slivers: [
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  context.read<SelectFamilyCubit>().loadFamilies();
+                },
+                color: AppColors.primary,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
@@ -284,6 +290,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                     child: SizedBox(height: 24),
                   ),
                 ],
+              ),
               ),
             );
           }
