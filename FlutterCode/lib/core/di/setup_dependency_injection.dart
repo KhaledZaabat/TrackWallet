@@ -23,6 +23,7 @@ import 'package:famxpense/features/Families/Cubits/select_family_cubit.dart';
 import 'package:famxpense/features/Profile/Cubits/profile_cubit.dart';
 import 'package:famxpense/features/Settings/Cubits/settings_cubit.dart';
 import 'package:famxpense/features/Transactions/Cubits/transaction_cubit.dart';
+import 'package:famxpense/core/language/language_cubit.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get_it/get_it.dart';
@@ -152,6 +153,11 @@ Future<void> setupDependencyInjection() async {
   // Settings Cubit - Singleton
   getIt.registerLazySingleton<SettingsCubit>(
     () => SettingsCubit(getIt<UserRepository>()),
+  );
+
+  // Language Cubit - Singleton (for app-wide language management)
+  getIt.registerLazySingleton<LanguageCubit>(
+    () => LanguageCubit(getIt<LocalStorage>()),
   );
 
   // Factory Cubits (new instance each time)

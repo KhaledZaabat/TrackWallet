@@ -10,6 +10,7 @@ class LocalStorage {
   static const String _deviceIdKey = 'device_id';
   static const String _fcmTokenKey = 'fcm_token';
   static const String _onboardingKey = 'onboarding_completed';
+  static const String _languageKey = 'language';
 
   final FlutterSecureStorage _secureStorage;
   static const _uuid = Uuid();
@@ -134,5 +135,14 @@ class LocalStorage {
   // Read all stored data (useful for debugging)
   Future<Map<String, String>> getAllData() async {
     return await _secureStorage.readAll();
+  }
+
+  // ========== Language ==========
+  Future<void> saveLanguage(String languageCode) async {
+    await _secureStorage.write(key: _languageKey, value: languageCode);
+  }
+
+  Future<String?> getLanguage() async {
+    return await _secureStorage.read(key: _languageKey);
   }
 }

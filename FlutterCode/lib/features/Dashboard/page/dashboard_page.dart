@@ -1,4 +1,5 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/extensions/localization_extension.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Dashboard/cubit/dashboard_cubit.dart';
@@ -77,6 +78,8 @@ class _DashboardViewState extends State<_DashboardView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    
     return BlocListener<TransactionCubit, TransactionState>(
       bloc: getIt<TransactionCubit>(),
       listener: (context, state) {
@@ -162,7 +165,7 @@ class _DashboardViewState extends State<_DashboardView> {
               );
             }
 
-            return const Center(child: Text('Something went wrong'));
+            return Center(child: Text(l10n.somethingWentWrong));
           },
         ),
         floatingActionButton: FloatingActionButton(
@@ -187,6 +190,8 @@ class _DashboardErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -213,7 +218,7 @@ class _DashboardErrorView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.retry),
             ),
           ],
         ),
@@ -230,22 +235,24 @@ class _BudgetChartSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Budget This Month',
-              style: TextStyle(
+            Text(
+              l10n.budgetThisMonth,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
             Text(
-              DateFormat('MMMM yyyy').format(DateTime.now()),
+              DateFormat('MMMM yyyy', context.l10n.localeName).format(DateTime.now()),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -269,15 +276,17 @@ class _RecentTransactionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Recent Transactions',
-              style: TextStyle(
+            Text(
+              l10n.recentTransactions,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -285,9 +294,9 @@ class _RecentTransactionsSection extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => context.go(Routes.transactions),
-              child: const Text(
-                'View All',
-                style: TextStyle(
+              child: Text(
+                l10n.viewAll,
+                style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -317,6 +326,8 @@ class _RecentTransactionsSection extends StatelessWidget {
 class _EmptyTransactionsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -329,7 +340,7 @@ class _EmptyTransactionsView extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'No transactions yet',
+              l10n.noTransactionsYet,
               style: TextStyle(
                 color: AppColors.textSecondary.withOpacity(0.6),
                 fontSize: 14,

@@ -1,5 +1,6 @@
 // features/auth/presentation/Families/pages/select_family_page.dart - IMPROVED
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/extensions/localization_extension.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/features/Dashboard/cubit/dashboard_cubit.dart';
@@ -77,10 +78,10 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
               size: 28,
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Delete Family',
-                style: TextStyle(
+                context.l10n.deleteFamily,
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 18,
                 ),
@@ -100,7 +101,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              'Cancel',
+              context.l10n.cancel,
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
@@ -120,9 +121,9 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
-            child: const Text(
-              'Delete',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Text(
+              context.l10n.delete,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -188,9 +189,9 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Select a Family',
-                                        style: TextStyle(
+                                      Text(
+                                        context.l10n.selectFamily,
+                                        style: const TextStyle(
                                           fontSize: 28,
                                           fontWeight: FontWeight.w700,
                                           color: AppColors.textPrimary,
@@ -200,8 +201,8 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                       const SizedBox(height: 8),
                                       Text(
                                         state.families.isEmpty
-                                            ? 'Create your first family'
-                                            : 'Choose a family to continue',
+                                            ? context.l10n.createYourFirstFamily
+                                            : context.l10n.chooseFamily,
                                         style: TextStyle(
                                           fontSize: 15,
                                           color: AppColors.textSecondary.withValues(alpha: 0.6),
@@ -266,14 +267,24 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                                 child: _FamilyCard(
                                   family: family,
                                   isSelected: isCurrentFamily,
-                                  onTap: () {
+                                  onTap: () async {
                                     if (isCurrentFamily) {
-                                      if (context.canPop()) {
-                                        context.pop();
-                                      } else {
+                         
+                                      // If selecting the family that was already active:
+                                      // 1. Manually restore ID to storage (since we cleared it in initState)
+                                      // 2. Navigate instantly without showing loading spinner
+                                      await getIt<LocalStorage>().saveSelectedFamilyId(family.id);
+                                      
+                                      // Trigger background refreshes (fire and forget)
+                                      getIt<DashboardCubit>().loadDashboard();
+                                      getIt<InvitationsCubit>().loadAll();
+                                      getIt<MyFamilyCubit>().loadFamilyDetails();
+
+                                      if (context.mounted) {
                                         context.go(Routes.dashboard);
                                       }
                                     } else {
+                                      // New family selection - triggers full loading cycle
                                       context
                                         .read<SelectFamilyCubit>()
                                         .selectFamily(family.id);
@@ -325,9 +336,9 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                         color: AppColors.error.withOpacity(0.6),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Failed to load families',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.somethingWentWrong,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -359,7 +370,7 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
                           ),
                         ),
                         icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Retry'),
+                        label: Text(context.l10n.retry),
                       ),
                     ],
                   ),
@@ -382,8 +393,8 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
             );
           }
 
-          return const Center(
-            child: Text('Something went wrong'),
+          return Center(
+            child: Text(context.l10n.somethingWentWrong),
           );
         },
       ),
@@ -545,7 +556,7 @@ class _FamilyCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '$memberCount ${memberCount == 1 ? 'Member' : 'Members'}',
+                      '$memberCount ${memberCount == 1 ? context.l10n.member : context.l10n.members}',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -588,9 +599,9 @@ class _EmptyFamiliesView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'No Families Yet',
-              style: TextStyle(
+            Text(
+              context.l10n.noFamiliesYet,
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -598,7 +609,7 @@ class _EmptyFamiliesView extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Create your first family to start managing expenses together.',
+              context.l10n.createFamilyDescription,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -627,9 +638,9 @@ class _EmptyFamiliesView extends StatelessWidget {
                   ),
                 ),
                 icon: const Icon(Icons.add),
-                label: const Text(
-                  'Create Your First Family',
-                  style: TextStyle(
+                label: Text(
+                  context.l10n.createYourFirstFamily,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),

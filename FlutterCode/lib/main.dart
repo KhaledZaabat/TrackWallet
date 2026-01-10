@@ -1,9 +1,12 @@
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
+import 'package:famxpense/core/language/language_cubit.dart';
+import 'package:famxpense/core/language/language_state.dart';
 import 'package:famxpense/core/services/category_service.dart';
 import 'package:famxpense/core/services/device_manager.dart';
 import 'package:famxpense/features/Auth/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -11,6 +14,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:famxpense/core/services/notifications_service.dart';
 import 'package:famxpense/core/router/app_router.dart';
 import 'package:famxpense/core/theme/app_theme.dart';
+import 'package:famxpense/l10n/app_localizations.dart';
 import 'dart:async';
 
 import 'package:go_router/go_router.dart';
@@ -34,6 +38,9 @@ Future<void> main() async {
   await setupDependencyInjection();
   await getIt<CategoryService>().initialize();
 
+  // Initialize language preference
+  await getIt<LanguageCubit>().initialize();
+
   final deviceManager = getIt<DeviceManager>();
   await deviceManager.initializeDevice();
   deviceManager.listenToFcmTokenRefresh();
@@ -53,16 +60,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final AuthCubit _authCubit;
+  late final LanguageCubit _languageCubit;
   late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
-    // Get the singleton AuthCubit instance
     _authCubit = getIt<AuthCubit>();
-    // Create router with the same AuthCubit instance
+    _languageCubit = getIt<LanguageCubit>();
     _router = AppRouter.createRouter(_authCubit);
-    // Start auth check
     _authCubit.checkAuthStatus();
   }
 
@@ -74,13 +80,32 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _authCubit,
-      child: MaterialApp.router(
-        title: 'FamXpense',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        routerConfig: _router,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _authCubit),
+        BlocProvider.value(value: _languageCubit),
+      ],
+      child: BlocBuilder<LanguageCubit, LanguageState>(
+        builder: (context, languageState) {
+          return MaterialApp.router(
+            title: 'FamXpense',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            routerConfig: _router,
+            // Localization
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'), // English
+              Locale('fr'), // French
+            ],
+            locale: languageState.locale,
+          );
+        },
       ),
     );
   }

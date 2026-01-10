@@ -17,7 +17,7 @@ class NotificationService {
 
   static Future<void> initialize() async {
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/app_icon');
 
     const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
@@ -71,7 +71,7 @@ class NotificationService {
       channelDescription: _channel.description,
       importance: Importance.max,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@drawable/app_icon',
     );
 
     final NotificationDetails details =
