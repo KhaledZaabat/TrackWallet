@@ -1,6 +1,3 @@
-// models/transaction/transaction_models.dart
-
-/// Transaction type enum
 enum TransactionType {
   Income,
   Expense;
@@ -15,7 +12,6 @@ enum TransactionType {
   }
 }
 
-/// Creator info
 class TransactionCreator {
   final String userId;
   final String? fullName;
@@ -42,7 +38,6 @@ class TransactionCreator {
       };
 }
 
-/// Transaction category info
 class TransactionCategory {
   final String categoryId;
   final String name;
@@ -65,7 +60,6 @@ class TransactionCategory {
       };
 }
 
-/// Transaction item from API
 class TransactionItem {
   final String transactionId;
   final String? title;
@@ -125,7 +119,6 @@ class TransactionItem {
       'Transaction(id: $transactionId, title: $title, amount: $amount, type: $type)';
 }
 
-/// Paginated response for transactions
 class TransactionPagedResponse {
   final List<TransactionItem> items;
   final String? nextCursor;
@@ -154,7 +147,6 @@ class TransactionPagedResponse {
       };
 }
 
-/// Request to create transaction
 class CreateTransactionRequest {
   final TransactionType type;
   final String categoryId;
@@ -182,7 +174,6 @@ class CreateTransactionRequest {
       };
 }
 
-/// Request to update transaction
 class UpdateTransactionRequest {
   final TransactionType type;
   final double? amount;
@@ -225,7 +216,6 @@ class TransactionFilters {
     this.creatorId,
   });
 
-  /// Check if any filters are active
   bool get hasActiveFilters =>
       transactionType != null ||
       categoryType != null ||
@@ -233,7 +223,6 @@ class TransactionFilters {
       maxAmount != null ||
       creatorId != null;
 
-  /// Get count of active filters
   int get activeFilterCount {
     int count = 0;
     if (transactionType != null) count++;
@@ -243,12 +232,10 @@ class TransactionFilters {
     return count;
   }
 
-  /// Create empty filters
   factory TransactionFilters.empty() {
     return const TransactionFilters();
   }
 
-  /// Copy with method
   TransactionFilters copyWith({
     TransactionType? Function()? transactionType,
     String? Function()? categoryType,
@@ -266,7 +253,6 @@ class TransactionFilters {
     );
   }
 
-  /// Convert to query parameters for API
   Map<String, dynamic> toQueryParameters() {
     final Map<String, dynamic> params = {};
 
@@ -295,7 +281,6 @@ class TransactionFilters {
   }
 }
 
-/// Model for family user
 class FamilyUser {
   final String userId;
   final String? fullName;

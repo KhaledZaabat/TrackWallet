@@ -8,7 +8,6 @@ class ResetPasswordCubit extends Cubit<ResetPasswordState> {
 
   ResetPasswordCubit(this._authRepository) : super(ResetPasswordInitial());
 
-  /// Send OTP to email
   Future<void> sendOtp({required String email}) async {
     emit(SendingOtp());
 
@@ -30,7 +29,6 @@ class ResetPasswordCubit extends Cubit<ResetPasswordState> {
     }
   }
 
-  /// Verify OTP
   Future<void> verifyOtp({
     required String otp,
     String? email,
@@ -66,7 +64,6 @@ class ResetPasswordCubit extends Cubit<ResetPasswordState> {
     }
   }
 
-  /// Resend OTP
   Future<void> resendOtp({String? email}) async {
     final emailToResend = email ?? _pendingEmail;
 
@@ -100,7 +97,6 @@ class ResetPasswordCubit extends Cubit<ResetPasswordState> {
     }
   }
 
-  /// Reset password
   Future<void> resetPassword({
     required String newPassword,
     String? email,
@@ -136,12 +132,10 @@ class ResetPasswordCubit extends Cubit<ResetPasswordState> {
     }
   }
 
-  /// Reset to initial state
   void reset() {
     _pendingEmail = null;
     emit(ResetPasswordInitial());
   }
 
-  /// Get pending email
   String? get pendingEmail => _pendingEmail;
 }

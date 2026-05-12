@@ -1,4 +1,3 @@
-// features/auth/presentation/cubit/auth_cubit.dart
 import 'package:famxpense/core/app_logger.dart';
 import 'package:famxpense/core/services/google_sign_in_service.dart';
 import 'package:famxpense/data/repos/auth_repository.dart';
@@ -17,7 +16,6 @@ class AuthCubit extends Cubit<AuthState> {
     this._googleSignInService,
   ) : super(AuthInitial());
 
-  /// Check if user is already authenticated
   Future<void> checkAuthStatus() async {
     emit(AuthChecking());
 
@@ -66,7 +64,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Login with email/username and password
   Future<void> login({
     required String identifier,
     required String password,
@@ -91,24 +88,20 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Login with Google
   Future<void> loginWithGoogle() async {
     emit(AuthLoading());
 
     try {
       AppLogger.info(_tag, 'Starting Google Sign-In flow');
 
-      // Get ID token from Google
       final idToken = await _googleSignInService.signIn();
 
       if (idToken == null) {
-        // User cancelled the sign-in
         AppLogger.info(_tag, 'Google Sign-In cancelled by user');
         emit(AuthUnauthenticated());
         return;
       }
 
-      // Authenticate with backend
       AppLogger.info(_tag, 'Authenticating with backend');
       final result = await _authRepository.loginWithGoogle(idToken);
 
@@ -140,15 +133,12 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Logout
   Future<void> logout() async {
     emit(AuthLoading());
 
     try {
-      // Logout from backend
       await _authRepository.logout();
 
-      // Disconnect Google account if signed in
       if (await _googleSignInService.isSignedIn()) {
         await _googleSignInService.disconnect();
       }
@@ -156,14 +146,11 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthUnauthenticated());
     } catch (e, stackTrace) {
       AppLogger.error(_tag, 'Logout error', error: e, stackTrace: stackTrace);
-      // Still logout locally even if API fails
       emit(AuthUnauthenticated());
     }
   }
 
-  /// Helper: Emit authenticated state
   void _emitAuthenticatedState(dynamic data) {
-    // data.families is already List<FamilyInfo> from the repository
     final List<FamilyInfo> families = data.families is List<FamilyInfo>
         ? data.families
         : (data.families as List?)
@@ -187,7 +174,6 @@ class AuthCubit extends Cubit<AuthState> {
     ));
   }
 
-  /// Helper: Emit error and return to unauthenticated
   Future<void> _emitErrorAndReset(String message) async {
     emit(AuthError(message));
     await Future.delayed(const Duration(milliseconds: 100));

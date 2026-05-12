@@ -18,7 +18,6 @@ public sealed class RegisterCommandHandler(
 {
     public async Task<ErrorOr<Success>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
-        // Step 1: Create Identity User with password
         ErrorOr<IdentityRegistrationResult> identityResult = await identityService.CreateIdentityByEmailAsync(
             email: request.Email,
             password: request.Password,
@@ -31,7 +30,6 @@ public sealed class RegisterCommandHandler(
         var identity = identityResult.Value;
         Guid userId = Guid.Parse(identity.IdentityUserId);
 
-        // Step 2: Create Domain User
         ErrorOr<User> userResult = User.Create(
             id: userId,
             fullName: request.FullName,
@@ -45,7 +43,6 @@ public sealed class RegisterCommandHandler(
 
         User user = userResult.Value;
 
-        // Step 3: Upload profile image using UploadFileCommand
         if (request.ProfileImage is not null)
         {
             var uploadFileCommand = new UploadImageCommand(
@@ -66,11 +63,9 @@ public sealed class RegisterCommandHandler(
                 return assignResult.Errors;
         }
 
-        // Step 4: Save user
         await users.AddAsync(user, cancellationToken);
         await users.SaveChangesAsync(cancellationToken);
 
-        // Step 5: Publish event
         await bus.PublishAsync(new UserCreatedEvent(user));
 
         return new Success();

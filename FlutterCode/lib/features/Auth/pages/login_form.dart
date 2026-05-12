@@ -3,7 +3,6 @@ import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/features/Auth/pages/validation_patterns.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// Reusable login form widget containing email and password fields
 class LoginForm extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;

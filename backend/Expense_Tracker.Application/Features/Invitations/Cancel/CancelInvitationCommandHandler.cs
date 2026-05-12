@@ -16,22 +16,19 @@ public sealed class CancelInvitationCommandHandler(
         CancelInvitationCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Get invitation
         Invitation? invitation = await invitationRepo.QueryTracked()
             .FirstOrDefaultAsync(i => i.Id == request.InvitationId, cancellationToken);
 
         if (invitation is null)
             return DomainErrors.GeneralErrors.NotFound(nameof(Invitation));
 
-        // 2. Cancel invitation (domain logic validates inviter)
+        // Cancel invitation (domain logic validates inviter)
         ErrorOr<Success> cancelResult = invitation.Cancel(request.RequesterId);
         if (cancelResult.IsError)
             return cancelResult.Errors;
 
-        // 3. Save changes (event handler will delete invitation and notifications)
         await invitationRepo.SaveChangesAsync(cancellationToken);
 
-        // 4. Publish event
         await bus.PublishAsync(new InvitationCancelledEvent(invitation));
 
         return new Success();

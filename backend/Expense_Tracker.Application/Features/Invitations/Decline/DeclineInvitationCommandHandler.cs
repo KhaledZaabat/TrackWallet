@@ -16,26 +16,21 @@ public sealed class DeclineInvitationCommandHandler(
         DeclineInvitationCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Get invitation
         Invitation? invitation = await invitationRepo.QueryTracked()
             .FirstOrDefaultAsync(i => i.Id == request.InvitationId, cancellationToken);
 
         if (invitation is null)
             return DomainErrors.GeneralErrors.NotFound(nameof(Invitation));
 
-        // 2. Verify user is the invitee
         if (invitation.InviteeUserId != request.UserId)
             return DomainErrors.GeneralErrors.Forbidden("You can only decline invitations sent to you.");
 
-        // 3. Decline invitation (domain logic)
         ErrorOr<Success> declineResult = invitation.Decline();
         if (declineResult.IsError)
             return declineResult.Errors;
 
-        // 4. Save changes
         await invitationRepo.SaveChangesAsync(cancellationToken);
 
-        // 5. Publish event
         await bus.PublishAsync(new InvitationDeclinedEvent(invitation));
 
         return new Success();

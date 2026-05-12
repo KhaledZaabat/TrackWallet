@@ -10,7 +10,6 @@ class ValidationPatterns {
   static final RegExp _digitRegex = RegExp(r'[0-9]');
   static final RegExp _specialCharRegex = RegExp(r'[!@#$%^&*(),.?":{}|<>]');
 
-  /// Validates if a string is a valid email format
   static bool isValidEmail(String email) {
     return _emailRegex.hasMatch(email);
   }

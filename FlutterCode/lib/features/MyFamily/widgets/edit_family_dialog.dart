@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// Dialog for editing family name and bio
-/// Only visible to parent users
 class EditFamilyDialog extends StatefulWidget {
   final String currentName;
   final String? currentBio;
@@ -69,7 +67,6 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
               Row(
                 children: [
                   Container(
@@ -97,7 +94,6 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
               ),
               const SizedBox(height: 24),
 
-              // Family Name Field
               Text(
                 l10n.familyName,
                 style: GoogleFonts.inter(
@@ -142,7 +138,6 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
               ),
               const SizedBox(height: 20),
 
-              // Family Bio Field
               Text(
                 l10n.familyBioOptional,
                 style: GoogleFonts.inter(
@@ -176,7 +171,6 @@ class _EditFamilyDialogState extends State<EditFamilyDialog> {
               ),
               const SizedBox(height: 28),
 
-              // Action Buttons
               Row(
                 children: [
                   Expanded(

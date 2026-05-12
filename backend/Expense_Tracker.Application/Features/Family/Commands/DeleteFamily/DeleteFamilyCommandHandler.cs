@@ -20,7 +20,6 @@ public sealed class DeleteFamilyCommandHandler(
         DeleteFamilyCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Verify requester
         var requestingUser = await familyUsers.Query()
             .FirstOrDefaultAsync(
                 fu => fu.FamilyId == request.FamilyId &&
@@ -35,14 +34,12 @@ public sealed class DeleteFamilyCommandHandler(
             return DomainErrors.GeneralErrors.Forbidden(
                 "Only parents can delete the family.");
 
-        // 2. Ensure family exists
         var familyExists = await families.QueryTracked()
             .AnyAsync(f => f.Id == request.FamilyId, cancellationToken);
 
         if (!familyExists)
             return DomainErrors.GeneralErrors.NotFound(nameof(Family));
 
-        // 3. Cancel pending invitations 
         var pendingInvitations = await invitations.QueryTracked()
             .Where(i => i.FamilyId == request.FamilyId &&
                         i.Status == InvitationStatus.Pending)
@@ -56,12 +53,10 @@ public sealed class DeleteFamilyCommandHandler(
         // 4. Save → domain events are dispatched safely
         await invitations.SaveChangesAsync(cancellationToken);
 
-        // 5. Hard delete family-user links
         await familyUsers.Query()
             .Where(fu => fu.FamilyId == request.FamilyId)
             .ExecuteDeleteAsync(cancellationToken);
 
-        // 6. Hard delete family
         await families.Query()
             .Where(f => f.Id == request.FamilyId)
             .ExecuteDeleteAsync(cancellationToken);

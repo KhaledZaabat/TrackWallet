@@ -104,16 +104,8 @@ public sealed class SelectFamilyCommandHandler(
 
         List<BudgetHistoryItem> budgetHistory = budgetHistoryResult.Value;
 
-        // 6. Get recent transactions (paginated)
-        ErrorOr<CursorPagedResponse<TransactionItem>> transactionsResult =
-            await bus.InvokeAsync<ErrorOr<CursorPagedResponse<TransactionItem>>>(
-                new GetFamilyTransactionsQuery(request.FamilyId, PageSize: 10, Cursor: null),
-                cancellationToken);
+    
 
-        if (transactionsResult.IsError)
-            return transactionsResult.Errors;
-
-        CursorPagedResponse<TransactionItem> transactionsPage = transactionsResult.Value;
 
         // 8. Build response
         SelectFamilyResponse response = new(
@@ -122,10 +114,7 @@ public sealed class SelectFamilyCommandHandler(
             FullName: authDto.FullName,
             JwtToken: authDto.JwtToken,
             RefreshToken: authDto.RefreshToken,
-            FamilyContext: familyContext,
-            BudgetHistory: budgetHistory,
-            RecentTransactions: transactionsPage.Items.ToList(),
-            ProfileImageUrl: profileImageUrl
+            FamilyContext: familyContext
         );
 
         return response;

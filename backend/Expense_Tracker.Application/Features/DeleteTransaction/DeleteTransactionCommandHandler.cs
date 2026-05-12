@@ -17,7 +17,6 @@ public sealed class DeleteTransactionCommandHandler(
         DeleteTransactionCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Get transaction with family
         Transaction? transaction = await transactionRepo.QueryTracked()
             .Include(t => t.Family)
             .FirstOrDefaultAsync(t => t.Id == request.TransactionId, cancellationToken);
@@ -25,11 +24,9 @@ public sealed class DeleteTransactionCommandHandler(
         if (transaction is null)
             return DomainErrors.GeneralErrors.NotFound(nameof(Transaction));
 
-        // 2. Verify user has access to this family
         if (transaction.FamilyId != request.FamilyId)
             return DomainErrors.GeneralErrors.Forbidden("You don't have access to this transaction.");
 
-        // 3. Verify user is member of the family
         bool isFamilyMember = await familyUserRepo.Query()
             .AnyAsync(fu => fu.FamilyId == request.FamilyId && fu.UserId == request.UserId,
                 cancellationToken);
@@ -37,7 +34,6 @@ public sealed class DeleteTransactionCommandHandler(
         if (!isFamilyMember)
             return DomainErrors.GeneralErrors.Forbidden("You are not a member of this family.");
 
-        // 4. Reverse the transaction impact on family budget
         bool isExpense = transaction.Type == TransactionType.Expense;
         var reverseResult = transaction.Family!.ReverseTransaction(
             transaction.Amount,
@@ -46,7 +42,6 @@ public sealed class DeleteTransactionCommandHandler(
         if (reverseResult.IsError)
             return reverseResult.Errors;
 
-        // 5. Delete transaction
         transactionRepo.Remove(transaction);
         await transactionRepo.SaveChangesAsync(cancellationToken);
 

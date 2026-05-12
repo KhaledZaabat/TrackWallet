@@ -16,7 +16,6 @@ public sealed class UpdateNotificationPreferencesCommandHandler(
         UpdateNotificationPreferencesCommand request,
         CancellationToken cancellationToken)
     {
-        // Get user with preferences
         Expense_Tracker.Domain.Users.User? user = await users.QueryTracked()
             .Include(u => u.NotificationPreferences)
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
@@ -31,10 +30,8 @@ public sealed class UpdateNotificationPreferencesCommandHandler(
                 "At least one of preferences must be enabled");
         }
 
-        // Store the old push notification state to detect changes
         bool wasPushEnabled = user.NotificationPreferences?.PushNotifications ?? false;
 
-        // Get or create notification preferences
         NotificationPreferences? preferences = await notificationPreferences.QueryTracked()
             .FirstOrDefaultAsync(
                 np => np.PushNotifications == request.PushNotifications
@@ -46,20 +43,16 @@ public sealed class UpdateNotificationPreferencesCommandHandler(
                 nameof(NotificationPreferences),
                 "Preferences not found");
 
-        // Update user's notification preferences
         ErrorOr<Success> updateResult = user.UpdateNotificationPreferences(preferences.Id);
         if (updateResult.IsError)
             return updateResult.Errors;
 
-        // Handle device activation/deactivation based on push notification state change
         if (wasPushEnabled && !preferences.PushNotifications)
         {
-            // User disabled push notifications - deactivate all their devices
             await DeactivateUserDevicesAsync(request.UserId, cancellationToken);
         }
         else if (!wasPushEnabled && preferences.PushNotifications)
         {
-            // User enabled push notifications - reactivate all their devices
             await ActivateUserDevicesAsync(request.UserId, cancellationToken);
         }
 

@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using ErrorOr;
+using Expense_Tracker.App.Auth;
 using Expense_Tracker.App.Filters;
 using Expense_Tracker.Application.Features.Family.Commands.CreateFamily;
 using Expense_Tracker.Application.Features.Family.Commands.DeleteFamily;
@@ -27,16 +28,10 @@ namespace Expense_Tracker.App.Controllers;
 public class FamiliesController(
     IMessageBus bus,
     IUserContext userContext,
-    IFamilyContext familyContext
+    IFamilyContext familyContext,
+    IAuthCookieWriter authCookies
 ) : ControllerBase
 {
-    /// <summary>
-    /// Retrieves all families associated with the authenticated user.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of <see cref="FamilyResponse"/> representing user's families.</returns>
-    /// <response code="200">Families retrieved successfully.</response>
-    /// <response code="401">User is not authenticated.</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<FamilyResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -59,17 +54,6 @@ public class FamiliesController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Selects a family and retrieves complete family context with dashboard data.
-    /// </summary>
-    /// <param name="request">Family selection request containing the family ID and device ID.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A <see cref="SelectFamilyResponse"/> containing full family context, dashboard data, budget history, recent transactions, and refreshed auth tokens.</returns>
-    /// <response code="200">Family selected successfully; returns complete context, dashboard data, and new JWT/refresh tokens.</response>
-    /// <response code="400">Invalid request or validation failure.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="404">Specified family not found or user is not a member.</response>
     [HttpPost("select")]
     [ProducesResponseType(typeof(SelectFamilyResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -98,18 +82,19 @@ public class FamiliesController(
             command,
             cancellationToken
         );
+
+        if (result.IsError)
+            return this.Problem(result.Errors);
+
+
+        SelectFamilyResponse value = result.Value;
+
+        authCookies.WriteAccessCookie(HttpContext, value.JwtToken.Token, value.JwtToken.ExpiresAt);
+        authCookies.WriteRefreshCookie(HttpContext, value.RefreshToken.Token, value.RefreshToken.ExpiresAt);
+        authCookies.IssueCsrfCookie(HttpContext);
+
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Creates a new family with the authenticated user as the parent.
-    /// </summary>
-    /// <param name="request">Family creation request containing name, initial budget, and bio.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A <see cref="CreateFamilyResponse"/> containing the newly created family details.</returns>
-    /// <response code="201">Family created successfully.</response>
-    /// <response code="400">Invalid request or validation failure.</response>
-    /// <response code="401">User is not authenticated.</response>
     [HttpPost]
     [ProducesResponseType(typeof(CreateFamilyResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -140,15 +125,6 @@ public class FamiliesController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Retrieves the currently selected family with all its members.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The active family with member profiles.</returns>
-    /// <response code="200">Family retrieved successfully.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="404">Family not found or user is not a member.</response>
     [HttpGet("me")]
     [ProducesResponseType(typeof(FamilyWithMembersResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -173,10 +149,6 @@ public class FamiliesController(
 
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Retrieves users of the currently selected family (id + name only).
-    /// </summary>
     [HttpGet("users")]
     [ProducesResponseType(typeof(List<FamilyUserSimpleResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -199,18 +171,6 @@ public class FamiliesController(
 
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Updates the current family's information (name and/or bio).
-    /// </summary>
-    /// <param name="request">Update request containing new name and/or bio.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>No content on success.</returns>
-    /// <response code="200">Family updated successfully.</response>
-    /// <response code="400">Invalid request or validation failure.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="403">User is not a parent or no family selected.</response>
-    /// <response code="404">Family not found.</response>
     [HttpPut]
     [RequireParentRole]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -240,17 +200,6 @@ public class FamiliesController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Leaves the current family.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>No content on success.</returns>
-    /// <response code="200">Successfully left the family.</response>
-    /// <response code="400">Cannot leave - last parent with other members remaining.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="403">No family selected.</response>
-    /// <response code="404">User is not a member of this family.</response>
     [HttpDelete("leave")]
     [RequireFamily]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -279,18 +228,6 @@ public class FamiliesController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Kicks a member from the current family.
-    /// </summary>
-    /// <param name="userId">The ID of the user to kick.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>No content on success.</returns>
-    /// <response code="200">Member kicked successfully.</response>
-    /// <response code="400">Cannot kick yourself or another parent.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="403">User is not a parent or no family selected.</response>
-    /// <response code="404">Target user is not a member of this family.</response>
     [HttpDelete("members/{userId:guid}")]
     [RequireFamily]
     [RequireParentRole]
@@ -324,17 +261,6 @@ public class FamiliesController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Deletes a family by ID.
-    /// </summary>
-    /// <param name="familyId">The ID of the family to delete.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>No content on success.</returns>
-    /// <response code="200">Family deleted successfully.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="403">User is not a parent of this family.</response>
-    /// <response code="404">Family not found or user is not a member.</response>
     [HttpDelete("{familyId:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

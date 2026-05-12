@@ -20,14 +20,12 @@ public sealed class CreateFamilyCommandHandler(
         CreateFamilyCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Verify user exists
         var userExists = await users.Query()
             .AnyAsync(u => u.Id == request.UserId, cancellationToken);
 
         if (!userExists)
             return DomainErrors.GeneralErrors.NotFound(nameof(User));
 
-        // 2. Create family
         var familyResult = DomainFamily.Create(
             name: request.Name,
             currentBudget: request.InitialBudget,
@@ -40,7 +38,6 @@ public sealed class CreateFamilyCommandHandler(
 
         DomainFamily family = familyResult.Value;
 
-        // 3. Add creator as parent member
         var familyUserResult = FamilyUser.Create(
             familyId: family.Id,
             userId: request.UserId,
@@ -53,13 +50,11 @@ public sealed class CreateFamilyCommandHandler(
 
         FamilyUser familyUser = familyUserResult.Value;
 
-        // 5. Save all entities
         await families.AddAsync(family, cancellationToken);
         await familyUsers.AddAsync(familyUser, cancellationToken);
 
         await families.SaveChangesAsync(cancellationToken);
 
-        // 6. Build response
         var response = new CreateFamilyResponse(
             Id: family.Id,
             Name: family.Name,

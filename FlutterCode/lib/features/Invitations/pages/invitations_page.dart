@@ -12,7 +12,6 @@ import 'package:famxpense/features/Invitations/widgets/sent_invitations_tab.dart
 import 'package:famxpense/features/Invitations/widgets/send_invitation_dialog.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// Main page for managing family invitations with tabbed interface
 class InvitationsPage extends StatefulWidget {
   final bool forceGuestMode;
   const InvitationsPage({Key? key, this.forceGuestMode = false}) : super(key: key);

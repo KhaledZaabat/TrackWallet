@@ -5,8 +5,6 @@ import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// Displays family header information including name, budget, bio, and member count
-/// Includes edit button for parent users
 class FamilyHeader extends StatelessWidget {
   final FamilyDetails familyDetails;
   final bool isCurrentUserParent;
@@ -48,11 +46,9 @@ class FamilyHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row with name and edit button
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Family icon
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -66,7 +62,6 @@ class FamilyHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                // Family name
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +85,6 @@ class FamilyHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Edit button (parents only)
                 if (isCurrentUserParent && onEditPressed != null)
                   IconButton(
                     onPressed: onEditPressed,
@@ -108,7 +102,6 @@ class FamilyHeader extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Budget section
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -159,7 +152,6 @@ class FamilyHeader extends StatelessWidget {
               ),
             ),
 
-            // Bio section
             if (familyDetails.familyBio != null && familyDetails.familyBio!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Container(

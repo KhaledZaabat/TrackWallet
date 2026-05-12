@@ -1,4 +1,3 @@
-// core/storage/local_storage.dart
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 
@@ -16,13 +15,11 @@ class LocalStorage {
 
   LocalStorage(this._secureStorage);
 
-  // Factory constructor - default secure storage
   factory LocalStorage.standard() {
     const secureStorage = FlutterSecureStorage();
     return LocalStorage(secureStorage);
   }
 
-  // ========== Auth Tokens ==========
   Future<void> saveAuthTokens(String jwt, String refresh) async {
     await Future.wait([
       _secureStorage.write(key: _jwtTokenKey, value: jwt),
@@ -45,7 +42,6 @@ class LocalStorage {
     ]);
   }
 
-  // ========== User Data ==========
   Future<void> saveUserId(String userId) async {
     await _secureStorage.write(key: _userIdKey, value: userId);
   }
@@ -54,7 +50,6 @@ class LocalStorage {
     return await _secureStorage.read(key: _userIdKey);
   }
 
-  // ========== Device & FCM ==========
   /// Gets or generates a unique device ID
   /// This ID persists across app launches but is deleted on app reinstall
   Future<String> getOrCreateDeviceId() async {
@@ -98,7 +93,6 @@ class LocalStorage {
     await _secureStorage.delete(key: _fcmTokenKey);
   }
 
-  // ========== Family Selection ==========
   Future<void> saveSelectedFamilyId(String familyId) async {
     await _secureStorage.write(key: _selectedFamilyIdKey, value: familyId);
   }
@@ -121,7 +115,6 @@ class LocalStorage {
     return value == 'true';
   }
 
-  // ========== Utility Methods ==========
   Future<bool> hasAuthTokens() async {
     final refresh = await getRefreshToken();
     return refresh != null;

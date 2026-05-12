@@ -35,16 +35,13 @@ public sealed class ResendConfirmationEventHandler(
         string userName,
         CancellationToken cancellationToken)
     {
-        // Generate NEW OTP (this invalidates any previous codes)
         string key = $"confirm:{email.ToLowerInvariant().Trim()}";
         string otp = _otpService.Generate(key, digits: _otpSettings.Digits);
 
-        // Load resend confirmation template
         string template = await _templateLoader.LoadTemplateAsync(
             EmailTemplates.ResendConfirmationTemplate,
             cancellationToken);
 
-        // Replace placeholders
         var body = _bodyBuilder.Build(template, new Dictionary<string, string>
         {
             ["UserName"] = userName,
@@ -53,7 +50,6 @@ public sealed class ResendConfirmationEventHandler(
             ["Duration"] = _otpSettings.ExpirationInSeconds.ToString()
         });
 
-        // Send resend confirmation email
         await _notification.SendEmailAsync(
             to: email,
             subject: "Your New Verification Code - Expense Tracker",

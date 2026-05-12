@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:famxpense/features/Invitations/cubit/invitations_cubit.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// Stateful widget for creating and sending new family invitations
 class SendInvitationDialog extends StatefulWidget {
   final String currentUserEmail;
   final InvitationsCubit cubit;

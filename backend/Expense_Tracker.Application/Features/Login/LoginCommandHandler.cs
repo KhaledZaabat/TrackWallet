@@ -29,7 +29,6 @@ public sealed class LoginCommandHandler(
         LoginCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Authenticate user
         ErrorOr<AuthenticatedUser> authResult =
             await identityService.AuthenticateByEmailAsync(
                 request.Email,
@@ -40,7 +39,6 @@ public sealed class LoginCommandHandler(
 
         AuthenticatedUser authenticatedUser = authResult.Value;
 
-        // 2. Generate JWT tokens
         ErrorOr<AuthDto> tokenResult =
             await tokenProvider.GenerateJwtTokenAsync(
                 authenticatedUser,
@@ -53,7 +51,6 @@ public sealed class LoginCommandHandler(
         AuthDto authDto = tokenResult.Value;
         Guid userId = Guid.Parse(authDto.UserId);
 
-        // 3. Get user profile image
         Guid? profileFileId = await users.Query()
             .Where(u => u.Id == userId)
             .Select(u => u.ProfileImageFileId)
@@ -61,7 +58,6 @@ public sealed class LoginCommandHandler(
 
         string? profileImageUrl = fileUrlBuilder.GetUrl(profileFileId);
 
-        // 4. Get user's first family (or null if no families)
         ErrorOr<List<FamilyResponse>> familiesResult =
             await bus.InvokeAsync<ErrorOr<List<FamilyResponse>>>(
                 new GetUserFamiliesQuery(userId), cancellationToken);
@@ -71,7 +67,6 @@ public sealed class LoginCommandHandler(
 
         List<FamilyResponse>? families = familiesResult.Value;
 
-        // 5. Map to AuthResponse
         AuthResponse authResponse = (authDto, profileImageUrl, families).Adapt<AuthResponse>();
 
         await userDeviceRepository.UpsertAsync(userId, request.FcmToken,Domain.PushNotifications.Enums.PushPlatform.Web, cancellationToken);

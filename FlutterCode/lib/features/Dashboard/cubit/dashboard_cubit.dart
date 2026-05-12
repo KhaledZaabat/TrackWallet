@@ -7,7 +7,6 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   DashboardCubit(this._dashboardRepository) : super(DashboardInitial());
 
-  /// Load dashboard data from API
   Future<void> loadDashboard({
     int budgetHistoryMonths = 1,
     int recentTransactionsPageSize = 10,
@@ -42,9 +41,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     }
   }
 
-  /// Refresh dashboard data
   Future<void> refresh() async {
-    // Keep the current loaded state while refreshing
     final currentState = state;
 
     try {
@@ -63,13 +60,11 @@ class DashboardCubit extends Cubit<DashboardState> {
           transactionsCursor: data.transactionsCursor,
         ));
       } else {
-        // On refresh error, stay in current state
         if (currentState is DashboardLoaded) {
           emit(currentState);
         }
       }
     } catch (e) {
-      // Keep current state on error
       if (currentState is DashboardLoaded) {
         emit(currentState);
       }

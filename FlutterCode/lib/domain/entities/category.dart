@@ -105,7 +105,6 @@ enum CategoryType {
   Miscellaneous,
 }
 
-/// Category data from API
 class CategoryData {
   final String categoryId;
   final String name;
@@ -133,10 +132,8 @@ class CategoryData {
         'name': name,
       };
 
-  /// Get icon for this category
   IconData get icon => CategoryIconHelper.iconFor(categoryType);
 
-  /// Get display name (formatted)
   String get displayName => _formatDisplayName(name);
 
   static String _formatDisplayName(String name) {
@@ -176,7 +173,6 @@ class CategoryData {
   int get hashCode => categoryId.hashCode;
 }
 
-/// Helper class for category icons
 class CategoryIconHelper {
   static IconData iconFor(CategoryType type) {
     switch (type) {
@@ -360,7 +356,6 @@ class CategoryIconHelper {
     }
   }
 
-  /// Get category group name
   static String getGroupName(CategoryType type) {
     if (_foodAndDrinks.contains(type)) return 'Food & Drinks';
     if (_transportation.contains(type)) return 'Transportation';

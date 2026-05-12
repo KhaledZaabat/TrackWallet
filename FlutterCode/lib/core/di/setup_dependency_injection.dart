@@ -1,5 +1,3 @@
-// core/di/setup_dependency_injection.dart
-
 import 'package:famxpense/core/Network/ApiClient.dart';
 import 'package:famxpense/core/app_logger.dart';
 import 'package:famxpense/core/services/category_service.dart';
@@ -33,19 +31,14 @@ final getIt = GetIt.instance;
 Future<void> setupDependencyInjection() async {
   AppLogger.info('DI', 'Starting dependency injection setup...');
 
-  // ========== Core Services ==========
-
-  // LocalStorage (Singleton)
   getIt.registerLazySingleton<LocalStorage>(
     () => LocalStorage.standard(),
   );
 
-  // Firebase Messaging (Singleton)
   getIt.registerLazySingleton<FirebaseMessaging>(
     () => FirebaseMessaging.instance,
   );
 
-  // Device Manager (Singleton)
   getIt.registerLazySingleton<DeviceManager>(
     () => DeviceManager(
       getIt<LocalStorage>(),
@@ -53,34 +46,25 @@ Future<void> setupDependencyInjection() async {
     ),
   );
 
-  // Initialize device and get device info
   AppLogger.info('DI', 'Initializing device manager...');
   await getIt<DeviceManager>().initializeDevice();
 
-  // API Client (Singleton)
   getIt.registerLazySingleton<ApiClient>(
     () => ApiClient(getIt<LocalStorage>()),
   );
 
-  // Set API client in device manager (for backend sync)
   getIt<DeviceManager>().setApiClient(getIt<ApiClient>());
 
-  // Start listening to FCM token refresh
   getIt<DeviceManager>().listenToFcmTokenRefresh();
 
-  // Google Sign-In Service (Singleton)
   getIt.registerLazySingleton<GoogleSignInService>(
     () => GoogleSignInService.production(),
   );
   AppLogger.info('DI', 'Google Sign-In service registered');
 
-  // ========== Category Service (Singleton) ==========
-  // This loads categories on app start
   getIt.registerLazySingleton<CategoryService>(
     () => CategoryService(getIt<ApiClient>()),
   );
-
-  // ========== Repositories ==========
 
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(
@@ -114,9 +98,6 @@ Future<void> setupDependencyInjection() async {
     () => InvitationsRepository(getIt<ApiClient>()),
   );
 
-  // ========== Cubits ==========
-
-  // Auth Cubit - Singleton (shared across app)
   // Updated to include GoogleSignInService
   getIt.registerLazySingleton<AuthCubit>(
     () => AuthCubit(
@@ -125,42 +106,34 @@ Future<void> setupDependencyInjection() async {
     ),
   );
 
-  // Dashboard Cubit - Singleton (shared state)
   getIt.registerLazySingleton<DashboardCubit>(
     () => DashboardCubit(getIt<DashboardRepository>()),
   );
 
-  // Invitations Cubit - Singleton (shared state)
   getIt.registerLazySingleton<InvitationsCubit>(
     () => InvitationsCubit(getIt<InvitationsRepository>()),
   );
 
-  // MyFamily Cubit - Singleton (shared state)
   getIt.registerLazySingleton<MyFamilyCubit>(
     () => MyFamilyCubit(getIt<FamilyRepository>(), getIt<LocalStorage>(), getIt<DashboardCubit>()),
   );
 
-  // Transaction Cubit - Singleton (shared state for list and forms)
   getIt.registerLazySingleton<TransactionCubit>(
     () => TransactionCubit(getIt<TransactionRepository>()),
   );
 
-  // Profile Cubit - Singleton
   getIt.registerLazySingleton<ProfileCubit>(
     () => ProfileCubit(getIt<UserRepository>(), getIt<DashboardCubit>(), getIt<MyFamilyCubit>()),
   );
 
-  // Settings Cubit - Singleton
   getIt.registerLazySingleton<SettingsCubit>(
     () => SettingsCubit(getIt<UserRepository>()),
   );
 
-  // Locale Cubit - Singleton (for language persistence)
   getIt.registerLazySingleton<LocaleCubit>(
     () => LocaleCubit(),
   );
 
-  // Factory Cubits (new instance each time)
   getIt.registerFactory<SignupCubit>(
     () => SignupCubit(getIt<AuthRepository>()),
   );

@@ -23,23 +23,11 @@ public sealed class RefreshTokenService(
     ILogger<RefreshTokenService> logger
 ) : IRefreshTokenService
 {
-    /// <summary>
-    /// Hashes a raw refresh-token string with SHA-256 so only the digest is persisted (R18.5).
-    /// </summary>
     private static byte[] Sha256(string raw) => SHA256.HashData(Encoding.UTF8.GetBytes(raw));
 
-    /// <summary>
-    /// Base64-url encodes a byte buffer without padding, matching the CSPRNG token format used
-    /// elsewhere in the auth pipeline (R18.3).
-    /// </summary>
     private static string Base64UrlEncode(byte[] bytes) =>
         Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
-    /// <summary>
-    /// Validates a raw refresh token, applies the same reuse-detection and family-wide
-    /// revocation as <see cref="RotateAsync"/>, and returns the owning user.
-    /// Implements R7.2, R7.3, R9.2, R10.1, R10.2, R10.4, R18.4, R21.2.
-    /// </summary>
     public async Task<ErrorOr<AuthenticatedUser>> GetUserFromRefreshTokenAsync(
         string refreshToken,
         string deviceId,
@@ -53,7 +41,6 @@ public sealed class RefreshTokenService(
             ct
         );
 
-        // Row-level lock prevents concurrent reuse (R7.2, R7.3, R9.2).
         RefreshToken? dbToken = await db
             .RefreshTokens.FromSqlInterpolated(
                 $@"
@@ -71,8 +58,6 @@ public sealed class RefreshTokenService(
             return DomainErrors.TokenErrors.Invalid("Invalid refresh token.");
         }
 
-        // Reuse detection: a revoked token being presented means the session was stolen.
-        // Revoke the entire family before returning (R10.1, R10.2, R10.4, R18.4, R21.2).
         if (dbToken.RevokedAt is not null)
         {
             await RevokeSessionFamilyAsync(dbToken.SessionFamilyId, dbToken.DeviceId, ct);
@@ -108,7 +93,7 @@ public sealed class RefreshTokenService(
     )
     {
         RefreshToken? entity = await db
-            .RefreshTokens.AsNoTracking() // Read-only; no change tracking needed.
+            .RefreshTokens.AsNoTracking()
             .Where(rt => rt.UserId == userId && rt.DeviceId == deviceId && rt.RevokedAt == null)
             .OrderByDescending(rt => rt.CreatedAt)
             .FirstOrDefaultAsync(ct);
@@ -116,8 +101,6 @@ public sealed class RefreshTokenService(
         if (entity is null)
             return DomainErrors.TokenErrors.NotFound("Refresh token not found.");
 
-        // Never expose the SHA-256 digest to any client surface.
-        // Use the opaque entity Id for internal tracing only.
         return new RefreshTokenDto(
             entity.Id.ToString(),
             entity.CreatedAt,
@@ -126,7 +109,6 @@ public sealed class RefreshTokenService(
         );
     }
 
-    // Collapsed public entry-points into a single private implementation (issue #6).
     public Task<ErrorOr<Success>> AddAsync(
         Guid userId,
         string token,
@@ -143,7 +125,6 @@ public sealed class RefreshTokenService(
         CancellationToken ct = default
     ) => AddInternalAsync(userId, rawToken, deviceId, sessionFamilyId, originalIssuedAt, ct);
 
-    // Single UPDATE — no materialization, no per-row round-trips (issue #3).
     public async Task<ErrorOr<Success>> RevokeActiveTokensAsync(
         Guid userId,
         string deviceId,
@@ -162,7 +143,6 @@ public sealed class RefreshTokenService(
         return new Success();
     }
 
-    // Same transaction + FOR UPDATE pattern as RotateAsync (issue #2).
     public async Task<ErrorOr<Success>> RevokeAsync(string token, CancellationToken ct = default)
     {
         byte[] hash = Sha256(token);
@@ -188,7 +168,6 @@ public sealed class RefreshTokenService(
             return DomainErrors.TokenErrors.NotFound("Refresh token not found.");
         }
 
-        // Idempotent: already-revoked tokens are a no-op, not an error.
         if (entity.RevokedAt is not null)
         {
             await tx.RollbackAsync(ct);
@@ -202,18 +181,6 @@ public sealed class RefreshTokenService(
         return new Success();
     }
 
-    /// <summary>
-    /// Atomically rotates a presented refresh token under a row-locked transaction:
-    /// verifies the incoming raw value by hash, detects reuse of an already-revoked row,
-    /// enforces absolute session lifetime, revokes the old row while linking it to the
-    /// freshly-minted successor, and returns the raw successor plus user/family context.
-    ///
-    /// User and family context are resolved INSIDE the transaction so that any failure
-    /// can still be rolled back, leaving the client in a consistent state.
-    ///
-    /// Implements R7.2, R7.3, R8.1, R8.2, R9.2, R9.3, R10.1, R10.2, R10.4,
-    /// R11.1–R11.4, R18.2, R18.4, R21.1, R21.2.
-    /// </summary>
     public async Task<ErrorOr<RotationSuccess>> RotateAsync(
         string rawIncomingToken,
         CancellationToken ct
@@ -226,9 +193,6 @@ public sealed class RefreshTokenService(
             ct
         );
 
-        // Single indexed SELECT ... FOR UPDATE against the unique TokenHash index (R7.2, R7.3, R9.2).
-        // TokenHash is unique across the table — no need for a DeviceId predicate; the stored
-        // row is itself the authoritative source of the device binding.
         RefreshToken? existing = await db
             .RefreshTokens.FromSqlInterpolated(
                 $@"
@@ -245,8 +209,6 @@ public sealed class RefreshTokenService(
             return DomainErrors.TokenErrors.Invalid("Invalid refresh token.");
         }
 
-        // Reuse detection (R10.1, R10.2, R10.4, R18.4, R21.2):
-        // a revoked row being presented means the token was stolen — nuke the whole family.
         if (existing.RevokedAt is not null)
         {
             await RevokeSessionFamilyAsync(existing.SessionFamilyId, existing.DeviceId, ct);
@@ -264,14 +226,12 @@ public sealed class RefreshTokenService(
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
-        // Expired row — middleware treats this as a silent-refresh failure.
         if (existing.ExpiresAt <= now)
         {
             await tx.RollbackAsync(ct);
             return DomainErrors.TokenErrors.Expired("Refresh token has expired.");
         }
 
-        // Absolute-lifetime enforcement (R11.2, R11.3).
         if (
             now - existing.OriginalIssuedAt
             > TimeSpan.FromDays(jwtSettings.AbsoluteSessionLifetimeDays)
@@ -281,10 +241,6 @@ public sealed class RefreshTokenService(
             return DomainErrors.TokenErrors.Forbidden("Absolute session lifetime exceeded.");
         }
 
-        // ── Resolve user + family BEFORE minting or committing ───────────────
-        // If either lookup fails we can still roll back cleanly, keeping the
-        // client's current token valid. Previously this happened post-commit,
-        // which would leave the client with a revoked token and no successor.
         ErrorOr<AuthenticatedUser> userResult = await identityService.GetUserByIdAsync(
             existing.UserId
         );
@@ -306,7 +262,6 @@ public sealed class RefreshTokenService(
             )
             .FirstOrDefaultAsync(ct);
 
-        // ── Mint the successor (R18.2, R18.3) ───────────────────────────────
         byte[] newRawBytes = RandomNumberGenerator.GetBytes(32);
         string newRawToken = Base64UrlEncode(newRawBytes);
         byte[] newHash = Sha256(newRawToken);
@@ -328,7 +283,6 @@ public sealed class RefreshTokenService(
 
         RefreshToken successor = createResult.Value;
 
-        // Atomic: revoke old row → insert successor → commit (R8.1, R8.2, R9.3, R11.1, R11.4).
         ErrorOr<Success> markResult = existing.MarkReplacedBy(successor.Id);
         if (markResult.IsError)
         {
@@ -366,15 +320,6 @@ public sealed class RefreshTokenService(
         return new Success();
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  Private helpers
-    // ─────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Bulk-revokes all active tokens in a session family for a given device.
-    /// Called both by <see cref="RotateAsync"/> and <see cref="GetUserFromRefreshTokenAsync"/>
-    /// on reuse detection so the behaviour is identical across both paths.
-    /// </summary>
     private Task RevokeSessionFamilyAsync(
         Guid sessionFamilyId,
         string deviceId,
@@ -419,8 +364,6 @@ public sealed class RefreshTokenService(
         }
         catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
         {
-            // Extremely rare hash collision or duplicate submission — surface as a clean error
-            // rather than letting the raw DB exception bubble up to the caller.
             logger.LogError(
                 ex,
                 "Unique constraint violation persisting refresh token. UserId={UserId} DeviceId={DeviceId}",
@@ -434,10 +377,6 @@ public sealed class RefreshTokenService(
         return new Success();
     }
 
-    /// <summary>
-    /// Heuristic check for unique-constraint violations across Npgsql and other providers.
-    /// Avoids a hard dependency on provider-specific exception types.
-    /// </summary>
     private static bool IsUniqueConstraintViolation(DbUpdateException ex)
     {
         return ex.InnerException is PostgresException postgresEx

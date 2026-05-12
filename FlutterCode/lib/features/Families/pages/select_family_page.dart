@@ -1,4 +1,3 @@
-// features/auth/presentation/Families/pages/select_family_page.dart - IMPROVED
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/core/router/routes.dart';
@@ -141,11 +140,9 @@ class _SelectFamilyViewState extends State<_SelectFamilyView> {
       
             await Future.delayed(const Duration(milliseconds: 100));
             
-            // Load data after family selection (with new tokens)
             getIt<InvitationsCubit>().loadAll();
             getIt<MyFamilyCubit>().loadFamilyDetails();
             
-            // Load dashboard first, then navigate
             await getIt<DashboardCubit>().loadDashboard();
             
             if (context.mounted) {

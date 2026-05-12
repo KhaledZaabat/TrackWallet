@@ -5,8 +5,6 @@ import 'package:famxpense/models/Family/family_models.dart';
 import 'package:famxpense/features/MyFamily/widgets/member_card.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// Displays a list of family members using MemberCard widgets
-/// Includes section header and handles empty state
 class MembersListWidget extends StatelessWidget {
   final List<FamilyMember> members;
   final bool isCurrentUserParent;
@@ -27,7 +25,6 @@ class MembersListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
-    // Handle empty state
     if (members.isEmpty) {
       return Center(
         child: Padding(
@@ -63,7 +60,6 @@ class MembersListWidget extends StatelessWidget {
       );
     }
 
-    // Sort members: Parents first, then alphabetically
     final sortedMembers = List<FamilyMember>.from(members)
       ..sort((a, b) {
         if (a.isParent && !b.isParent) return -1;
@@ -74,7 +70,6 @@ class MembersListWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Row(
@@ -112,7 +107,6 @@ class MembersListWidget extends StatelessWidget {
             ],
           ),
         ),
-        // Member cards
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

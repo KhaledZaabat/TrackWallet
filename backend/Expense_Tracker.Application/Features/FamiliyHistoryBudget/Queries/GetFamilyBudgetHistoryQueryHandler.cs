@@ -15,14 +15,11 @@ public sealed class GetFamilyBudgetHistoryQueryHandler(
         GetFamilyBudgetHistoryQuery request,
         CancellationToken cancellationToken)
     {
-        // Validate months parameter
         int months = request.Months <= 0 ? 1 : request.Months;
         months = Math.Min(months, 24); // Cap at 24 months (2 years)
 
-        // Calculate date threshold
         DateTimeOffset thresholdDate = DateTimeOffset.UtcNow.AddMonths(-months);
 
-        // Query budget history
         var budgetHistory = await familyBudgetHistoryRepo.Query()
             .Where(h =>
                 h.FamilyId == request.FamilyId &&

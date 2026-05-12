@@ -22,7 +22,6 @@ public sealed class InvitationCreatedEventHandler(
         InvitationCreatedEvent notification,
         CancellationToken ct)
     {
-        // Get inviter, invitee, and family information
         var inviterInfo = await users.Query()
             .Where(u => u.Id == notification.Invitation.InviterUserId)
             .Select(u => u.UserName)
@@ -38,7 +37,6 @@ public sealed class InvitationCreatedEventHandler(
             .Select(f => f.Name)
             .SingleOrDefaultAsync(ct);
 
-        // Send push notification
         DomainNotification domainNotification = DomainNotification.Create(
             userId: notification.Invitation.InviteeUserId,
             title: "👨‍👩‍👧‍👦 New family invitation",
@@ -55,7 +53,6 @@ public sealed class InvitationCreatedEventHandler(
 
         await dispatcher.EnqueueAsync(domainNotification, ct);
 
-        // Send email if enabled
         if (inviteeInfo?.EmailNotifications == true && !string.IsNullOrWhiteSpace(inviteeInfo.Email))
         {
             await SendInvitationEmailAsync(

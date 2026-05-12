@@ -121,10 +121,7 @@ using (var scope = app.Services.CreateScope())
 app.UseRouting();
 app.UseCors("AllowFrontend");
 
-// SilentRefreshMiddleware runs BEFORE UseAuthentication so it can inspect the cookies
-// and, if rotation is required, inject the freshly minted access token into the request
-// in time for UseAuthentication's first and only call to JwtBearerHandler. This avoids
-// the pitfall of the JWT handler caching a NoResult outcome on a cookie-less request.
+
 app.UseMiddleware<SilentRefreshMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<CsrfValidationMiddleware>();

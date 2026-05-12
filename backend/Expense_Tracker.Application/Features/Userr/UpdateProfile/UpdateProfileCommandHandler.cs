@@ -28,7 +28,6 @@ public sealed class UpdateProfileCommandHandler(
         if (user is null)
             return DomainErrors.UserErrors.NotFound();
 
-        // Update FullName if provided
         if (!string.IsNullOrWhiteSpace(cmd.FullName))
         {
             var updateResult = user.UpdateFullName(cmd.FullName);
@@ -36,7 +35,6 @@ public sealed class UpdateProfileCommandHandler(
                 return updateResult.FirstError;
         }
 
-        // Update BirthDate if provided
         if (cmd.BirthDate.HasValue)
         {
             var updateResult = user.UpdateBirthDate(cmd.BirthDate.Value);
@@ -44,7 +42,6 @@ public sealed class UpdateProfileCommandHandler(
                 return updateResult.FirstError;
         }
 
-        // Update Gender if provided
         if (cmd.IsMale.HasValue)
         {
             var updateResult = user.UpdateGender(cmd.IsMale.Value);
@@ -52,7 +49,6 @@ public sealed class UpdateProfileCommandHandler(
                 return updateResult.FirstError;
         }
 
-        // Update ProfileImage if provided
         if (cmd.ProfileImage is not null)
         {
             // Delete old profile image if exists

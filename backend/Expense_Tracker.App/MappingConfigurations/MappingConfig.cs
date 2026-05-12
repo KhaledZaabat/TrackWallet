@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Application.Dtos;
+using Expense_Tracker.Application.Dtos;
 using Expense_Tracker.Contracts.Reponses.Category;
 using Expense_Tracker.Contracts.Reponses.Family;
 using Expense_Tracker.Contracts.Reponses.Identity;
@@ -50,7 +50,6 @@ public class MappingConfig : IRegister
 
         // ===============================
         // ApplicationUser -> AuthenticatedUser
-        // Maps identity user to authenticated user without role
         // ===============================
         config.NewConfig<ApplicationUser, AuthenticatedUser>()
             .Map(dest => dest.Id, src => src.Id)
@@ -60,7 +59,6 @@ public class MappingConfig : IRegister
 
         // ===============================
         // (ApplicationUser, Role) -> AuthenticatedUser
-        // Maps identity user with role to authenticated user
         // ===============================
         config.NewConfig<(ApplicationUser user, string? role), AuthenticatedUser>()
             .Map(dest => dest.Id, src => src.user.Id)

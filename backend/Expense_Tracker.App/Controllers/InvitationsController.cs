@@ -26,20 +26,6 @@ public class InvitationsController(
     IUserContext userContext
 ) : ControllerBase
 {
-    /// <summary>
-    /// Sends a family invitation to a user by email.
-    /// </summary>
-    /// <param name="request">Invitation request containing invitee email and parent role flag.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An <see cref="InvitationResponse"/> containing the created invitation details.</returns>
-    /// <response code="201">Invitation sent successfully; FCM notification sent to invitee.</response>
-    /// <response code="400">Invalid request or validation failure (e.g., user already in family).</response>
-    /// <response code="401">User is not authenticated or family context is missing.</response>
-    /// <response code="403">User does not have permission to send invitations (parents only).</response>
-    /// <remarks>
-    /// Only parents can send family invitations. Upon successful invitation, an FCM push notification
-    /// is sent to the invitee to alert them of the new invitation.
-    /// </remarks>
     [HttpPost]
     [ProducesResponseType(typeof(InvitationResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -71,22 +57,6 @@ public class InvitationsController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Accepts a family invitation and adds the user to the family.
-    /// </summary>
-    /// <param name="invitationId">The unique identifier of the invitation to accept.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Success response if invitation accepted.</returns>
-    /// <response code="200">Invitation accepted successfully; FCM notification sent to family parents.</response>
-    /// <response code="400">Invalid request or invitation already processed.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="403">User is not the invitation recipient.</response>
-    /// <response code="404">Invitation not found.</response>
-    /// <remarks>
-    /// Upon acceptance, the user is added to the family with the designated role (parent or child).
-    /// All family parents receive an FCM notification about the new member.
-    /// </remarks>
     [HttpPost("{invitationId}/accept")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -114,22 +84,6 @@ public class InvitationsController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Declines a family invitation.
-    /// </summary>
-    /// <param name="invitationId">The unique identifier of the invitation to decline.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Success response if invitation declined.</returns>
-    /// <response code="200">Invitation declined successfully; FCM notification sent to inviter.</response>
-    /// <response code="400">Invalid request or invitation already processed.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="403">User does not have permission to decline (parents only can decline on behalf of family).</response>
-    /// <response code="404">Invitation not found.</response>
-    /// <remarks>
-    /// Only parents can decline invitations. Upon declining, the invitation status is updated
-    /// and the inviter receives an FCM notification about the declined invitation.
-    /// </remarks>
     [HttpPost("{invitationId}/decline")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -157,15 +111,6 @@ public class InvitationsController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Retrieves all invitations received by the authenticated user.
-    /// </summary>
-    /// <param name="status">Optional status filter (Pending, Accepted, Declined, Cancelled). Defaults to Pending if not specified.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of <see cref="InvitationResponse"/> representing invitations.</returns>
-    /// <response code="200">Invitations retrieved successfully.</response>
-    /// <response code="401">User is not authenticated.</response>
     [HttpGet("received")]
     [ProducesResponseType(typeof(List<InvitationResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -186,16 +131,6 @@ public class InvitationsController(
         >(query, cancellationToken);
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Retrieves all invitations sent by the authenticated user's family.
-    /// </summary>
-    /// <param name="status">Optional status filter (Pending, Accepted, Declined, Cancelled).</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of <see cref="InvitationResponse"/> representing sent invitations.</returns>
-    /// <response code="200">Invitations retrieved successfully.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="403">User does not have permission to view sent invitations.</response>
     [HttpGet("sent")]
     [ProducesResponseType(typeof(List<InvitationResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -222,22 +157,6 @@ public class InvitationsController(
         >(query, cancellationToken);
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Cancels a sent family invitation.
-    /// </summary>
-    /// <param name="invitationId">The unique identifier of the invitation to cancel.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Success response if invitation cancelled.</returns>
-    /// <response code="200">Invitation cancelled successfully; FCM notification sent to invitee.</response>
-    /// <response code="400">Invalid request or invitation already processed.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="403">User does not have permission to cancel (parents only).</response>
-    /// <response code="404">Invitation not found.</response>
-    /// <remarks>
-    /// Only parents can cancel sent invitations. Upon cancellation, the invitation status is updated
-    /// and the invitee receives an FCM notification about the cancelled invitation.
-    /// </remarks>
     [HttpPost("{invitationId}/cancel")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

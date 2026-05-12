@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:famxpense/core/Network/ApiClient.dart';
 import 'package:famxpense/models/Invitations/invitation_model.dart';
 
-/// ApiResult pattern for consistent error handling across repository methods
 class ApiResult<T> {
   final bool isSuccess;
   final T? data;
@@ -17,13 +16,11 @@ class ApiResult<T> {
         data = null;
 }
 
-/// Repository for managing family invitations API calls
 class InvitationsRepository {
   final ApiClient _apiClient;
 
   InvitationsRepository(this._apiClient);
 
-  /// Extract error message from DioException response following auth_repository pattern
   String _extractErrorMessage(DioException e) {
     try {
       final detail = e.response?.data['detail'] as String?;
@@ -38,9 +35,6 @@ class InvitationsRepository {
     }
   }
 
-  /// Send invitation to user by email
-  /// POST /api/invitations
-  /// Returns: Invitation object (201 Created)
   Future<ApiResult<Invitation>> sendInvitation({
     required String email,
     required bool isParent,
@@ -75,10 +69,6 @@ class InvitationsRepository {
     }
   }
 
-  /// Get invitations where current user is recipient (all users can access)
-  /// GET /api/invitations/received
-  /// Optional status filter: Pending, Accepted, Declined, Cancelled
-  /// Returns: List<Invitation>
   Future<ApiResult<List<Invitation>>> getReceivedInvitations({
     String? status,
   }) async {
@@ -114,10 +104,6 @@ class InvitationsRepository {
     }
   }
 
-  /// Get invitations sent from current family (parents only - 403 if not parent)
-  /// GET /api/invitations/sent
-  /// Optional status filter: Pending, Accepted, Declined, Cancelled
-  /// Returns: List<Invitation>
   Future<ApiResult<List<Invitation>>> getSentInvitations({
     String? status,
   }) async {
@@ -142,7 +128,6 @@ class InvitationsRepository {
       return ApiResult.error('Failed to load sent invitations: ${response.statusCode}');
     } on DioException catch (e) {
       if (e.response?.statusCode == 403) {
-        // Parent-only action - user-friendly error message
         return ApiResult.error('You must be a family parent to view sent invitations');
       } else if (e.response?.statusCode == 401) {
         return ApiResult.error('Authentication required');
@@ -153,9 +138,6 @@ class InvitationsRepository {
     }
   }
 
-  /// Accept a received invitation
-  /// POST /api/invitations/{invitationId}/accept
-  /// Returns: void (200 OK with no body)
   Future<ApiResult<void>> acceptInvitation(String invitationId) async {
     try {
       final response = await _apiClient.dio.post(
@@ -182,9 +164,6 @@ class InvitationsRepository {
     }
   }
 
-  /// Decline a received invitation
-  /// POST /api/invitations/{invitationId}/decline
-  /// Returns: void (200 OK with no body)
   Future<ApiResult<void>> declineInvitation(String invitationId) async {
     try {
       final response = await _apiClient.dio.post(
@@ -211,9 +190,6 @@ class InvitationsRepository {
     }
   }
 
-  /// Cancel a sent invitation (parents only - 403 if not parent)
-  /// POST /api/invitations/{invitationId}/cancel
-  /// Returns: void (200 OK with no body)
   Future<ApiResult<void>> cancelInvitation(String invitationId) async {
     try {
       final response = await _apiClient.dio.post(
@@ -227,7 +203,6 @@ class InvitationsRepository {
       return ApiResult.error('Failed to cancel invitation: ${response.statusCode}');
     } on DioException catch (e) {
       if (e.response?.statusCode == 403) {
-        // Parent-only action - user-friendly error message
         return ApiResult.error('Only family parents can cancel invitations');
       } else if (e.response?.statusCode == 404) {
         return ApiResult.error('Invitation not found');

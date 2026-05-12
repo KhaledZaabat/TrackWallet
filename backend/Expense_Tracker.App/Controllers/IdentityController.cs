@@ -20,11 +20,6 @@ using Microsoft.Extensions.Options;
 using Wolverine;
 
 namespace Expense_Tracker.App.Controllers;
-
-/// <summary>
-/// Handles all identity-related actions such as login, token refresh,
-/// email confirmation, password reset, and verification flows.
-/// </summary>
 [ApiController]
 [Route("api/identity")]
 [Tags("Identity")]
@@ -37,9 +32,6 @@ public sealed class IdentityController(
     IOptionsMonitor<AuthCookieOptions> cookieOptions
 ) : ControllerBase
 {
-    /// <summary>
-    /// Authenticates a user using email + password credentials.
-    /// </summary>
     [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
@@ -72,7 +64,6 @@ public sealed class IdentityController(
 
         AuthCommandResult value = result.Value;
 
-        // R2.1, R3.1, R12.2 — issue all three auth cookies through the single writer (R22.10).
         authCookies.WriteAccessCookie(HttpContext, value.AccessToken, value.AccessExpiresAt);
         authCookies.WriteRefreshCookie(HttpContext, value.RefreshToken, value.RefreshExpiresAt);
         authCookies.IssueCsrfCookie(HttpContext);
@@ -80,24 +71,9 @@ public sealed class IdentityController(
         return value.Response;
     }
 
-    /// <summary>
-    /// Registers a new user using email credentials.
-    /// </summary>
-    /// <remarks>
-    /// This endpoint creates a new user account using the provided email and password.
-    /// If successful, an OTP (One-Time Password) is sent to the user's email address
-    /// for account verification.
-    /// </remarks>
-    /// <param name="request">
-    /// The registration payload containing user credentials and profile information.
-    /// </param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>
-    /// Returns 200 OK if registration succeeds.
-    /// </returns>
     [AllowAnonymous]
     [HttpPost("register")]
-    [Consumes("multipart/form-data")] // Add this
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -125,13 +101,6 @@ public sealed class IdentityController(
         ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Resends account confirmation OTP to email or phone.
-    /// </summary>
-    /// <param name="request">Object containing email or phone.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>Success if OTP resent, or failure if already confirmed or user not found.</returns>
     [AllowAnonymous]
     [HttpPost("confirm-account/otp/resend")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -152,17 +121,6 @@ public sealed class IdentityController(
         ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Confirms a user account (email) using a valid OTP.
-    /// </summary>
-    /// <param name="request">Request containing email/phone and OTP code.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>An IActionResult indicating success or failure.</returns>
-    /// <response code="200">Account successfully confirmed.</response>
-    /// <response code="400">Invalid data or expired OTP.</response>
-    /// <response code="404">User not found.</response>
-    /// <response code="500">Internal server error.</response>
     [AllowAnonymous]
     [HttpPost("confirm-account")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -182,10 +140,6 @@ public sealed class IdentityController(
         ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Refreshes the access and refresh tokens.
-    /// </summary>
     [HttpPost("refresh")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -223,20 +177,6 @@ public sealed class IdentityController(
 
         return value.Response;
     }
-
-    /// <summary>
-    /// Sends and Resend an OTP code to the user for resetting their password.
-    /// </summary>
-    /// <param name="request">Object containing the email of the user.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>
-    /// An <see cref="IActionResult"/> indicating whether the OTP was successfully sent.
-    /// </returns>
-    /// <response code="200">OTP successfully sent to email or phone.</response>
-    /// <response code="400">Invalid email/phone format or validation failure.</response>
-    /// <response code="404">User not found.</response>
-    /// <response code="409">User email or phone is not confirmed.</response>
-    /// <response code="500">Internal server error.</response>
     [AllowAnonymous]
     [HttpPost("reset-password/otp/send")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -256,19 +196,6 @@ public sealed class IdentityController(
         ErrorOr<Success> res = await bus.InvokeAsync<ErrorOr<Success>>(command, cancellationToken);
         return res.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Verifies a password-reset OTP sent to the user.
-    /// </summary>
-    /// <param name="request">Object containing email/phone and the OTP code.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>
-    /// An <see cref="IActionResult"/> indicating whether the OTP is valid.
-    /// </returns>
-    /// <response code="200">OTP is valid. User may now reset the password.</response>
-    /// <response code="400">Invalid OTP format or expired OTP.</response>
-    /// <response code="404">User or OTP key not found.</response>
-    /// <response code="500">Internal server error.</response>
     [AllowAnonymous]
     [HttpPost("reset-password/otp/verify")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -287,20 +214,6 @@ public sealed class IdentityController(
         ErrorOr<Success> res = await bus.InvokeAsync<ErrorOr<Success>>(command, cancellationToken);
         return res.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Resets the user password after OTP verification.
-    /// </summary>
-    /// <param name="request">Object containing email/phone and the new password.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>
-    /// An <see cref="IActionResult"/> indicating whether the password was successfully reset.
-    /// </returns>
-    /// <response code="200">Password successfully reset.</response>
-    /// <response code="400">Weak password or validation failure.</response>
-    /// <response code="404">User not found.</response>
-    /// <response code="409">User has not confirmed email/phone.</response>
-    /// <response code="500">Internal server error.</response>
     [AllowAnonymous]
     [HttpPost("reset-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -325,16 +238,6 @@ public sealed class IdentityController(
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Logs out the current user by revoking their latest active refresh token.
-    /// </summary>
-    /// <remarks>
-    /// This endpoint invalidates the user's most recent refresh token, effectively logging them out.
-    /// </remarks>
-    /// <response code="200">Logout successful.</response>
-    /// <response code="401">User not authenticated.</response>
-    /// <response code="500">Unexpected server error.</response>
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

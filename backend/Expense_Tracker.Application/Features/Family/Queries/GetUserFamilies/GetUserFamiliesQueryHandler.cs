@@ -19,7 +19,6 @@ public sealed class GetUserFamiliesQueryHandler(
     {
         Guid userId = request.userId;
 
-        // Get all families where the user is a member with all related data
         var familiesData = await familyUserRepo.Query()
             .Where(fu => fu.UserId == userId && !fu.Family.IsDeleted)
             .Select(fu => new
@@ -42,10 +41,8 @@ public sealed class GetUserFamiliesQueryHandler(
             })
             .ToListAsync(cancellationToken);
 
-        // Map to response DTOs with profile image URLs
         var familyResponses = familiesData.Select(family =>
         {
-            // Map each member to FamilyMemberProfile with profile image URL
             var memberProfiles = family.Members.Select(member =>
             {
                 string? profileImageUrl = fileUrlBuilder.GetUrl(member.ProfileImageFileId);
@@ -57,7 +54,6 @@ public sealed class GetUserFamiliesQueryHandler(
                 );
             }).ToList();
 
-            // Create the family response
             return new FamilyResponse(
                 Id: family.FamilyId,
                 Name: family.FamilyName,
@@ -67,7 +63,6 @@ public sealed class GetUserFamiliesQueryHandler(
             );
         }).ToList();
 
-        // Return successful result with all families
         return familyResponses;
     }
 }

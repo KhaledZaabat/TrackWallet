@@ -33,7 +33,6 @@ public sealed class GetDashboardQueryHandler(
         GetDashboardQuery request,
         CancellationToken cancellationToken)
     {
-        // 1. Get current user and family context
         Guid? userId = userContext.UserId;
         Guid? familyId = myFamilyContext.FamilyId;
 
@@ -43,7 +42,6 @@ public sealed class GetDashboardQueryHandler(
         if (familyId is null)
             return DomainErrors.GeneralErrors.InvalidState(nameof(Family), "No family selected. Please select a family first.");
 
-        // 2. Get family context details
         FamilyContextDto? familyContext = await familyUserRepo.Query()
             .Where(fu => fu.UserId == userId && fu.FamilyId == familyId)
             .Select(fu => new FamilyContextDto(
@@ -57,7 +55,6 @@ public sealed class GetDashboardQueryHandler(
         if (familyContext is null)
             return DomainErrors.GeneralErrors.NotFound(nameof(Family));
 
-        // 3. Get user profile information
         var userProfile = await userRepo.Query()
             .Where(u => u.Id == userId)
             .Select(u => new
@@ -73,7 +70,6 @@ public sealed class GetDashboardQueryHandler(
         if (userProfile is null)
             return DomainErrors.UserErrors.NotFound();
 
-        // 4. Get budget history for the family
         var budgetHistoryResult = await bus.InvokeAsync<ErrorOr<List<BudgetHistoryItem>>>(
             new GetFamilyBudgetHistoryQuery(familyId.Value, Months: request.BudgetHistoryMonths),
             cancellationToken);
@@ -83,7 +79,6 @@ public sealed class GetDashboardQueryHandler(
 
         List<BudgetHistoryItem> budgetHistory = budgetHistoryResult.Value;
 
-        // 5. Get recent transactions
         var transactionsResult = await bus.InvokeAsync<ErrorOr<CursorPagedResponse<TransactionItem>>>(
             new GetFamilyTransactionsQuery(
                 familyId.Value,
@@ -96,7 +91,6 @@ public sealed class GetDashboardQueryHandler(
 
         CursorPagedResponse<TransactionItem> transactionsPage = transactionsResult.Value;
 
-        // 6. Build dashboard response
         DashboardResponse response = new(
             UserId: userId.Value.ToString(),
             Email: userProfile.Email,

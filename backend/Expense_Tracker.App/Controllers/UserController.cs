@@ -9,10 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 using Wolverine;
 
 namespace Expense_Tracker.App.Controllers;
-
-/// <summary>
-/// Handles user-related operations such as profile actions and administration queries.
-/// </summary>
 [ApiController]
 [Route("api/users")]
 [ApiVersion("1.0")]
@@ -20,24 +16,6 @@ namespace Expense_Tracker.App.Controllers;
 [Produces("application/json")]
 public sealed class UserController(IMessageBus bus) : ControllerBase
 {
-    /// <summary>
-    /// Changes the authenticated user's password.
-    /// </summary>
-    /// <remarks>
-    /// The user must be authenticated and provide:
-    /// - the current password
-    /// - a new password that meets security requirements
-    ///
-    /// This endpoint is intended for **self-service password updates**.
-    /// </remarks>
-    /// <param name="request">Contains the current and new password.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <response code="200">Password changed successfully.</response>
-    /// <response code="400">Validation error or weak password.</response>
-    /// <response code="401">User not authenticated.</response>
-    /// <response code="404">User not found.</response>
-    /// <response code="409">New password is the same as the current one.</response>
-    /// <response code="500">Unexpected server error.</response>
     [HttpPost("update-password")]
     [EndpointName("UpdatePassword")]
     [EndpointSummary("Update the authenticated user's password")]
@@ -68,15 +46,6 @@ public sealed class UserController(IMessageBus bus) : ControllerBase
 
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Retrieves the authenticated user's profile information.
-    /// </summary>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>A <see cref="UserProfileResponse"/> containing user profile details.</returns>
-    /// <response code="200">Profile retrieved successfully.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="404">User profile not found.</response>
     [HttpGet("profile")]
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -96,21 +65,6 @@ public sealed class UserController(IMessageBus bus) : ControllerBase
         );
         return result.ToActionResult(this);
     }
-
-    /// <summary>
-    /// Updates the authenticated user's profile information.
-    /// </summary>
-    /// <param name="command">Profile update command containing user details and optional avatar image.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>Success response if profile updated.</returns>
-    /// <response code="200">Profile updated successfully.</response>
-    /// <response code="400">Invalid request, validation failure, or unsupported file format.</response>
-    /// <response code="401">User is not authenticated.</response>
-    /// <response code="404">User profile not found.</response>
-    /// <remarks>
-    /// Accepts multipart/form-data for profile updates including an optional avatar image.
-    /// Supported image formats: JPEG, PNG, GIF. Maximum file size may apply.
-    /// </remarks>
     [HttpPut("profile")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

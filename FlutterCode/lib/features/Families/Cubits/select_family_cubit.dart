@@ -7,7 +7,6 @@ class SelectFamilyCubit extends Cubit<SelectFamilyState> {
 
   SelectFamilyCubit(this._familyRepository) : super(SelectFamilyInitial());
 
-  /// Load user's families
   Future<void> loadFamilies() async {
     emit(SelectFamilyLoading());
 
@@ -25,7 +24,6 @@ class SelectFamilyCubit extends Cubit<SelectFamilyState> {
     }
   }
 
-  /// Select a family - just saves the selection, doesn't load dashboard
   Future<void> selectFamily(String familyId) async {
     emit(SelectFamilyLoading());
 
@@ -33,12 +31,10 @@ class SelectFamilyCubit extends Cubit<SelectFamilyState> {
       final result = await _familyRepository.selectFamily(familyId);
 
       if (result.isSuccess) {
-        // Emit simple success - dashboard will be loaded separately
         emit(SelectFamilySuccess());
       } else {
         emit(SelectFamilyError(
             message: result.errorMessage ?? 'Failed to select family'));
-        // Return to families loaded state
         await Future.delayed(const Duration(milliseconds: 100));
         await loadFamilies();
       }
@@ -49,8 +45,6 @@ class SelectFamilyCubit extends Cubit<SelectFamilyState> {
     }
   }
 
-  /// Delete a family
-  /// Only parents can delete. Returns true on success.
   Future<bool> deleteFamily(String familyId) async {
     final currentState = state;
     
@@ -60,7 +54,6 @@ class SelectFamilyCubit extends Cubit<SelectFamilyState> {
       final result = await _familyRepository.deleteFamily(familyId);
 
       if (result.isSuccess) {
-        // Reload families to update the list
         await loadFamilies();
         return true;
       } else {

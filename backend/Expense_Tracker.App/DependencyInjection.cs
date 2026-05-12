@@ -15,7 +15,6 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
 using MapsterMapper;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -167,22 +166,6 @@ public static class ServiceRegistration
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        // R12.1 — register IAntiforgery with attributes driven by CsrfOptions
-        // (R22.4 non-HttpOnly, R22.5 Secure always, R22.6 SameSite from options).
-        // Post-configure after BindConfiguration so the runtime DI graph isn't materialized
-        // at registration time (avoids the BuildServiceProvider anti-pattern that breaks
-        // Wolverine code generation).
-        services.AddAntiforgery();
-        services.AddOptions<AntiforgeryOptions>().Configure<IOptions<CsrfOptions>>((options, csrfOpts) =>
-        {
-            var csrf = csrfOpts.Value;
-            options.Cookie.Name = csrf.CookieName;
-            options.Cookie.HttpOnly = false; // R22.4
-            options.Cookie.SameSite = csrf.SameSite; // R22.6
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // R22.5
-            options.HeaderName = csrf.HeaderName;
-        });
-
         // R22.8 — fail fast on invalid auth cookie configuration in non-Development environments.
         services.AddHostedService<AuthCookieStartupValidator>();
 
@@ -215,7 +198,6 @@ public static class ServiceRegistration
 
     public static IServiceCollection AddSwaggerDocs(this IServiceCollection services)
     {
-        // Needed for minimal APIs / endpoint discovery
         services.AddEndpointsApiExplorer();
 
         services.AddSwaggerGen(options =>
@@ -256,7 +238,7 @@ public static class ServiceRegistration
                 "AllowFrontend",
                 policy =>
                     policy
-                        .WithOrigins("http://localhost:3000")
+                        .WithOrigins("http://localhost:3000", "https://localhost:7067")
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                         .AllowCredentials()
@@ -384,7 +366,6 @@ public static class ServiceRegistration
     {
         var config = TypeAdapterConfig.GlobalSettings;
 
-        // Scan API and Application projects
         config.Scan(typeof(ServiceRegistration).Assembly);
         config.Scan(typeof(IRepository<>).Assembly);
 
@@ -467,7 +448,6 @@ public static class ServiceRegistration
             }
         );
 
-    
         services.AddScoped<IUrlBuilder>(sp => sp.GetRequiredKeyedService<IUrlBuilder>("files"));
 
         return services;

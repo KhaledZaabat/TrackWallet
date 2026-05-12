@@ -1,4 +1,3 @@
-// core/services/device_manager.dart
 import 'package:famxpense/core/Network/ApiClient.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../storage/local_storage.dart';
@@ -14,15 +13,11 @@ class DeviceManager {
     _apiClient = apiClient;
   }
 
-  /// Initialize device - generate device ID and request FCM token
   Future<DeviceInfo> initializeDevice() async {
-    // Get or create device ID
     final deviceId = await _localStorage.getOrCreateDeviceId();
 
-    // Request FCM token
     String? fcmToken;
     try {
-      // Request permission for notifications
       final settings = await _firebaseMessaging.requestPermission(
         alert: true,
         badge: true,
@@ -46,7 +41,6 @@ class DeviceManager {
     );
   }
 
-  /// Listen to FCM token refresh
   void listenToFcmTokenRefresh() {
     _firebaseMessaging.onTokenRefresh.listen((newToken) async {
       final wasUpdated = await _localStorage.saveFcmToken(newToken);
@@ -58,7 +52,6 @@ class DeviceManager {
     });
   }
 
-  /// Update FCM token on backend
   Future<bool> updateFcmTokenOnBackend(String fcmToken) async {
     if (_apiClient == null) {
       print('ApiClient not set. Cannot update FCM token on backend.');
@@ -80,7 +73,6 @@ class DeviceManager {
     }
   }
 
-  /// Get current device info
   Future<DeviceInfo> getDeviceInfo() async {
     final deviceId = await _localStorage.getDeviceId();
     final fcmToken = await _localStorage.getFcmToken();

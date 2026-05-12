@@ -60,7 +60,6 @@ class AppRouter {
               currentPath.startsWith(Routes.myFamily) ||
               currentPath.startsWith(Routes.profile);
 
-          // If authenticated
           if (authState is AuthAuthenticated) {
             // If on auth route, redirect to dashboard or selectFamily
             if (isAuthRoute) {
@@ -84,7 +83,6 @@ class AppRouter {
             return null;
           }
 
-          // If not authenticated
           if (authState is AuthUnauthenticated) {
             if (!isAuthRoute) {
               return Routes.login;
@@ -95,7 +93,6 @@ class AppRouter {
           return null;
         },
         routes: [
-          // Auth Routes
           GoRoute(
             path: Routes.login,
             builder: (context, state) => const LoginPage(),
@@ -163,14 +160,12 @@ class AppRouter {
             builder: (context, state) => const SelectFamilyPage(),
           ),
 
-          // Stateful Shell Route
           StatefulShellRoute.indexedStack(
             builder: (context, state, navigationShell) {
               return ScaffoldWithNestedNavigation(
                   navigationShell: navigationShell);
             },
             branches: [
-              // Branch 0: Dashboard
               StatefulShellBranch(
                 routes: [
                   GoRoute(
@@ -179,7 +174,6 @@ class AppRouter {
                   ),
                 ],
               ),
-              // Branch 1: Invitations (Shared)
               StatefulShellBranch(
                 routes: [
                   GoRoute(
@@ -189,7 +183,6 @@ class AppRouter {
                       child: const InvitationsPage(),
                     ),
                     routes: [
-                      // Sub-routes if any
                       GoRoute(
                         path: 'to-join', // relative path
                         // matches /invitations/to-join
@@ -202,7 +195,6 @@ class AppRouter {
                   ),
                 ],
               ),
-              // Branch 2: Transactions
               StatefulShellBranch(
                 routes: [
                   GoRoute(
@@ -237,7 +229,6 @@ class AppRouter {
                   ),
                 ],
               ),
-              // Branch 3: MyFamily
               StatefulShellBranch(
                 routes: [
                   GoRoute(
@@ -246,7 +237,6 @@ class AppRouter {
                   ),
                 ],
               ),
-              // Branch 4: Settings
               StatefulShellBranch(
                 routes: [
                   GoRoute(
@@ -258,7 +248,6 @@ class AppRouter {
                   ),
                 ],
               ),
-               // Branch 5: Select Family
               StatefulShellBranch(
                 routes: [
                   GoRoute(
@@ -267,7 +256,6 @@ class AppRouter {
                   ),
                 ],
               ),
-               // Branch 6: Invitations (Guest/No-Family Mode)
               StatefulShellBranch(
                 routes: [
                   GoRoute(

@@ -8,26 +8,22 @@ public class UploadImagesCommandValidator : AbstractValidator<UploadImagesComman
 {
     public UploadImagesCommandValidator()
     {
-        // Validate EntityType
         RuleFor(x => x.EntityType)
             .NotEmpty()
             .WithMessage("EntityType is required.")
             .MaximumLength(FileSettings.MaxEntityTypeLength)
             .WithMessage($"EntityType cannot exceed {FileSettings.MaxEntityTypeLength} characters.");
 
-        // Validate EntityId
         RuleFor(x => x.EntityId)
             .NotEqual(Guid.Empty)
             .WithMessage("EntityId is required.");
 
-        // Validate Images collection
         RuleFor(x => x.Images)
             .NotNull()
             .WithMessage("Images collection is required.")
             .Must(images => images?.Count > 0)
             .WithMessage("At least one image must be provided.");
 
-        // Validate each image in collection
         RuleForEach(x => x.Images)
             .SetValidator(new FileNotEmptyValidator())
             .SetValidator(new FileSizeValidator())

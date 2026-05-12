@@ -21,7 +21,6 @@ public sealed class GetSentInvitationsQueryHandler(
         GetSentInvitationsQuery request,
         CancellationToken cancellationToken)
     {
-        // 1. Verify parent
         bool isParent = await familyUserRepo.QueryTracked()
             .AnyAsync(fu =>
                 fu.FamilyId == request.FamilyId &&
@@ -32,7 +31,6 @@ public sealed class GetSentInvitationsQueryHandler(
         if (!isParent)
             return DomainErrors.GeneralErrors.Forbidden("Only parent members can view sent invitations.");
 
-        // 2. Query
         var query =
             from i in invitationRepo.QueryTracked()
             join inviter in userRepo.QueryTracked() on i.InviterUserId equals inviter.Id

@@ -16,15 +16,6 @@ namespace Expense_Tracker.App.Controllers;
 public class NotificationPreferencesController(IMessageBus bus, IUserContext userContext)
     : ControllerBase
 {
-    /// <summary>
-    /// Updates notification preferences for the authenticated user.
-    /// </summary>
-    /// <param name="request">Notification preferences containing email and push notification settings.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>No content on successful update.</returns>
-    /// <response code="204">Notification preferences updated successfully.</response>
-    /// <response code="400">Invalid request or validation failure.</response>
-    /// <response code="401">User is not authenticated.</response>
     [HttpPatch]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

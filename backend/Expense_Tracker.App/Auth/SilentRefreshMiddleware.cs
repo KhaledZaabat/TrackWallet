@@ -10,10 +10,7 @@ namespace Expense_Tracker.App.Auth;
 
 public sealed class SilentRefreshMiddleware
 {
-    /// <summary>Per-request re-entry guard.</summary>
     public const string MarkerKey = "__trackwallet_silent_refresh_ran";
-
-    /// <summary>Set by the logout action to prevent re-issuing cookies on the logout response.</summary>
     public const string LogoutSkipKey = "AuthLogoutInProgress";
 
     private readonly RequestDelegate _next;
@@ -78,26 +75,15 @@ public sealed class SilentRefreshMiddleware
 
         if (newAccessToken is null)
         {
-            // Rotation failed — cookies already cleared. Let the pipeline produce 401.
             await _next(ctx);
             return;
         }
 
-        // Inject the fresh token into the Authorization header so JwtBearerHandler
-        // picks it up via OnMessageReceived on its first (and only) call this request.
         ctx.Request.Headers.Authorization = $"Bearer {newAccessToken}";
 
         await _next(ctx);
     }
 
-    /// <summary>
-    /// Returns <see langword="true"/> when the access cookie is missing, unreadable,
-    /// expired, or within the silent-refresh threshold window.
-    /// Reading <c>exp</c> from the unvalidated cookie is intentional — a tampered
-    /// expiry can only cause unnecessary rotation (past) or a 401 from
-    /// <c>UseAuthentication</c> (future with bad signature). Neither is a privilege
-    /// escalation.
-    /// </summary>
     private static bool ShouldRotate(string? accessCookie, JwtSettings jwt)
     {
         if (string.IsNullOrEmpty(accessCookie))
@@ -130,12 +116,6 @@ public sealed class SilentRefreshMiddleware
         }
     }
 
-    /// <summary>
-    /// Grace-cache hit → returns the cached token immediately.
-    /// Cache miss → calls <c>RotateAsync</c>, mints a new access token, writes
-    /// all three cookies, caches the new access token, and returns it.
-    /// Returns <see langword="null"/> and clears cookies on any rotation error.
-    /// </summary>
     private async Task<string?> TryRotateAsync(
         HttpContext ctx,
         string rawRefresh,

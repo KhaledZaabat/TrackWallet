@@ -1,5 +1,3 @@
-// features/auth/presentation/reset_password/pages/reset_password_otp_page.dart
-
 import 'dart:async';
 
 import 'package:famxpense/core/router/routes.dart';

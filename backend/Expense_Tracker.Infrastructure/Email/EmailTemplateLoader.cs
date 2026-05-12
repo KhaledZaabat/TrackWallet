@@ -20,8 +20,6 @@ public sealed class EmailTemplateLoader : IEmailTemplateLoader
             ? templateName
             : $"{templateName}.html";
 
-        // Resource name format: Namespace.Folder.FileName
-        // Example: SurveyBasket.Infrastructure.Email.Templates.WelcomeEmail.html
         var resourceName = $"{_assembly.GetName().Name.Replace("-", "_")}.Email.Templates.{fileName}";
 
         using var stream = _assembly.GetManifestResourceStream(resourceName);
@@ -29,7 +27,6 @@ public sealed class EmailTemplateLoader : IEmailTemplateLoader
 
         if (stream is null)
         {
-            // List available resources for debugging
             var availableResources = _assembly.GetManifestResourceNames();
             throw new FileNotFoundException(
                 $"Email template not found: {resourceName}. " +

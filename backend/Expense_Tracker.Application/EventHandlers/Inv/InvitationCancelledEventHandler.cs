@@ -25,7 +25,6 @@ public sealed class InvitationCancelledEventHandler(
         InvitationCancelledEvent notification,
         CancellationToken ct)
     {
-        // Get inviter, invitee, and family information
         var inviterInfo = await users.Query()
             .Where(u => u.Id == notification.Invitation.InviterUserId)
             .Select(u => u.UserName)
@@ -41,7 +40,6 @@ public sealed class InvitationCancelledEventHandler(
             .Select(f => f.Name)
             .SingleOrDefaultAsync(ct);
 
-        // Send email BEFORE deleting (if enabled)
         if (inviteeInfo?.EmailNotifications == true && !string.IsNullOrWhiteSpace(inviteeInfo.Email))
         {
             await SendCancelledEmailAsync(
@@ -52,7 +50,6 @@ public sealed class InvitationCancelledEventHandler(
                 ct);
         }
 
-        // 1. Delete related notifications for this invitation
         var relatedNotifications = await notifications.QueryTracked()
             .Where(n => n.UserId == notification.Invitation.InviteeUserId
                      && n.ActorUserId == notification.Invitation.InviterUserId)
@@ -61,7 +58,6 @@ public sealed class InvitationCancelledEventHandler(
         if (relatedNotifications.Count > 0)
             notifications.RemoveRange(relatedNotifications);
 
-        // 2. Delete the invitation itself
         var invitationToDelete = await invitations.QueryTracked()
             .FirstOrDefaultAsync(i => i.Id == notification.Invitation.Id, ct);
 
@@ -70,7 +66,6 @@ public sealed class InvitationCancelledEventHandler(
 
         await notifications.SaveChangesAsync(ct);
 
-        // 3. Notify the invitee that invitation was cancelled
         DomainNotification domainNotification = DomainNotification.Create(
             userId: notification.Invitation.InviteeUserId,
             title: "🚫 Invitation cancelled",

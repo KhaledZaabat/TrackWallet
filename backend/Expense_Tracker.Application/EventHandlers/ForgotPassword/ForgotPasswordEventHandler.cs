@@ -25,16 +25,13 @@ public sealed class ForgotPasswordEventHandler(IOtpService _otpService, IEmailTe
         string userName,
         CancellationToken cancellationToken)
     {
-        // Generate OTP
         string key = $"reset:{email}";
         string otp = _otpService.Generate(key, digits: 4);
 
-        // Load email template
         string template = await _templateLoader.LoadTemplateAsync(
             EmailTemplates.ForgotPasswordOtp,
             cancellationToken);
 
-        // Build HTML body
         string body = _bodyBuilder.Build(template, new Dictionary<string, string>
         {
             ["UserName"] = userName,
@@ -43,7 +40,6 @@ public sealed class ForgotPasswordEventHandler(IOtpService _otpService, IEmailTe
             ["Duration"] = otpSettings.ExpirationInSeconds.ToString()
         });
 
-        // Send email
         await _notification.SendEmailAsync(
             to: email,
             subject: "Reset Your Expense Tracker Account Password",

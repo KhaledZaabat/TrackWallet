@@ -10,7 +10,6 @@ class AppTheme {
       primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.background,
       
-      // Color Scheme
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.darkGrey,
@@ -22,13 +21,11 @@ class AppTheme {
         onError: AppColors.white,
       ),
 
-      // Text Theme (Inter for a clean modern look)
       textTheme: GoogleFonts.interTextTheme().apply(
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,
       ),
 
-      // AppBar Theme
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
@@ -37,7 +34,6 @@ class AppTheme {
         iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
 
-      // Card Theme
       cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
@@ -47,7 +43,6 @@ class AppTheme {
         ),
       ),
 
-      // Input Decoration (TextFields)
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.white,
@@ -70,7 +65,6 @@ class AppTheme {
         ),
       ),
 
-      // Button Themes
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -102,13 +96,11 @@ class AppTheme {
         ),
       ),
 
-      // Icon Theme
       iconTheme: const IconThemeData(
         color: AppColors.textPrimary,
         size: 24,
       ),
       
-      // Floating Action Button
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,

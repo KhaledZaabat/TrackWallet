@@ -16,7 +16,6 @@ public sealed class ConfirmAccountCommandHandler(IOtpService _otpService, IIdent
         if (!valid)
             return DomainErrors.OtpErrors.InvalidOrExpired();
 
-        // Mark user as confirmed (email )
         ErrorOr<Guid> res = await IdentityService.ConfirmUserAsync(request.Email, ct);
         if (res.IsError)
             return res.Errors;

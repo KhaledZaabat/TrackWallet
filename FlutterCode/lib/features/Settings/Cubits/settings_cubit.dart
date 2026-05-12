@@ -8,7 +8,6 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   SettingsCubit(this._userRepository) : super(const SettingsInitial());
 
-  /// Load user settings
   Future<void> loadSettings() async {
     try {
       emit(const SettingsLoading());
@@ -29,7 +28,6 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
-  /// Update password
   Future<void> updatePassword({
     required String currentPassword,
     required String newPassword,
@@ -65,7 +63,6 @@ class SettingsCubit extends Cubit<SettingsState> {
         'Password updated successfully',
       ));
 
-      // Transition back to loaded state
       await Future.delayed(const Duration(milliseconds: 100));
       emit(SettingsLoaded(currentUser));
     } catch (e, stackTrace) {
@@ -79,7 +76,6 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
-  /// Update notification preferences
   Future<void> updateNotificationPreferences({
     required bool emailNotifications,
     required bool pushNotifications,
@@ -109,7 +105,6 @@ class SettingsCubit extends Cubit<SettingsState> {
         pushNotifications: pushNotifications,
       );
 
-      // Update local user model
       final updatedUser = currentUser.copyWith(
         emailNotifications: emailNotifications,
         pushNotifications: pushNotifications,
@@ -121,7 +116,6 @@ class SettingsCubit extends Cubit<SettingsState> {
         'Notification preferences updated',
       ));
 
-      // Transition back to loaded state
       await Future.delayed(const Duration(milliseconds: 100));
       emit(SettingsLoaded(updatedUser));
     } catch (e, stackTrace) {
@@ -135,7 +129,6 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
-  /// Refresh settings
   Future<void> refreshSettings() async {
     final currentState = state;
 

@@ -8,7 +8,6 @@ class SignupCubit extends Cubit<SignupState> {
 
   SignupCubit(this._authRepository) : super(SignupInitial());
 
-  /// Register a new user
   Future<void> register({
     required String email,
     required String password,
@@ -36,7 +35,6 @@ class SignupCubit extends Cubit<SignupState> {
         emit(SignupSuccess(email: result.email!));
       } else {
         emit(SignupError(result.errorMessage ?? 'Registration failed'));
-        // Return to initial after showing error
         await Future.delayed(const Duration(milliseconds: 100));
         emit(SignupInitial());
       }
@@ -47,7 +45,6 @@ class SignupCubit extends Cubit<SignupState> {
     }
   }
 
-  /// Verify OTP
   Future<void> verifyOtp({
     required String otp,
     String? email,
@@ -71,7 +68,6 @@ class SignupCubit extends Cubit<SignupState> {
         emit(OtpVerificationSuccess());
       } else {
         emit(OtpVerificationError(result.message ?? 'OTP verification failed'));
-        // Return to initial OTP state after showing error
         await Future.delayed(const Duration(milliseconds: 100));
         emit(SignupSuccess(email: emailToVerify));
       }
@@ -84,7 +80,6 @@ class SignupCubit extends Cubit<SignupState> {
     }
   }
 
-  /// Resend OTP
   Future<void> resendOtp({String? email}) async {
     final emailToResend = email ?? _pendingEmail;
 
@@ -102,7 +97,6 @@ class SignupCubit extends Cubit<SignupState> {
 
       if (result.isSuccess) {
         emit(OtpResent(result.message ?? 'OTP sent successfully'));
-        // Return to success state to allow entering OTP
         await Future.delayed(const Duration(seconds: 2));
         emit(SignupSuccess(email: emailToResend));
       } else {
@@ -119,12 +113,10 @@ class SignupCubit extends Cubit<SignupState> {
     }
   }
 
-  /// Reset to initial state
   void reset() {
     _pendingEmail = null;
     emit(SignupInitial());
   }
 
-  /// Get pending email
   String? get pendingEmail => _pendingEmail;
 }

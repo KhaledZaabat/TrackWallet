@@ -1,5 +1,3 @@
-// data/repositories/family_repository.dart
-
 import 'package:dio/dio.dart';
 import 'package:famxpense/core/Network/ApiClient.dart';
 import 'package:famxpense/core/app_logger.dart';
@@ -7,9 +5,6 @@ import 'package:famxpense/core/services/device_manager.dart';
 import 'package:famxpense/core/storage/local_storage.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 
-// ========== ApiResult Pattern ==========
-
-/// Generic result wrapper for API calls following consistent error handling pattern
 class ApiResult<T> {
   final bool isSuccess;
   final T? data;
@@ -35,7 +30,6 @@ class FamilyRepository {
     this._deviceManager,
   );
 
-  /// Get all user families
   Future<FamilyListResult> getUserFamilies() async {
     try {
       final response = await _apiClient.dio.get('/api/families');
@@ -58,7 +52,6 @@ class FamilyRepository {
     }
   }
 
-  /// Create a new family
   Future<CreateFamilyResult> createFamily({
     required String name,
     required double initialBudget,
@@ -119,7 +112,6 @@ class FamilyRepository {
     }
   }
 
-  /// Select a family - only saves the selection and updates tokens
   /// Does NOT return dashboard data
   Future<SelectFamilyResult> selectFamily(String familyId) async {
     try {
@@ -175,15 +167,10 @@ class FamilyRepository {
   }
 
 
-  /// Get selected family ID from local storage
   Future<String?> getSelectedFamilyId() async {
     return await _localStorage.getSelectedFamilyId();
   }
 
-  /// Get current family details with all members
-  /// GET /api/families/me
-  /// Returns: FamilyDetails with all members
-  /// Used by MyFamily page to display family info and member list
   Future<ApiResult<FamilyDetails>> getFamilyDetails() async {
     try {
       final response = await _apiClient.dio.get('/api/families/me');
@@ -206,9 +193,6 @@ class FamilyRepository {
     }
   }
 
-  /// Kick a member from the family
-  /// DELETE /api/families/members/{userId}
-  /// Only parents can kick non-parent members. Cannot kick self or other parents.
   Future<ApiResult<void>> kickMember(String userId) async {
     try {
       AppLogger.info('FamilyRepository', 'Kicking member: $userId');
@@ -243,9 +227,6 @@ class FamilyRepository {
     }
   }
 
-  /// Update family information (name and/or bio)
-  /// PUT /api/families/select
-  /// Only parents can update family information.
   Future<ApiResult<void>> updateFamily({
     String? name,
     String? bio,
@@ -292,10 +273,6 @@ class FamilyRepository {
     }
   }
 
-  /// Leave the current family
-  /// DELETE /api/families/leave
-  /// The last parent cannot leave if other members exist.
-  /// User's transactions remain with the family.
   Future<ApiResult<void>> leaveFamily() async {
     try {
       AppLogger.info('FamilyRepository', 'Leaving family');
@@ -304,7 +281,6 @@ class FamilyRepository {
 
       if (response.statusCode == 200) {
         AppLogger.info('FamilyRepository', 'Left family successfully');
-        // Clear selected family since user is no longer in it
         await _localStorage.clearSelectedFamilyId();
         return ApiResult.success(null);
       }
@@ -330,10 +306,6 @@ class FamilyRepository {
     }
   }
 
-  /// Delete a family
-  /// DELETE /api/families/{familyId}
-  /// Only parents can delete. All members removed, invitations cancelled.
-  /// Transactions preserved for historical data.
   Future<ApiResult<void>> deleteFamily(String familyId) async {
     try {
       AppLogger.info('FamilyRepository', 'Deleting family: $familyId');
@@ -342,7 +314,6 @@ class FamilyRepository {
 
       if (response.statusCode == 200) {
         AppLogger.info('FamilyRepository', 'Family deleted successfully');
-        // Clear selected family if it was the deleted one
         final currentFamilyId = await _localStorage.getSelectedFamilyId();
         if (currentFamilyId == familyId) {
           await _localStorage.clearSelectedFamilyId();
@@ -368,8 +339,6 @@ class FamilyRepository {
     }
   }
 }
-
-// ========== Result Models ==========
 
 class CreateFamilyResult {
   final bool isSuccess;

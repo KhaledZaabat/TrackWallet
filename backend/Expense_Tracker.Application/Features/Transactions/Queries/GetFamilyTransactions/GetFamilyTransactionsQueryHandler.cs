@@ -18,7 +18,6 @@ public sealed class GetFamilyTransactionsQueryHandler(
         GetFamilyTransactionsQuery request,
         CancellationToken cancellationToken)
     {
-        // Parse cursor (using CreatedAtUtc as cursor)
         DateTimeOffset cursor;
         if (string.IsNullOrWhiteSpace(request.Cursor))
         {
@@ -29,52 +28,43 @@ public sealed class GetFamilyTransactionsQueryHandler(
             cursor = DateTimeOffset.UtcNow;
         }
 
-        // Validate and set page size (max 50)
         int size = request.PageSize is <= 0 or > 50 ? 20 : request.PageSize;
 
-        // Build query with cursor pagination and filters
         var query = transactionRepo.Query()
             .Where(t =>
                 t.FamilyId == request.FamilyId &&
                 t.CreatedAtUtc < cursor);
 
-        // Filter by transaction type
         if (request.TransactionType.HasValue)
         {
             query = query.Where(t => t.Type == request.TransactionType.Value);
         }
 
-        // Filter by category type
         if (request.CategoryType.HasValue)
         {
             query = query.Where(t => t.Category!.Type == request.CategoryType.Value);
         }
 
-        // Filter by minimum amount
         if (request.MinAmount.HasValue)
         {
             query = query.Where(t => t.Amount >= request.MinAmount.Value);
         }
 
-        // Filter by maximum amount
         if (request.MaxAmount.HasValue)
         {
             query = query.Where(t => t.Amount <= request.MaxAmount.Value);
         }
 
-        // Filter by creator (user who created the transaction)
         if (request.CreatorId.HasValue)
         {
             query = query.Where(t => t.CreatedById == request.CreatorId.Value);
         }
 
-        // Apply ordering and pagination
         query = query
             .OrderByDescending(t => t.CreatedAtUtc)
             .ThenByDescending(t => t.Id)
             .Take(size);
 
-        // Select transaction items
         var transactions = await query
             .Select(t => new TransactionItem(
                 TransactionId: t.Id,
@@ -97,7 +87,6 @@ public sealed class GetFamilyTransactionsQueryHandler(
             ))
             .ToListAsync(cancellationToken);
 
-        // Handle empty results
         if (transactions.Count == 0)
         {
             return new CursorPagedResponse<TransactionItem>(
@@ -106,12 +95,10 @@ public sealed class GetFamilyTransactionsQueryHandler(
                 HasNextPage: false);
         }
 
-        // Calculate next cursor
         string? nextCursor = transactions.Count == size
             ? transactions.Last().CreatedAtUtc.ToString("o")
             : null;
 
-        // Build response
         return new CursorPagedResponse<TransactionItem>(
             Items: transactions,
             NextCursor: nextCursor,

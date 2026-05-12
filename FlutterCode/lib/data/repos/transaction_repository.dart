@@ -8,7 +8,6 @@ class TransactionRepository {
 
   TransactionRepository(this._apiClient);
 
-  /// Get paginated transactions for current family with optional filters
   Future<TransactionResult> getTransactions({
     int pageSize = 20,
     String? cursor,
@@ -18,11 +17,9 @@ class TransactionRepository {
       AppLogger.info('TransactionRepository',
           'Fetching transactions (pageSize: $pageSize, cursor: $cursor, filters: $filters)');
 
-      // Build query parameters
       final queryParams = {
         'pageSize': pageSize,
         if (cursor != null) 'cursor': cursor,
-        // Add filter parameters
         if (filters != null) ...filters.toQueryParameters(),
       };
 
@@ -60,7 +57,6 @@ class TransactionRepository {
     }
   }
 
-  /// Get family users
   Future<FamilyUsersResult> getFamilyUsers() async {
     try {
       AppLogger.info('TransactionRepository', 'Fetching family users');
@@ -96,7 +92,6 @@ class TransactionRepository {
     }
   }
 
-  /// Create a new transaction
   Future<CreateTransactionResult> createTransaction(
     CreateTransactionRequest request,
   ) async {
@@ -141,7 +136,6 @@ class TransactionRepository {
     }
   }
 
-  /// Update an existing transaction
   Future<UpdateTransactionResult> updateTransaction(
     String transactionId,
     UpdateTransactionRequest request,
@@ -187,7 +181,6 @@ class TransactionRepository {
     }
   }
 
-  /// Delete a transaction
   Future<DeleteTransactionResult> deleteTransaction(
       String transactionId) async {
     try {
@@ -228,8 +221,6 @@ class TransactionRepository {
     }
   }
 }
-
-// ========== Result Models ==========
 
 class TransactionResult {
   final bool isSuccess;

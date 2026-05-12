@@ -1,5 +1,3 @@
-// presentation/settings/pages/settings_page.dart
-
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/core/di/setup_dependency_injection.dart';
 import 'package:famxpense/core/router/routes.dart';
@@ -28,14 +26,12 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    // Check if family is selected
     getIt<LocalStorage>().getSelectedFamilyId().then((familyId) {
       setState(() {
         _isFamilySelected = familyId != null && familyId.isNotEmpty;
       });
     });
 
-    // Load settings - using post frame callback to ensure context is available
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final cubit = context.read<SettingsCubit>();
@@ -175,11 +171,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (confirmed == true) {
-      // Call logout - the AuthCubit will emit AuthUnauthenticated
-      // and the GoRouter's refreshListenable will handle navigation to login
       await getIt<AuthCubit>().logout();
       
-      // Use a post-frame callback to navigate after the current frame completes
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           context.go(Routes.login);
@@ -295,14 +288,12 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // ✅ Validation: Check if trying to disable both notifications
   void _handleNotificationToggle({
     required bool newEmailValue,
     required bool currentPushValue,
     required bool isEmailToggle,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    // If trying to disable both notifications
     if (!newEmailValue && !currentPushValue) {
       _showValidationDialog(
         l10n.cannotDisableAllNotifications,
@@ -311,7 +302,6 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
 
-    // Proceed with update
     context.read<SettingsCubit>().updateNotificationPreferences(
           emailNotifications: newEmailValue,
           pushNotifications: currentPushValue,
@@ -448,7 +438,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
                     Text(
                       l10n.settings,
                       style: TextStyle(

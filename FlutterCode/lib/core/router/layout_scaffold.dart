@@ -21,11 +21,10 @@ class LayoutScaffold extends StatelessWidget {
             BoxShadow(
               color: Colors.black
                   // ignore: deprecated_member_use
-                  .withValues(alpha: 0.2), // shadow color
-              blurRadius: 10, // how soft
+                  .withValues(alpha: 0.2),
+              blurRadius: 10,
               spreadRadius: 0,
-              offset: const Offset(
-                  0, -4), // move shadow up/down
+              offset: const Offset(0, -4),
             ),
           ],
         ),

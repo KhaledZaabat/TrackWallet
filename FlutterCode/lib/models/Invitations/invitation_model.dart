@@ -12,7 +12,6 @@ enum InvitationStatus {
   const InvitationStatus(this.displayName);
 }
 
-/// Invitation model representing a family invitation
 class Invitation extends Equatable {
   final String invitationId;
   final String inviteeUserId;
@@ -68,7 +67,6 @@ class Invitation extends Equatable {
     }
   }
 
-  /// Convert Invitation to JSON for API requests (if needed)
   Map<String, dynamic> toJson() {
     return {
       'invitationId': invitationId,
@@ -84,17 +82,14 @@ class Invitation extends Equatable {
     };
   }
 
-  /// Get formatted date string for display
   String getFormattedDate() {
     return DateFormat('MMM dd, yyyy').format(sentAtUtc.toLocal());
   }
 
-  /// Get role display string
   String getRoleDisplay() {
     return isParent ? 'parent' : 'member';
   }
 
-  /// Create a copy of this Invitation with some fields replaced
   Invitation copyWith({
     String? invitationId,
     String? inviteeUserId,

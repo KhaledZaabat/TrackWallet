@@ -1,5 +1,3 @@
-// data/repos/user_repository.dart
-
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:famxpense/core/Network/ApiClient.dart';
@@ -11,7 +9,6 @@ class UserRepository {
 
   UserRepository(this._apiClient);
 
-  /// Get current user profile
   Future<User> getProfile() async {
     try {
       AppLogger.info('UserRepository', 'Fetching user profile...');
@@ -50,7 +47,6 @@ class UserRepository {
     }
   }
 
-  /// Update user profile
   Future<void> updateProfile({
     required String fullName,
     required DateTime birthDate,
@@ -117,7 +113,6 @@ class UserRepository {
     }
   }
 
-  /// Update user password
   Future<void> updatePassword({
     required String currentPassword,
     required String newPassword,
@@ -167,7 +162,6 @@ class UserRepository {
     }
   }
 
-  /// Update notification preferences
   Future<void> updateNotificationPreferences({
     required bool emailNotifications,
     required bool pushNotifications,

@@ -22,13 +22,11 @@ public sealed class TransactionCreatedEventHandler(
     {
         var transaction = notification.Transaction;
 
-        // Fetch creator name
         var creatorName = await users.Query()
             .Where(u => u.Id == transaction.CreatedById)
             .Select(u => u.UserName)
             .SingleOrDefaultAsync(ct);
 
-        // Fetch family name
         var familyName = await families.Query()
             .Where(f => f.Id == transaction.FamilyId)
             .Select(f => f.Name)

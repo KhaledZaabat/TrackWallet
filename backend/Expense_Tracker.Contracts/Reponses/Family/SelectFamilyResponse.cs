@@ -11,10 +11,7 @@ public sealed record SelectFamilyResponse(
     string FullName,
     TokenResponse JwtToken,
     TokenResponse RefreshToken,
-    FamilyContextDto FamilyContext,
-    List<BudgetHistoryItem> BudgetHistory,
-    List<TransactionItem> RecentTransactions,
-    string? ProfileImageUrl = null
+    FamilyContextDto FamilyContext
 );
 
 

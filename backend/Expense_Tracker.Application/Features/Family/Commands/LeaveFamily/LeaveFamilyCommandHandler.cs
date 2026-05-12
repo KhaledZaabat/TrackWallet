@@ -17,7 +17,6 @@ public sealed class LeaveFamilyCommandHandler(
         LeaveFamilyCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Find the user's membership in the family
         var familyUser = await familyUsers.QueryTracked()
             .FirstOrDefaultAsync(
                 fu => fu.FamilyId == request.FamilyId && fu.UserId == request.UserId,
@@ -26,7 +25,6 @@ public sealed class LeaveFamilyCommandHandler(
         if (familyUser is null)
             return DomainErrors.GeneralErrors.NotFound(nameof(FamilyUser), "You are not a member of this family.");
 
-        // 2. If user is a parent, check if there are other parents
         if (familyUser.IsParent)
         {
             var otherParentsCount = await familyUsers.QueryTracked()
@@ -63,10 +61,8 @@ public sealed class LeaveFamilyCommandHandler(
             }
         }
 
-        // 3. Remove the family user record
         familyUsers.Remove(familyUser);
 
-        // 4. Save changes
         await familyUsers.SaveChangesAsync(cancellationToken);
 
         return new Success();

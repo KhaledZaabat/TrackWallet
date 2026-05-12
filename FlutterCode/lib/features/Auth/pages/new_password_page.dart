@@ -1,5 +1,3 @@
-// features/auth/presentation/reset_password/pages/new_password_page.dart
-
 import 'package:famxpense/features/Auth/cubit/reset_password_cubit.dart';
 import 'package:famxpense/features/Auth/cubit/reset_password_state.dart';
 import 'package:famxpense/features/Auth/pages/validation_patterns.dart';

@@ -1,10 +1,6 @@
 import 'package:famxpense/models/Transactions/transaction_models.dart';
 import 'package:equatable/equatable.dart';
 
-// ========== MyFamily Page Models ==========
-
-/// Represents a single family member with detailed profile information
-/// Used in the MyFamily page to display all family members
 class FamilyMember extends Equatable {
   final String userId;
   final String fullName;
@@ -24,7 +20,6 @@ class FamilyMember extends Equatable {
     required this.isParent,
   });
 
-  /// Create FamilyMember from API JSON response
   factory FamilyMember.fromJson(Map<String, dynamic> json) {
     return FamilyMember(
       userId: json['userId'] as String,
@@ -51,8 +46,6 @@ class FamilyMember extends Equatable {
   ];
 }
 
-/// Represents the complete family details including all members
-/// Used in the MyFamily page to display family info and member list
 class FamilyDetails extends Equatable {
   final String id;
   final String name;
@@ -68,7 +61,6 @@ class FamilyDetails extends Equatable {
     required this.members,
   });
 
-  /// Create FamilyDetails from API JSON response (/api/families/me)
   factory FamilyDetails.fromJson(Map<String, dynamic> json) {
     return FamilyDetails(
       id: json['id'] as String,
@@ -85,8 +77,6 @@ class FamilyDetails extends Equatable {
   @override
   List<Object?> get props => [id, name, currentBudget, familyBio, members];
 }
-
-// ========== Existing Models ==========
 
 class FamilyListResult {
   final bool isSuccess;
@@ -165,8 +155,6 @@ class FamilyMemberProfile {
   }
 }
 
-// ========== Select Family Models ==========
-
 class SelectFamilyResult {
   final bool isSuccess;
   final String? errorMessage;
@@ -229,8 +217,6 @@ class SelectFamilyData {
   });
 }
 
-// ========== Family Context ==========
-
 class FamilyContext {
   final String familyId;
   final String familyName;
@@ -255,8 +241,6 @@ class FamilyContext {
     );
   }
 }
-
-// ========== Budget History ==========
 
 class BudgetHistoryItem {
   final double budget;

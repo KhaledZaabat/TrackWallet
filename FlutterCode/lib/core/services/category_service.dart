@@ -5,14 +5,12 @@ import 'package:famxpense/domain/entities/category.dart';
 class CategoryService {
   final ApiClient _apiClient;
 
-  // In-memory cache
   Map<String, CategoryData>? _categoriesById;
   List<CategoryData>? _allCategories;
   bool _isInitialized = false;
 
   CategoryService(this._apiClient);
 
-  /// Initialize categories on app start
   Future<void> initialize() async {
     if (_isInitialized) {
       AppLogger.info('CategoryService', 'Already initialized, skipping...');
@@ -52,7 +50,6 @@ class CategoryService {
     }
   }
 
-  /// Get category by ID
   CategoryData? getCategoryById(String categoryId) {
     if (!_isInitialized) {
       AppLogger.error(
@@ -62,7 +59,6 @@ class CategoryService {
     return _categoriesById?[categoryId];
   }
 
-  /// Get all categories
   List<CategoryData> getAllCategories() {
     if (!_isInitialized) {
       AppLogger.error('CategoryService',
@@ -72,21 +68,17 @@ class CategoryService {
     return _allCategories ?? [];
   }
 
-  /// Get category type by ID (for icon mapping)
   CategoryType? getCategoryTypeById(String categoryId) {
     final category = getCategoryById(categoryId);
     return category?.categoryType;
   }
 
-  /// Check if service is initialized
   bool get isInitialized => _isInitialized;
 
-  /// Get categories by type (for filtering)
   List<CategoryData> getCategoriesByType(CategoryType type) {
     return getAllCategories().where((cat) => cat.categoryType == type).toList();
   }
 
-  /// Search categories by name
   List<CategoryData> searchCategories(String query) {
     if (query.isEmpty) return getAllCategories();
 
@@ -98,7 +90,6 @@ class CategoryService {
         .toList();
   }
 
-  /// Force refresh categories (optional, in case of updates)
   Future<void> refresh() async {
     _isInitialized = false;
     _categoriesById = null;
@@ -106,7 +97,6 @@ class CategoryService {
     await initialize();
   }
 
-  /// Clear cache
   void clear() {
     _isInitialized = false;
     _categoriesById = null;

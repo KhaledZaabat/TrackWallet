@@ -87,11 +87,9 @@ public static class FileHelper
     {
         var header = await GetFileHeaderAsync(file, ct);
 
-        // First check if blocked
         if (IsSignatureBlocked(header))
             return false;
 
-        // Then check if allowed
         return IsSignatureAllowed(header);
     }
 

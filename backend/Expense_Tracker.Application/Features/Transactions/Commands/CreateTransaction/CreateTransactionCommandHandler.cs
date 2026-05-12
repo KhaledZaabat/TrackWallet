@@ -29,7 +29,6 @@ public sealed class CreateTransactionCommandHandler(
         CreateTransactionCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Verify user is a member of the family
         var isMember = await familyUserRepo.Query()
             .AnyAsync(fu =>
                 fu.UserId == request.UserId &&
@@ -39,14 +38,12 @@ public sealed class CreateTransactionCommandHandler(
         if (!isMember)
             return DomainErrors.GeneralErrors.NotFound("User is not a member of this family.");
 
-        // 2. Verify category exists
         var categoryExists = await categoryRepo.Query()
             .AnyAsync(c => c.Id == request.CategoryId, cancellationToken);
 
         if (!categoryExists)
             return DomainErrors.GeneralErrors.NotFound(nameof(Category));
 
-        // 3. Create transaction
         var transactionResult = Transaction.Create(
             type: request.Type,
             amount: request.Amount,
@@ -63,7 +60,6 @@ public sealed class CreateTransactionCommandHandler(
 
         Transaction transaction = transactionResult.Value;
 
-        // 4. Update family budget
         var family = await familyRepo.QueryTracked()
             .FirstOrDefaultAsync(f => f.Id == request.FamilyId, cancellationToken);
 
@@ -76,14 +72,11 @@ public sealed class CreateTransactionCommandHandler(
         if (budgetResult.IsError)
             return budgetResult.Errors;
 
-        // 5. Save transaction and updated family
         await transactionRepo.AddAsync(transaction);
         await transactionRepo.SaveChangesAsync(cancellationToken);
 
-        // 6. Publish event
         await bus.PublishAsync(new TransactionCreatedEvent(transaction));
 
-        // 7. Get complete transaction details for response
         var transactionResponse = await transactionRepo.Query()
             .Where(t => t.Id == transaction.Id)
             .Select(t => new TransactionResponse(

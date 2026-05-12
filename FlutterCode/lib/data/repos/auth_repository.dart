@@ -1,5 +1,3 @@
-// data/repositories/auth_repository.dart
-
 import 'package:dio/dio.dart';
 import 'package:famxpense/core/Network/ApiClient.dart';
 import 'package:famxpense/core/app_logger.dart';
@@ -24,7 +22,6 @@ class AuthRepository {
     this._deviceManager,
   );
 
-  /// Register new user
   Future<RegisterResult> register({
     required String email,
     required String password,
@@ -38,11 +35,9 @@ class AuthRepository {
       AppLogger.info(_tag, 'Starting user registration for email: $email');
       final deviceInfo = await _deviceManager.getDeviceInfo();
 
-      // Format birth date as yyyy-MM-dd
       final formattedDate =
           '${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}';
 
-      // Create FormData
       final formData = FormData.fromMap({
         'Email': email,
         'Password': password,
@@ -52,7 +47,6 @@ class AuthRepository {
         'IsMale': isMale,
       });
 
-      // Add profile image if provided
       if (profileImagePath != null) {
         formData.files.add(
           MapEntry(
@@ -112,7 +106,6 @@ class AuthRepository {
     }
   }
 
-  /// Resend confirmation OTP
   Future<OtpResult> resendConfirmationOtp({
     required String email,
   }) async {
@@ -163,7 +156,6 @@ class AuthRepository {
     }
   }
 
-  /// Confirm account with OTP
   Future<OtpResult> confirmAccount({
     required String email,
     required String otp,
@@ -213,7 +205,6 @@ class AuthRepository {
     }
   }
 
-  /// Login with email/username and password
   Future<AuthResult> login({
     required String identifier,
     required String password,
@@ -221,7 +212,6 @@ class AuthRepository {
     try {
       AppLogger.info(_tag, 'Starting login for: $identifier');
 
-      // Get device info
       final deviceInfo = await _deviceManager.getDeviceInfo();
       AppLogger.info(_tag, 'Device ID: ${deviceInfo.deviceId}');
 
@@ -241,7 +231,6 @@ class AuthRepository {
       if (response.statusCode == 200) {
         final data = response.data;
 
-        // Save auth tokens
         await _localStorage.saveAuthTokens(
           data['jwtToken']['token'],
           data['refreshToken']['token'],
@@ -290,7 +279,6 @@ class AuthRepository {
     }
   }
 
-  /// Google login (mobile)
   Future<AuthResult> loginWithGoogle(String idToken) async {
     try {
       AppLogger.info(_tag, '🔐 Starting Google login');
@@ -375,7 +363,6 @@ class AuthRepository {
     }
   }
 
-  /// Logout
   Future<bool> logout() async {
     try {
       AppLogger.info(_tag, 'Starting logout');
@@ -457,7 +444,6 @@ class AuthRepository {
     }
   }
 
-  /// Verify reset password OTP
   Future<OtpResult> verifyResetPasswordOtp({
     required String email,
     required String otp,
@@ -509,7 +495,6 @@ class AuthRepository {
     }
   }
 
-  /// Reset password
   Future<OtpResult> resetPassword({
     required String email,
     required String newPassword,
@@ -563,14 +548,12 @@ class AuthRepository {
     }
   }
 
-  /// Check if user is authenticated
   Future<bool> isAuthenticated() async {
     final result = await _localStorage.hasAuthTokens();
     AppLogger.info(_tag, 'User authenticated: $result');
     return result;
   }
 
-  /// Get current user ID
   Future<String?> getCurrentUserId() async {
     final userId = await _localStorage.getUserId();
     AppLogger.info(_tag, 'Current user ID: ${userId ?? "None"}');
@@ -608,13 +591,11 @@ class AuthRepository {
       if (response.statusCode == 200) {
         final data = response.data;
 
-        // Save new tokens
         await _localStorage.saveAuthTokens(
           data['jwtToken']['token'],
           data['refreshToken']['token'],
         );
 
-        // Save user ID
         await _localStorage.saveUserId(data['userId']);
 
         AppLogger.info(_tag,
@@ -644,7 +625,6 @@ class AuthRepository {
       AppLogger.error(_tag, 'Response data: ${e.response?.data}');
 
       if (e.response?.statusCode == 401) {
-        // Refresh token is invalid, clear storage
         await _localStorage.clearAuthTokens();
         AppLogger.info(_tag, 'Session expired, tokens cleared');
         return AuthResult.failure('Session expired');
@@ -657,5 +637,3 @@ class AuthRepository {
     }
   }
 }
-
-// ========== Result Models ==========

@@ -9,7 +9,6 @@ public sealed class ApplicationUserConfiguration
 {
     public void Configure(EntityTypeBuilder<ApplicationUser> builder)
     {
-        // Identity table
         builder.ToTable("AspNetUsers");
 
 
@@ -23,10 +22,6 @@ public sealed class ApplicationUserConfiguration
             .IsRequired(false);
 
         builder.HasQueryFilter(u => !u.IsDeleted);
-
-        // -----------------------------
-        // Refresh tokens
-        // -----------------------------
 
         builder.HasMany(u => u.RefreshTokens)
             .WithOne()

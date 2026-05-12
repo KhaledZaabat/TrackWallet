@@ -17,13 +17,6 @@ import 'package:famxpense/features/Families/Cubits/select_family_cubit.dart';
 import 'package:famxpense/core/router/routes.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// MyFamily page displays all members of the currently selected family
-///
-/// Features:
-/// - Family header with name, budget, bio, and edit button
-/// - List of all family members with profile information
-/// - Kick member functionality (parents only)
-/// - Edit family info (parents only)
 class MyFamilyPage extends StatelessWidget {
   const MyFamilyPage({super.key});
 
@@ -131,7 +124,6 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
               Navigator.pop(dialogContext);
               final success = await context.read<MyFamilyCubit>().leaveFamily();
               if (success && mounted) {
-                // Refresh families list before navigating
                 getIt<SelectFamilyCubit>().loadFamilies();
                 context.go(Routes.selectFamily);
               }
@@ -260,7 +252,6 @@ class _MyFamilyViewState extends State<_MyFamilyView> {
                         },
                       ),
                       const SizedBox(height: 24),
-                      // Leave Family Button
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: OutlinedButton.icon(

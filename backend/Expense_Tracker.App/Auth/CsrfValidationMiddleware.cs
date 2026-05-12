@@ -1,14 +1,19 @@
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 namespace Expense_Tracker.App.Auth;
 
 /// <summary>
-/// Validates the CSRF header on unsafe HTTP methods targeting authorized endpoints.
-/// Runs between <c>SilentRefreshMiddleware</c> and <c>UseAuthorization</c>; short-circuits
-/// with <c>403 Forbidden</c> on validation failure without emitting any cookies or
-/// touching the auth rotation pipeline (R12.3, R12.4, R12.5).
+/// Double-submit cookie CSRF check: the SPA reads the CSRF token from a non-HttpOnly
+/// cookie and echoes it back in the <see cref="CsrfOptions.HeaderName"/> header.
+/// A matching header ↔ cookie pair on unsafe HTTP methods targeting authorized endpoints
+/// proves same-origin intent, because a cross-origin attacker cannot read the cookie and
+/// therefore cannot reproduce its value in a custom header.
+///
+/// This replaces ASP.NET Core's <c>IAntiforgery</c> token system, which binds tokens to
+/// the claims-based user identity and is incompatible with a stateless bearer-over-cookie
+/// SPA where the user transitions from anonymous (at login) to authenticated between
+/// token issuance and validation.
 /// </summary>
 public sealed class CsrfValidationMiddleware
 {
@@ -21,17 +26,11 @@ public sealed class CsrfValidationMiddleware
     };
 
     private readonly RequestDelegate _next;
-    private readonly IAntiforgery _antiforgery;
     private readonly IOptionsMonitor<CsrfOptions> _csrfOpts;
 
-    public CsrfValidationMiddleware(
-        RequestDelegate next,
-        IAntiforgery antiforgery,
-        IOptionsMonitor<CsrfOptions> csrfOpts
-    )
+    public CsrfValidationMiddleware(RequestDelegate next, IOptionsMonitor<CsrfOptions> csrfOpts)
     {
         _next = next;
-        _antiforgery = antiforgery;
         _csrfOpts = csrfOpts;
     }
 
@@ -39,7 +38,6 @@ public sealed class CsrfValidationMiddleware
     {
         CsrfOptions opts = _csrfOpts.CurrentValue;
 
-        // R12.5 — exempt paths (login, register, refresh, password flows, etc.).
         foreach (string exempt in opts.ExemptPaths)
         {
             if (ctx.Request.Path.StartsWithSegments(exempt, StringComparison.OrdinalIgnoreCase))
@@ -49,7 +47,6 @@ public sealed class CsrfValidationMiddleware
             }
         }
 
-        // R12.3 — only validate on unsafe methods AND when the endpoint requires authorization.
         bool unsafeMethod = UnsafeMethods.Contains(ctx.Request.Method);
         bool requiresAuth = EndpointAuthInspector.RequiresAuthorization(ctx);
 
@@ -59,18 +56,33 @@ public sealed class CsrfValidationMiddleware
             return;
         }
 
-        try
+        string? cookieToken = ctx.Request.Cookies[opts.CookieName];
+        string? headerToken = ctx.Request.Headers[opts.HeaderName].ToString();
+
+        if (
+            string.IsNullOrEmpty(cookieToken)
+            || string.IsNullOrEmpty(headerToken)
+            || !FixedTimeEquals(cookieToken, headerToken)
+        )
         {
-            await _antiforgery.ValidateRequestAsync(ctx);
-        }
-        catch (AntiforgeryValidationException)
-        {
-            // R12.4 — short-circuit with 403 and no additional cookies / no rotation.
             ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
             ctx.Response.ContentLength = 0;
             return;
         }
 
         await _next(ctx);
+    }
+
+    private static bool FixedTimeEquals(string a, string b)
+    {
+        if (a.Length != b.Length)
+            return false;
+
+        int diff = 0;
+        for (int i = 0; i < a.Length; i++)
+        {
+            diff |= a[i] ^ b[i];
+        }
+        return diff == 0;
     }
 }

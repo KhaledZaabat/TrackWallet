@@ -21,7 +21,6 @@ public sealed class UpdateTransactionCommandHandler(
         UpdateTransactionCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Load transaction with required relations
         var transaction = await transactionRepo.QueryTracked()
             .Include(t => t.Family)
             .Include(t => t.Category)
@@ -31,7 +30,6 @@ public sealed class UpdateTransactionCommandHandler(
         if (transaction is null)
             return DomainErrors.GeneralErrors.NotFound(nameof(Transaction));
 
-        // 2. Verify family access
         if (transaction.FamilyId != request.FamilyId)
             return DomainErrors.GeneralErrors.Forbidden("You don't have access to this transaction.");
 
@@ -44,11 +42,10 @@ public sealed class UpdateTransactionCommandHandler(
         if (!isFamilyMember)
             return DomainErrors.GeneralErrors.Forbidden("You are not a member of this family.");
 
-        // 3. Store old values for budget reversal
+        // Store old values for budget reversal
         decimal oldAmount = transaction.Amount;
         bool oldIsExpense = transaction.Type == TransactionType.Expense;
 
-        // 4. Update transaction fields
         if (request.Title is not null)
         {
             var result = transaction.Rename(request.Title);
@@ -77,7 +74,6 @@ public sealed class UpdateTransactionCommandHandler(
                 return result.Errors;
         }
 
-        // 5. Handle amount/type change (budget impact)
         bool amountChanged = request.Amount.HasValue && request.Amount.Value != oldAmount;
         bool typeChanged = request.Type.HasValue && request.Type.Value != transaction.Type;
 
@@ -119,10 +115,9 @@ public sealed class UpdateTransactionCommandHandler(
                 return applyResult.Errors;
         }
 
-        // 6. Save changes
         await transactionRepo.SaveChangesAsync(cancellationToken);
 
-        // 7. Re-query and return full response (same as CreateTransaction)
+        // Re-query and return full response (same as CreateTransaction)
         var transactionResponse = await transactionRepo.Query()
             .Where(t => t.Id == transaction.Id)
             .Select(t => new TransactionResponse(

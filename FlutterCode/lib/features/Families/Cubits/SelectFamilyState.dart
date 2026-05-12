@@ -13,7 +13,6 @@ class SelectFamilyFamiliesLoaded extends SelectFamilyState {
 }
 
 class SelectFamilySuccess extends SelectFamilyState {
-  // No data needed - just indicates successful selection
   SelectFamilySuccess();
 }
 

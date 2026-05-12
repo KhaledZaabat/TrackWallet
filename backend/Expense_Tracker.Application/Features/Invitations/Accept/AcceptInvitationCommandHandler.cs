@@ -19,7 +19,6 @@ public sealed class AcceptInvitationCommandHandler(
         AcceptInvitationCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Get invitation
         Invitation? invitation = await invitationRepo.QueryTracked()
             .Include(i => i.Family)
             .FirstOrDefaultAsync(i => i.Id == request.InvitationId, cancellationToken);
@@ -27,16 +26,13 @@ public sealed class AcceptInvitationCommandHandler(
         if (invitation is null)
             return DomainErrors.GeneralErrors.NotFound(nameof(Invitation));
 
-        // 2. Verify user is the invitee
         if (invitation.InviteeUserId != request.UserId)
             return DomainErrors.GeneralErrors.Forbidden("You can only accept invitations sent to you.");
 
-        // 3. Accept invitation (domain logic)
         ErrorOr<Success> acceptResult = invitation.Accept();
         if (acceptResult.IsError)
             return acceptResult.Errors;
 
-        // 4. Add user to family
         ErrorOr<FamilyUser> familyUserResult = FamilyUser.Create(
             invitation.FamilyId,
             invitation.InviteeUserId,
@@ -49,10 +45,8 @@ public sealed class AcceptInvitationCommandHandler(
         FamilyUser familyUser = familyUserResult.Value;
         await familyUserRepo.AddAsync(familyUser);
 
-        // 5. Save changes
         await invitationRepo.SaveChangesAsync(cancellationToken);
 
-        // 6. Publish event
         await bus.PublishAsync(new InvitationAcceptedEvent(invitation));
 
         return new Success();

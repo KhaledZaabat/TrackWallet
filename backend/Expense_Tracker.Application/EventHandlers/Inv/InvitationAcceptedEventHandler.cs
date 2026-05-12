@@ -22,7 +22,6 @@ public sealed class InvitationAcceptedEventHandler(
         InvitationAcceptedEvent notification,
         CancellationToken ct)
     {
-        // Get invitee, inviter, and family information
         var inviteeInfo = await users.Query()
             .Where(u => u.Id == notification.Invitation.InviteeUserId)
             .Select(u => u.UserName)
@@ -38,7 +37,6 @@ public sealed class InvitationAcceptedEventHandler(
             .Select(f => f.Name)
             .SingleOrDefaultAsync(ct);
 
-        // Notify the inviter
         DomainNotification domainNotification = DomainNotification.Create(
             userId: notification.Invitation.InviterUserId,
             title: "✅ Invitation accepted",
@@ -55,7 +53,6 @@ public sealed class InvitationAcceptedEventHandler(
 
         await dispatcher.EnqueueAsync(domainNotification, ct);
 
-        // Send email if enabled
         if (inviterInfo?.EmailNotifications == true && !string.IsNullOrWhiteSpace(inviterInfo.Email))
         {
             await SendAcceptedEmailAsync(

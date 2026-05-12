@@ -4,7 +4,6 @@ import 'package:famxpense/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// Reusable card widget displaying a single invitation with appropriate action buttons
 class InvitationCard extends StatelessWidget {
   final Invitation invitation;
   final VoidCallback? onAccept;

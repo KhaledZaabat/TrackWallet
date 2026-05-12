@@ -2,34 +2,17 @@ using Serilog.Core;
 using Serilog.Events;
 
 namespace Expense_Tracker.App.Logging;
-
-/// <summary>
-/// Serilog enricher that masks properties whose names indicate token or cookie
-/// values so nothing emitted through ILogger leaks raw or hashed auth material
-/// (R10.4, R18.4). Also walks into nested <see cref="StructureValue"/> payloads
-/// (e.g. scopes that expose AuthCookieOptions or HTTP request objects) and
-/// rewrites the offending properties in place.
-/// </summary>
 public sealed class AuthTokenScrubber : ILogEventEnricher
 {
     private const string RedactedMarker = "***REDACTED***";
-
-    /// <summary>
-    /// Property names (case-insensitive) whose values MUST NOT be emitted in any form.
-    /// Covers the literal property names mentioned in tasks.md (TokenHash, accessToken,
-    /// refreshToken, xsrf, Cookie, Set-Cookie) and the header / cookie-option
-    /// payloads that might surface through ASP.NET Core scopes.
-    /// </summary>
     private static readonly HashSet<string> ForbiddenNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Explicit task names.
         "TokenHash",
         "accessToken",
         "refreshToken",
         "xsrf",
         "Cookie",
         "Set-Cookie",
-        // Common cookie/header variants and AuthCookieOptions sub-properties.
         "XSRF-TOKEN",
         "X-XSRF-TOKEN",
         "Authorization",

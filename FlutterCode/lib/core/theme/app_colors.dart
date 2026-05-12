@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary Monochromes
   static const Color black = Color(0xFF101010);
   static const Color darkGrey = Color(0xFF2C2C2E);
   static const Color grey = Color(0xFF8E8E93);
@@ -14,7 +13,6 @@ class AppColors {
   static const Color success = Color(0xFF32D74B); // Modern Green
   static const Color warning = Color(0xFFFF9F0A); // Modern Orange
 
-  // Theme Specific
   static const Color primary = black;
   static const Color background = Color(0xFFF5F5F5); // Slightly off-white for depth
   static const Color surface = white;
@@ -22,7 +20,6 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6C6C70);
   static const Color border = Color(0xFFE5E5EA);
 
-  // Gradient helper (Wolf Vibe)
   static const LinearGradient wolfGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

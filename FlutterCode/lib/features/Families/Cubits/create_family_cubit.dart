@@ -10,7 +10,6 @@ class CreateFamilyCubit extends Cubit<CreateFamilyState> {
 
   CreateFamilyCubit(this._familyRepository) : super(CreateFamilyInitial());
 
-  /// Create a new family
   Future<void> createFamily({
     required String name,
     required double initialBudget,
@@ -29,7 +28,6 @@ class CreateFamilyCubit extends Cubit<CreateFamilyState> {
     emit(CreateFamilyLoading());
 
     try {
-      // Log before API call
       AppLogger.info(
         'CreateFamilyCubit',
         'Creating family: $name, budget: $initialBudget',
@@ -42,14 +40,12 @@ class CreateFamilyCubit extends Cubit<CreateFamilyState> {
       );
 
       if (result.isSuccess && result.family != null) {
-        // Log success
         AppLogger.info(
           'CreateFamilyCubit',
           'Family created successfully: ${result.family!.id}',
         );
         emit(CreateFamilySuccess(family: result.family!));
       } else {
-        // Log failure from repository
         AppLogger.error(
           'CreateFamilyCubit',
           'Failed to create family: ${result.errorMessage}',
@@ -59,7 +55,6 @@ class CreateFamilyCubit extends Cubit<CreateFamilyState> {
         ));
       }
     } catch (e, stackTrace) {
-      // Log unexpected errors
       AppLogger.error(
         'CreateFamilyCubit',
         'Error creating family',
@@ -70,7 +65,6 @@ class CreateFamilyCubit extends Cubit<CreateFamilyState> {
     }
   }
 
-  /// Reset to initial state
   void reset() {
     emit(CreateFamilyInitial());
   }

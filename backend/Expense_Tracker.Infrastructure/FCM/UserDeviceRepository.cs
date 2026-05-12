@@ -119,7 +119,6 @@ public sealed class UserDeviceRepository(
         // Subscribe to FCM topic
         await topicService.SubscribeToTopicAsync(tokens, topic, cancellationToken);
 
-        // Update local tracking
         foreach (var device in devices)
         {
             device.SubscribeToTopic(topic);
@@ -143,7 +142,6 @@ public sealed class UserDeviceRepository(
         // Unsubscribe from FCM topic
         await topicService.UnsubscribeFromTopicAsync(tokens, topic, cancellationToken);
 
-        // Update local tracking
         foreach (var device in devices)
         {
             device.UnsubscribeFromTopic(topic);

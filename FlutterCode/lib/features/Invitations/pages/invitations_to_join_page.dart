@@ -9,7 +9,6 @@ import 'package:famxpense/features/Invitations/cubit/invitations_state.dart';
 import 'package:famxpense/features/Invitations/widgets/invitation_card.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// Page for users to view and accept/decline invitations to JOIN families
 class InvitationsToJoinPage extends StatelessWidget {
   const InvitationsToJoinPage({super.key});
 

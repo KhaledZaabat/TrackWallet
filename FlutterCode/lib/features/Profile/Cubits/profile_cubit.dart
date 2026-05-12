@@ -13,7 +13,6 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   ProfileCubit(this._userRepository, this._dashboardCubit, this._myFamilyCubit) : super(const ProfileInitial());
 
-  /// Load current user profile
   Future<void> loadProfile() async {
     try {
       emit(const ProfileLoading());
@@ -34,7 +33,6 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  /// Update user profile
   Future<void> updateProfile({
     required String fullName,
     required DateTime birthDate,
@@ -68,10 +66,8 @@ class ProfileCubit extends Cubit<ProfileState> {
         profileImage: profileImage,
       );
 
-      // Reload profile to get updated data
       final updatedUser = await _userRepository.getProfile();
 
-      // Refresh dashboard and family to reflect profile changes
       _dashboardCubit.refresh();
       _myFamilyCubit.loadFamilyDetails();
 
@@ -81,7 +77,6 @@ class ProfileCubit extends Cubit<ProfileState> {
         'Profile updated successfully',
       ));
 
-      // After showing success, transition back to loaded state
       await Future.delayed(const Duration(milliseconds: 100));
       emit(ProfileLoaded(updatedUser));
     } catch (e, stackTrace) {
@@ -95,7 +90,6 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  /// Refresh profile data
   Future<void> refreshProfile() async {
     final currentState = state;
 

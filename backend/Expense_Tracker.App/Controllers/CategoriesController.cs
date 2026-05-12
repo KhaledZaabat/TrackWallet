@@ -12,13 +12,6 @@ namespace Expense_Tracker.App.Controllers;
 [ApiVersion("1.0")]
 public class CategoriesController(IMessageBus bus) : ControllerBase
 {
-    /// <summary>
-    /// Retrieves all available transactions categories.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A list of <see cref="CategoryResponse"/> representing all categories.</returns>
-    /// <response code="200">Categories retrieved successfully.</response>
-    /// <response code="401">User is not authenticated or family context is missing.</response>
     [HttpGet]
     [ProducesResponseType(typeof(List<CategoryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

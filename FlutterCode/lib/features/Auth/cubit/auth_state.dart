@@ -2,13 +2,10 @@ import 'package:famxpense/models/Family/FamilyInfo.dart';
 
 sealed class AuthState {}
 
-/// Initial state when app starts
 class AuthInitial extends AuthState {}
 
-/// Checking if user is already logged in (checking stored tokens)
 class AuthChecking extends AuthState {}
 
-/// User is authenticated
 class AuthAuthenticated extends AuthState {
   final String userId;
   final String email;
@@ -25,13 +22,10 @@ class AuthAuthenticated extends AuthState {
   });
 }
 
-/// User is not authenticated
 class AuthUnauthenticated extends AuthState {}
 
-/// Loading during login/logout
 class AuthLoading extends AuthState {}
 
-/// Login failed
 class AuthError extends AuthState {
   final String message;
 

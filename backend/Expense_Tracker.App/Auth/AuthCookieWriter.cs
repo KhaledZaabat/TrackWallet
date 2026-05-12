@@ -1,6 +1,6 @@
+using System.Security.Cryptography;
 using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Interfaces;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
@@ -9,24 +9,20 @@ using Microsoft.Extensions.Options;
 namespace Expense_Tracker.App.Auth;
 
 /// <summary>
-/// Centralised writer for every authentication-related cookie (access, refresh, CSRF).
-/// All attributes (HttpOnly, Secure, SameSite, Path, Domain, Expires, Name) originate here
-/// so they cannot drift between call sites. Direct <c>Response.Cookies.Append</c> /
-/// <c>Response.Cookies.Delete</c> for auth cookies is forbidden elsewhere in the
-/// application (R17.1, R22.2).
+/// Single source of truth for every authentication-related cookie (access token,
+/// refresh token, CSRF double-submit token). All <see cref="CookieOptions"/> live
+/// here so attributes cannot drift between write and clear call-sites.
 /// </summary>
 public sealed class AuthCookieWriter(
     IOptionsMonitor<AuthCookieOptions> cookieOpts,
     IOptionsMonitor<CsrfOptions> csrfOpts,
-    IWebHostEnvironment env,
-    IAntiforgery antiforgery
+    IWebHostEnvironment env
 ) : IAuthCookieWriter, IScopedService
 {
     public void WriteAccessCookie(HttpContext ctx, string accessToken, DateTimeOffset expiresAt)
     {
         AuthCookieOptions c = cookieOpts.CurrentValue;
-        CookieOptions opts = BuildAccessCookieOptions(c, expiresAt);
-        ctx.Response.Cookies.Append(c.AccessCookieName, accessToken, opts);
+        ctx.Response.Cookies.Append(c.AccessCookieName, accessToken, BuildAccessOpts(c, expiresAt));
     }
 
     public void WriteRefreshCookie(
@@ -36,25 +32,27 @@ public sealed class AuthCookieWriter(
     )
     {
         AuthCookieOptions c = cookieOpts.CurrentValue;
-        CookieOptions opts = BuildRefreshCookieOptions(c, expiresAt);
-        ctx.Response.Cookies.Append(c.RefreshCookieName, rawRefreshToken, opts);
+        ctx.Response.Cookies.Append(
+            c.RefreshCookieName,
+            rawRefreshToken,
+            BuildRefreshOpts(c, expiresAt)
+        );
     }
 
+    /// <summary>
+    /// Issues a cryptographically random CSRF token as a non-HttpOnly cookie. The SPA
+    /// reads this cookie and echoes its value in the <see cref="CsrfOptions.HeaderName"/>
+    /// header on unsafe requests. <see cref="CsrfValidationMiddleware"/> validates that
+    /// the header matches the cookie (double-submit cookie pattern, OWASP recommended).
+    /// No ASP.NET Core <c>IAntiforgery</c> involvement — no user-identity binding issues.
+    /// </summary>
     public void IssueCsrfCookie(HttpContext ctx)
     {
-        // IAntiforgery.GetAndStoreTokens emits its own Set-Cookie for the request token.
-        // We then re-assert our CsrfOptions-owned attributes by appending the same cookie name
-        // with our explicit CookieOptions so the final header carries our Path/Domain/Secure/SameSite.
-        AntiforgeryTokenSet tokens = antiforgery.GetAndStoreTokens(ctx);
-
-        CsrfOptions csrf = csrfOpts.CurrentValue;
         AuthCookieOptions c = cookieOpts.CurrentValue;
+        CsrfOptions csrf = csrfOpts.CurrentValue;
 
-        if (!string.IsNullOrEmpty(tokens.RequestToken))
-        {
-            CookieOptions opts = BuildCsrfCookieOptions(c, csrf);
-            ctx.Response.Cookies.Append(csrf.CookieName, tokens.RequestToken, opts);
-        }
+        string token = GenerateCsrfToken();
+        ctx.Response.Cookies.Append(csrf.CookieName, token, BuildCsrfOpts(c, csrf));
     }
 
     public void RefreshCsrfCookie(HttpContext ctx) => IssueCsrfCookie(ctx);
@@ -63,19 +61,14 @@ public sealed class AuthCookieWriter(
     {
         AuthCookieOptions c = cookieOpts.CurrentValue;
         CsrfOptions csrf = csrfOpts.CurrentValue;
-
-        // Use the same attributes (Path, Domain, Secure, SameSite, HttpOnly) with an expired
-        // Expires / zero Max-Age so the browser actually deletes each cookie (R14.2, R22.9).
         DateTimeOffset epoch = DateTimeOffset.UnixEpoch;
 
-        CookieOptions access = BuildAccessCookieOptions(c, epoch);
-        CookieOptions refresh = BuildRefreshCookieOptions(c, epoch);
-        CookieOptions csrfOut = BuildCsrfCookieOptions(c, csrf);
-        csrfOut.Expires = epoch;
+        ctx.Response.Cookies.Append(c.AccessCookieName, string.Empty, BuildAccessOpts(c, epoch));
+        ctx.Response.Cookies.Append(c.RefreshCookieName, string.Empty, BuildRefreshOpts(c, epoch));
 
-        ctx.Response.Cookies.Append(c.AccessCookieName, string.Empty, access);
-        ctx.Response.Cookies.Append(c.RefreshCookieName, string.Empty, refresh);
-        ctx.Response.Cookies.Append(csrf.CookieName, string.Empty, csrfOut);
+        CookieOptions csrfClear = BuildCsrfOpts(c, csrf);
+        csrfClear.Expires = epoch;
+        ctx.Response.Cookies.Append(csrf.CookieName, string.Empty, csrfClear);
     }
 
     public IReadOnlyList<AuthCookieDescriptor> GetRegisteredDescriptors()
@@ -86,34 +79,13 @@ public sealed class AuthCookieWriter(
 
         return
         [
-            new AuthCookieDescriptor(
-                Name: c.AccessCookieName,
-                HttpOnly: true,
-                Secure: secure,
-                SameSite: c.AccessSameSite,
-                Path: c.AccessPath,
-                Domain: c.Domain
-            ),
-            new AuthCookieDescriptor(
-                Name: c.RefreshCookieName,
-                HttpOnly: true,
-                Secure: secure,
-                SameSite: c.RefreshSameSite,
-                Path: c.RefreshPath,
-                Domain: c.Domain
-            ),
-            new AuthCookieDescriptor(
-                Name: csrf.CookieName,
-                HttpOnly: false,
-                Secure: secure,
-                SameSite: csrf.SameSite,
-                Path: c.CsrfPath,
-                Domain: c.Domain
-            ),
+            new(c.AccessCookieName, true, secure, c.AccessSameSite, c.AccessPath, c.Domain),
+            new(c.RefreshCookieName, true, secure, c.RefreshSameSite, c.RefreshPath, c.Domain),
+            new(csrf.CookieName, false, secure, csrf.SameSite, c.CsrfPath, c.Domain),
         ];
     }
 
-    private CookieOptions BuildAccessCookieOptions(AuthCookieOptions c, DateTimeOffset expiresAt) =>
+    private CookieOptions BuildAccessOpts(AuthCookieOptions c, DateTimeOffset exp) =>
         new()
         {
             HttpOnly = true,
@@ -121,14 +93,11 @@ public sealed class AuthCookieWriter(
             SameSite = c.AccessSameSite,
             Path = c.AccessPath,
             Domain = c.Domain,
-            Expires = expiresAt,
+            Expires = exp,
             IsEssential = true,
         };
 
-    private CookieOptions BuildRefreshCookieOptions(
-        AuthCookieOptions c,
-        DateTimeOffset expiresAt
-    ) =>
+    private CookieOptions BuildRefreshOpts(AuthCookieOptions c, DateTimeOffset exp) =>
         new()
         {
             HttpOnly = true,
@@ -136,14 +105,14 @@ public sealed class AuthCookieWriter(
             SameSite = c.RefreshSameSite,
             Path = c.RefreshPath,
             Domain = c.Domain,
-            Expires = expiresAt,
+            Expires = exp,
             IsEssential = true,
         };
 
-    private CookieOptions BuildCsrfCookieOptions(AuthCookieOptions c, CsrfOptions csrf) =>
+    private CookieOptions BuildCsrfOpts(AuthCookieOptions c, CsrfOptions csrf) =>
         new()
         {
-            HttpOnly = false, // non-HttpOnly by contract so the SPA can echo it in X-XSRF-TOKEN (R12.2)
+            HttpOnly = false,
             Secure = ResolveSecure(c),
             SameSite = csrf.SameSite,
             Path = c.CsrfPath,
@@ -153,4 +122,11 @@ public sealed class AuthCookieWriter(
 
     private bool ResolveSecure(AuthCookieOptions c) =>
         !(env.IsDevelopment() && c.AllowInsecureInDevelopment);
+
+    private static string GenerateCsrfToken() =>
+        Convert
+            .ToBase64String(RandomNumberGenerator.GetBytes(32))
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
 }

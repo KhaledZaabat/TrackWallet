@@ -70,9 +70,6 @@ public class FileService(AppDbContext db, IWebHostEnvironment env) : IFileServic
         return list.Select(f => f.Id).ToList();
     }
 
-    // ---------------------------------------------------------
-    //  Upload an IMAGE (supports primary flag)
-    // ---------------------------------------------------------
     public async Task<ErrorOr<Guid>> UploadImageAsync(
         string entityType,
         Guid entityId,
@@ -97,9 +94,6 @@ public class FileService(AppDbContext db, IWebHostEnvironment env) : IFileServic
         return file.Id;
     }
 
-    // ---------------------------------------------------------
-    //  Download file
-    // ---------------------------------------------------------
     public async Task<ErrorOr<FileDto>> DownloadAsync(Guid id, CancellationToken ct = default)
     {
         var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
@@ -116,9 +110,6 @@ public class FileService(AppDbContext db, IWebHostEnvironment env) : IFileServic
         return new FileDto(bytes, file.ContentType, file.FileName);
     }
 
-    // ---------------------------------------------------------
-    //  Stream file
-    // ---------------------------------------------------------
     public async Task<ErrorOr<StreamFileDto>> StreamAsync(Guid id, CancellationToken ct = default)
     {
         var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
@@ -141,9 +132,6 @@ public class FileService(AppDbContext db, IWebHostEnvironment env) : IFileServic
         return new StreamFileDto(stream, file.ContentType, file.FileName);
     }
 
-    // ---------------------------------------------------------
-    //  Delete file
-    // ---------------------------------------------------------
     public async Task<ErrorOr<Success>> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
@@ -161,9 +149,6 @@ public class FileService(AppDbContext db, IWebHostEnvironment env) : IFileServic
         return new Success();
     }
 
-    // ---------------------------------------------------------
-    //  Delete many files
-    // ---------------------------------------------------------
     public async Task<ErrorOr<Success>> DeleteManyAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
     {
         if (ids is null || !ids.Any())
@@ -193,9 +178,6 @@ public class FileService(AppDbContext db, IWebHostEnvironment env) : IFileServic
         return new Success();
     }
 
-    // ---------------------------------------------------------
-    //  Core SAVE method 
-    // ---------------------------------------------------------
     private async Task<ErrorOr<UploadedFile>> Save(
         IFormFile file,
         string entityType,

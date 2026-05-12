@@ -32,16 +32,13 @@ public sealed class UserCreatedEventHandler(
         string userName,
         CancellationToken cancellationToken)
     {
-        // Generate OTP using settings
         string key = $"confirm:{email.ToLowerInvariant().Trim()}";
         string otp = _otpService.Generate(key, digits: _otpSettings.Digits);
 
-        // Load welcome template for new users
         string template = await _templateLoader.LoadTemplateAsync(
             EmailTemplates.UserCreatedTemplate,
             cancellationToken);
 
-        // Replace placeholders
         var body = _bodyBuilder.Build(template, new Dictionary<string, string>
         {
             ["UserName"] = userName,
@@ -50,7 +47,6 @@ public sealed class UserCreatedEventHandler(
             ["Duration"] = _otpSettings.ExpirationInSeconds.ToString()
         });
 
-        // Send welcome email
         await _notification.SendEmailAsync(
             to: email,
             subject: "Welcome to Expense Tracker - Verify Your Email",

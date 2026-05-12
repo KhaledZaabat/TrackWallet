@@ -5,8 +5,6 @@ import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 
-/// Displays a single family member card with profile information
-/// Includes kick button for parent users (to remove non-parent members)
 class MemberCard extends StatelessWidget {
   final FamilyMember member;
   final bool isCurrentUserParent;
@@ -136,7 +134,6 @@ class MemberCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            // Profile picture or initials avatar
             Stack(
               children: [
                 if (member.profileImageUrl != null &&
@@ -159,7 +156,6 @@ class MemberCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                // "You" indicator
                 if (isCurrentUser)
                   Positioned(
                     bottom: 0,
@@ -185,12 +181,10 @@ class MemberCard extends StatelessWidget {
             ),
             const SizedBox(width: 14),
 
-            // Member details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Full name and parent badge
                   Row(
                     children: [
                       Expanded(
@@ -230,7 +224,6 @@ class MemberCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Username
                   if (member.userName != null && member.userName!.isNotEmpty)
                     Text(
                       '@${member.userName}',
@@ -241,7 +234,6 @@ class MemberCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
 
-                  // Birthday
                   if (member.birthDate != null) ...[
                     const SizedBox(height: 4),
                     Row(
@@ -266,7 +258,6 @@ class MemberCard extends StatelessWidget {
               ),
             ),
 
-            // Kick button (for non-parents, not self)
             if (_canBeKicked) ...[
               const SizedBox(width: 8),
               isOperationInProgress

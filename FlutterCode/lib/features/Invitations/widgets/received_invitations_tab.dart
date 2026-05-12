@@ -4,7 +4,6 @@ import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 import 'invitation_card.dart';
 
-/// Display received invitations with Accept/Decline buttons
 class ReceivedInvitationsTab extends StatelessWidget {
   final List<Invitation> invitations;
   final String? loadingInvitationId;

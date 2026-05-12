@@ -14,17 +14,6 @@ namespace Expense_Tracker.App.Controllers;
 [ApiVersion("1.0")]
 public class DashboardController(IMessageBus bus) : ControllerBase
 {
-    /// <summary>
-    /// Retrieves the dashboard overview for the currently selected family.
-    /// </summary>
-    /// <param name="budgetHistoryMonths">Number of months of budget history to include (default: 1).</param>
-    /// <param name="recentTransactionsPageSize">Number of recent transactions to include (default: 10).</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>A <see cref="DashboardResponse"/> containing user info, family context, budget history, and recent transactions.</returns>
-    /// <response code="200">Dashboard data retrieved successfully.</response>
-    /// <response code="400">Invalid request parameters.</response>
-    /// <response code="401">User is not authenticated or family context is missing.</response>
-    /// <response code="404">Requested family or data not found.</response>
     [HttpGet]
     [ProducesResponseType(typeof(DashboardResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

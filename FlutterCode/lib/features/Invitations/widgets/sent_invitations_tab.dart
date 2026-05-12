@@ -3,7 +3,6 @@ import 'package:famxpense/models/Invitations/invitation_model.dart';
 import 'package:famxpense/l10n/app_localizations.dart';
 import 'invitation_card.dart';
 
-/// Display sent invitations grouped by status with Cancel button for Pending
 class SentInvitationsTab extends StatelessWidget {
   final List<Invitation> invitations;
   final String? loadingInvitationId;

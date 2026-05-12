@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:famxpense/models/Family/family_models.dart';
 
-/// Abstract base class for all MyFamily states
 abstract class MyFamilyState extends Equatable {
   const MyFamilyState();
 
@@ -9,22 +8,14 @@ abstract class MyFamilyState extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Initial state - no data loaded yet
 class MyFamilyInitial extends MyFamilyState {
   const MyFamilyInitial();
 }
 
-/// Loading state - fetching family details from API
 class MyFamilyLoading extends MyFamilyState {
   const MyFamilyLoading();
 }
 
-/// Loaded state - family details and members are available
-///
-/// This state holds:
-/// - familyDetails: Complete family information including all members
-/// - isCurrentUserParent: Whether the current user can perform admin actions
-/// - operationInProgress: ID of member being kicked (null if no operation)
 class MyFamilyLoaded extends MyFamilyState {
   final FamilyDetails familyDetails;
   final bool isCurrentUserParent;
@@ -53,7 +44,6 @@ class MyFamilyLoaded extends MyFamilyState {
   List<Object?> get props => [familyDetails, isCurrentUserParent, operationInProgress];
 }
 
-/// Error state - failure during any operation
 class MyFamilyError extends MyFamilyState {
   final String message;
 
@@ -63,7 +53,6 @@ class MyFamilyError extends MyFamilyState {
   List<Object?> get props => [message];
 }
 
-/// Operation success state - used to trigger snackbar feedback
 class MyFamilyOperationSuccess extends MyFamilyState {
   final String message;
   final FamilyDetails familyDetails;

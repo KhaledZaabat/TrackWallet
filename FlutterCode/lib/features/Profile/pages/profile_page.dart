@@ -1,5 +1,3 @@
-// presentation/profile/pages/profile_page.dart
-
 import 'dart:io';
 import 'package:famxpense/core/theme/app_colors.dart';
 import 'package:famxpense/domain/entities/user.dart';
@@ -215,7 +213,6 @@ class _ProfilePageState extends State<ProfilePage> {
     return null;
   }
 
-  // ✅ FIXED: Get user from current state properly
   User? _getUserFromState(ProfileState state) {
     if (state is ProfileLoaded) {
       return state.user;
@@ -289,7 +286,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header
                       Row(
                         children: [
                           GestureDetector(
@@ -314,7 +310,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Profile Picture
                       Center(
                         child: Stack(
                           children: [
@@ -370,7 +365,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Email (read-only)
                       Center(
                         child: Text(
                           user.email,
@@ -383,7 +377,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Personal Information Section
                       _sectionLabel(l10n.personalInformation),
                       const SizedBox(height: 16),
 
@@ -449,7 +442,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Update Button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(

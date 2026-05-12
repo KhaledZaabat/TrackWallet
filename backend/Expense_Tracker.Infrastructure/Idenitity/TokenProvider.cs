@@ -15,9 +15,6 @@ public sealed class TokenProvider(
     JwtSettings jwt
 ) : ITokenProvider, IScopedService
 {
-    /// <summary>
-    /// Generates JWT token without family context (for initial login)
-    /// </summary>
     public async Task<ErrorOr<AuthDto>> GenerateJwtTokenAsync(
         AuthenticatedUser user,
         string deviceId,
@@ -30,9 +27,6 @@ public sealed class TokenProvider(
             ct);
     }
 
-    /// <summary>
-    /// Generates JWT token with family context (for family selection)
-    /// </summary>
     public async Task<ErrorOr<AuthDto>> GenerateJwtTokenWithFamilyAsync(
         AuthenticatedUser user,
         string deviceId,
@@ -129,10 +123,6 @@ public sealed class TokenProvider(
         }
     }
 
-    /// <summary>
-    /// Mints only an access token (no refresh-token rotation or persistence side effect).
-    /// Used by the silent-refresh middleware's success path (R5.3, R17.4, R19.1).
-    /// </summary>
     public Task<AccessTokenResult> GenerateAccessTokenOnlyAsync(
         AuthenticatedUser user,
         FamilyContextDto? family,
@@ -212,9 +202,6 @@ public sealed class TokenProvider(
         return claims;
     }
 
-    /// <summary>
-    /// Extracts family context from claims principal
-    /// </summary>
     public static FamilyContextDto? GetFamilyContext(ClaimsPrincipal principal)
     {
         var familyId = principal.FindFirst(CustomClaimTypes.FamilyId)?.Value;

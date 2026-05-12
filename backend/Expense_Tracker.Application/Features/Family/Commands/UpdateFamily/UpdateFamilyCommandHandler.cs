@@ -15,14 +15,12 @@ public sealed class UpdateFamilyCommandHandler(
         UpdateFamilyCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Find the family
         var family = await families.QueryTracked()
             .FirstOrDefaultAsync(f => f.Id == request.FamilyId && !f.IsDeleted, cancellationToken);
 
         if (family is null)
             return DomainErrors.GeneralErrors.NotFound(nameof(Family));
 
-        // 2. Update name if provided
         if (!string.IsNullOrWhiteSpace(request.Name))
         {
             var nameResult = family.UpdateName(request.Name);
@@ -30,7 +28,7 @@ public sealed class UpdateFamilyCommandHandler(
                 return nameResult.Errors;
         }
 
-        // 3. Update bio if provided (can be set to null/empty to clear it)
+        // Update bio if provided (can be set to null/empty to clear it)
         if (request.FamilyBio != null)
         {
             var bioResult = family.UpdateBio(request.FamilyBio);
@@ -38,7 +36,6 @@ public sealed class UpdateFamilyCommandHandler(
                 return bioResult.Errors;
         }
 
-        // 4. Save changes
         await families.SaveChangesAsync(cancellationToken);
 
         return new Success();

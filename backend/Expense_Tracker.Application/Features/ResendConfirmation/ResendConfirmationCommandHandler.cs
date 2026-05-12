@@ -14,7 +14,6 @@ public class ResendConfirmationCommandHandler(IIdentityService _identityService,
     public async Task<ErrorOr<Success>> Handle(ResendConfirmationCommand request, CancellationToken cancellationToken)
     {
 
-        //  Find user by email 
         ErrorOr<AuthenticatedUser> userResult =
              await _identityService.FindUserByEmailAsync(request.Email, requireConfirmedEmail: false);
 

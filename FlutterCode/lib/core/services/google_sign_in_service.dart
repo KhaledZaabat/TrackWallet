@@ -17,7 +17,6 @@ class GoogleSignInService {
     );
   }
 
-  /// Factory constructor for production use
   factory GoogleSignInService.production() {
     return GoogleSignInService(
       clientId:
@@ -27,7 +26,6 @@ class GoogleSignInService {
     );
   }
 
-  /// Sign in with Google and return ID token
   /// Returns null if sign-in was cancelled or failed
   Future<String?> signIn() async {
     try {
@@ -36,7 +34,6 @@ class GoogleSignInService {
       // Sign out first to force account picker every time
       await _signOutSilently();
 
-      // Trigger sign-in flow
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
 
       if (account == null) {
@@ -46,7 +43,6 @@ class GoogleSignInService {
 
       AppLogger.info(_tag, 'User signed in: ${account.email}');
 
-      // Get authentication tokens
       final GoogleSignInAuthentication auth = await account.authentication;
       final String? idToken = auth.idToken;
 
@@ -68,7 +64,6 @@ class GoogleSignInService {
     }
   }
 
-  /// Sign out silently (no UI)
   Future<void> _signOutSilently() async {
     try {
       await _googleSignIn.signOut();
@@ -79,7 +74,6 @@ class GoogleSignInService {
     }
   }
 
-  /// Disconnect Google account completely
   Future<void> disconnect() async {
     try {
       await _googleSignIn.disconnect();
@@ -89,16 +83,13 @@ class GoogleSignInService {
     }
   }
 
-  /// Check if user is currently signed in
   Future<bool> isSignedIn() async {
     return await _googleSignIn.isSignedIn();
   }
 
-  /// Get current signed-in account
   GoogleSignInAccount? get currentUser => _googleSignIn.currentUser;
 }
 
-/// Custom exception for Google Sign-In errors
 class GoogleSignInException implements Exception {
   final String message;
 
