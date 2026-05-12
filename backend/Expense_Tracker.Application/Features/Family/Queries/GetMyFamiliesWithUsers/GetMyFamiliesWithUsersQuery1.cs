@@ -1,32 +1,35 @@
-﻿using Expense_Tracker.Application.Features.Family.Queries.GetMyFamiliesWithUsers;
+using Family = Expense_Tracker.Domain.FamilyFolder.Family;
+using Expense_Tracker.Domain.FamilyUserFolder;
+using ErrorOr;
+using Expense_Tracker.Application.Features.Family.Queries.GetMyFamiliesWithUsers;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Family;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.FamilyFolder;
-using MediatR;
+using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Expense_Tracker.Domain.Errors;
 
 public sealed class GetMyFamilyWithUsersQueryHandler(
-      IAppDbContext db,
+      IRepository<Family> familyRepo,
+      IRepository<FamilyUser> familyUserRepo,
+      IRepository<User> userRepo,
       [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
       IFamilyContext familyContext,
       IUserContext userContext
-  ) : IRequestHandler<GetMyFamilyWithUsersQuery, Result<FamilyWithMembersResponse>>
+  )
 {
-    public async Task<Result<FamilyWithMembersResponse>> Handle(
+    public async Task<ErrorOr<FamilyWithMembersResponse>> Handle(
         GetMyFamilyWithUsersQuery request,
         CancellationToken ct)
     {
         if (familyContext.FamilyId is null || userContext.UserId is null)
-            return Result.Failure<FamilyWithMembersResponse>(
-                UserError.Unauthorized());
+            return DomainErrors.UserErrors.Unauthorized();
 
         Guid familyId = familyContext.FamilyId.Value;
         Guid userId = userContext.UserId.Value;
         var family = await (
-                 from f in db.Families
+                 from f in familyRepo.QueryTracked()
                  where f.Id == familyId && !f.IsDeleted
                  select new FamilyWithMembersResponse(
                      Id: f.Id,
@@ -34,8 +37,8 @@ public sealed class GetMyFamilyWithUsersQueryHandler(
                      CurrentBudget: f.CurrentBudget,
                      FamilyBio: f.FamilyBio,
                      Members: (
-                         from fu in db.FamilyUsers
-                         join u in db.Users on fu.UserId equals u.Id
+                         from fu in familyUserRepo.Query()
+                         join u in userRepo.Query() on fu.UserId equals u.Id
                          where fu.FamilyId == f.Id && !u.IsDeleted
                          select new FamilyUserProfileResponse(
                              UserId: u.Id,
@@ -53,9 +56,8 @@ public sealed class GetMyFamilyWithUsersQueryHandler(
              ).FirstOrDefaultAsync(ct);
 
         if (family is null)
-            return Result.Failure<FamilyWithMembersResponse>(
-                DomainError.NotFound(nameof(Family)));
+            return DomainErrors.GeneralErrors.NotFound(nameof(Family));
 
-        return Result.Success(family);
+        return family;
     }
 }

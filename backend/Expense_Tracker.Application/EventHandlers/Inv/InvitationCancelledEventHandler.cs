@@ -1,38 +1,43 @@
-﻿using Expense_Tracker.Application.Constans;
+using User = Expense_Tracker.Domain.Users.User;
+using Expense_Tracker.Application.Constans;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Events;
+using Expense_Tracker.Application.Events;
+using Expense_Tracker.Domain.FamilyFolder;
+using Expense_Tracker.Domain.Invitation;
 using Expense_Tracker.Domain.PushNotifications.Enums;
-using MediatR;
+using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Application.EventHandlers.Inv;
 
 public sealed class InvitationCancelledEventHandler(
-    IAppDbContext context,
+    IRepository<global::Expense_Tracker.Domain.Users.User> users,
+    IRepository<Family> families,
+    IRepository<DomainNotification> notifications,
+    IRepository<Invitation> invitations,
     IUnifiedNotificationDispatcher dispatcher,
     IEmailTemplateLoader templateLoader,
     IEmailBodyBuilder bodyBuilder,
     INotificationService notification)
-    : INotificationHandler<InvitationCancelledEvent>
 {
     public async Task Handle(
         InvitationCancelledEvent notification,
         CancellationToken ct)
     {
         // Get inviter, invitee, and family information
-        var inviterInfo = await context.Users
-            .Where(u => u.Id == notification.invitation.InviterUserId)
+        var inviterInfo = await users.Query()
+            .Where(u => u.Id == notification.Invitation.InviterUserId)
             .Select(u => u.UserName)
             .SingleOrDefaultAsync(ct);
 
-        var inviteeInfo = await context.Users
-            .Where(u => u.Id == notification.invitation.InviteeUserId)
+        var inviteeInfo = await users.Query()
+            .Where(u => u.Id == notification.Invitation.InviteeUserId)
             .Select(u => new { u.UserName, u.Email, u.NotificationPreferences.EmailNotifications })
             .SingleOrDefaultAsync(ct);
 
-        var familyInfo = await context.Families
-            .Where(f => f.Id == notification.invitation.FamilyId)
+        var familyInfo = await families.Query()
+            .Where(f => f.Id == notification.Invitation.FamilyId)
             .Select(f => f.Name)
             .SingleOrDefaultAsync(ct);
 
@@ -48,27 +53,34 @@ public sealed class InvitationCancelledEventHandler(
         }
 
         // 1. Delete related notifications for this invitation
-        await context.Notifications
-            .Where(n => n.UserId == notification.invitation.InviteeUserId
-                     && n.ActorUserId == notification.invitation.InviterUserId)
-            .ExecuteDeleteAsync(ct);
+        var relatedNotifications = await notifications.QueryTracked()
+            .Where(n => n.UserId == notification.Invitation.InviteeUserId
+                     && n.ActorUserId == notification.Invitation.InviterUserId)
+            .ToListAsync(ct);
+
+        if (relatedNotifications.Count > 0)
+            notifications.RemoveRange(relatedNotifications);
 
         // 2. Delete the invitation itself
-        await context.Invitations
-            .Where(i => i.Id == notification.invitation.Id)
-            .ExecuteDeleteAsync(ct);
+        var invitationToDelete = await invitations.QueryTracked()
+            .FirstOrDefaultAsync(i => i.Id == notification.Invitation.Id, ct);
+
+        if (invitationToDelete is not null)
+            invitations.Remove(invitationToDelete);
+
+        await notifications.SaveChangesAsync(ct);
 
         // 3. Notify the invitee that invitation was cancelled
         DomainNotification domainNotification = DomainNotification.Create(
-            userId: notification.invitation.InviteeUserId,
+            userId: notification.Invitation.InviteeUserId,
             title: "🚫 Invitation cancelled",
             body: $"{inviterInfo} cancelled the invitation to {familyInfo}",
             type: NotificationType.InvitationCancelled,
-            actorUserId: notification.invitation.InviterUserId,
+            actorUserId: notification.Invitation.InviterUserId,
             data: new Dictionary<string, string>
             {
-                [NotificationDataKeys.FAMILY_ID] = notification.invitation.FamilyId.ToString(),
-                [NotificationDataKeys.INVITER_USER_ID] = notification.invitation.InviterUserId.ToString(),
+                [NotificationDataKeys.FAMILY_ID] = notification.Invitation.FamilyId.ToString(),
+                [NotificationDataKeys.INVITER_USER_ID] = notification.Invitation.InviterUserId.ToString(),
                 ["action"] = "none"
             });
 

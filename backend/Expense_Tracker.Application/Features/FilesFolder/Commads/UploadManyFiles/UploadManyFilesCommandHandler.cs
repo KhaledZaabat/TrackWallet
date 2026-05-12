@@ -1,14 +1,13 @@
-﻿using Expense_Tracker.Application.Features.FilesFolder.Commads.UploadManyFiles;
+using Expense_Tracker.Application.Features.FilesFolder.Commads.UploadManyFiles;
 using Expense_Tracker.Contracts.Responses.Files;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using ErrorOr;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.FilesFolder.Commads.UploadFile;
 
 public class UploadManyFilesCommandHandler(IFileService fileService)
-    : IRequestHandler<UploadManyFilesCommand, Result<UploadManyFilesResponse>>
 {
-    public async Task<Result<UploadManyFilesResponse>> Handle(UploadManyFilesCommand request, CancellationToken ct)
+    public async Task<ErrorOr<UploadManyFilesResponse>> Handle(UploadManyFilesCommand request, CancellationToken ct)
     {
         var uploadResult = await fileService.UploadManyAsync(
 
@@ -17,11 +16,12 @@ public class UploadManyFilesCommandHandler(IFileService fileService)
              request.folder,
              request.Files,
              ct);
-        if (uploadResult.IsFailure)
-            return Result.Failure<UploadManyFilesResponse>(uploadResult.TryGetError());
-        IEnumerable<Guid> value = uploadResult.TryGetValue();
 
-        return Result.Success(new UploadManyFilesResponse(value.Count(), value.ToList()));
+        if (uploadResult.IsError)
+            return uploadResult.Errors;
 
+        IEnumerable<Guid> value = uploadResult.Value;
+
+        return new UploadManyFilesResponse(value.Count(), value.ToList());
     }
 }

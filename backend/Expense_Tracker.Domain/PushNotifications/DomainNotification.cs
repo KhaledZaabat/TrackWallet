@@ -1,7 +1,7 @@
 ﻿using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.PushNotifications.Enums;
 
-public sealed class DomainNotification : Entity
+public sealed class DomainNotification : Entity,ICreatable
 {
     public Guid UserId { get; private set; }          // Receiver
     public Guid? ActorUserId { get; private set; }    // Actor (who caused it)
@@ -11,8 +11,9 @@ public sealed class DomainNotification : Entity
     public Dictionary<string, string>? Data { get; private set; }
 
     public bool IsRead { get; private set; }
-    public DateTime CreatedUtc { get; private set; }
     public NotificationType Type { get; private set; }
+    public DateTimeOffset CreatedAtUtc { get ; set ; }
+    public Guid CreatedBy { get ; set; }
 
     private DomainNotification() { } // EF
 
@@ -46,7 +47,6 @@ public sealed class DomainNotification : Entity
         Data = data;
 
         IsRead = false;
-        CreatedUtc = DateTime.UtcNow;
     }
 
     public static DomainNotification Create(

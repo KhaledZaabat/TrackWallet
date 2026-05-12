@@ -1,11 +1,10 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
+using ErrorOr;
 using Expense_Tracker.App.Filters;
-using Expense_Tracker.App.Helpers;
 using Expense_Tracker.Application.Features.Dashboard;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Wolverine;
 
 namespace Expense_Tracker.App.Controllers;
 
@@ -13,8 +12,7 @@ namespace Expense_Tracker.App.Controllers;
 [Route("api/[controller]")]
 [Authorize]
 [ApiVersion("1.0")]
-
-public class DashboardController(ISender sender) : ControllerBase
+public class DashboardController(IMessageBus bus) : ControllerBase
 {
     /// <summary>
     /// Retrieves the dashboard overview for the currently selected family.
@@ -33,19 +31,25 @@ public class DashboardController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [EndpointSummary("Gets family dashboard overview.")]
-    [EndpointDescription("Returns a comprehensive dashboard with user information, family context, budget history, and recent transactions for the selected family.")]
+    [EndpointDescription(
+        "Returns a comprehensive dashboard with user information, family context, budget history, and recent transactions for the selected family."
+    )]
     [EndpointName("GetDashboard")]
     [RequireFamily]
     public async Task<ActionResult<DashboardResponse>> GetDashboard(
         [FromQuery] int budgetHistoryMonths = 1,
         [FromQuery] int recentTransactionsPageSize = 10,
-        CancellationToken ct = default)
+        CancellationToken ct = default
+    )
     {
         var query = new GetDashboardQuery(
             BudgetHistoryMonths: budgetHistoryMonths,
             RecentTransactionsPageSize: recentTransactionsPageSize
         );
-        Result<DashboardResponse> result = await sender.Send(query, ct);
-        return result.ToActionResult(HttpContext);
+        ErrorOr<DashboardResponse> result = await bus.InvokeAsync<ErrorOr<DashboardResponse>>(
+            query,
+            ct
+        );
+        return result.ToActionResult(this);
     }
 }

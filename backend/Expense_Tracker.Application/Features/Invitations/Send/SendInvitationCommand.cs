@@ -1,6 +1,4 @@
-﻿using Expense_Tracker.Contracts.Reponses.Inv;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using Expense_Tracker.Contracts.Reponses.Inv;
 
 namespace Expense_Tracker.Application.Features.Invitations.Send;
 
@@ -9,4 +7,4 @@ public sealed record SendInvitationCommand(
     bool IsParent,
     Guid InviterUserId,
     Guid FamilyId
-) : IRequest<Result<InvitationResponse>>;
+);

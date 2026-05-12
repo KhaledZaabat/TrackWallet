@@ -1,5 +1,6 @@
-﻿using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+﻿using ErrorOr;
+using Expense_Tracker.Domain.Common;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Domain.Users.Abstraction.NotificationPreferencesFolder;
 
@@ -10,9 +11,7 @@ public sealed class NotificationPreferences : Entity
 
     private NotificationPreferences() { }
 
-    private NotificationPreferences(
-        bool email,
-        bool push)
+    private NotificationPreferences(bool email, bool push)
     {
         EmailNotifications = email;
         PushNotifications = push;
@@ -21,28 +20,18 @@ public sealed class NotificationPreferences : Entity
     private NotificationPreferences(
         Guid Id,
         bool email,
-        bool push
-       ) : base(Id)
+        bool push) : base(Id)
     {
         EmailNotifications = email;
         PushNotifications = push;
     }
 
-    public static Result<NotificationPreferences> Create(
-        bool email,
-        bool push
-      )
+    public static ErrorOr<NotificationPreferences> Create(bool email, bool push)
     {
         if (!email && !push)
-        {
-            return Result.Failure<NotificationPreferences>(
-                NotificationPreferencesError.InvalidState(
-                    "At least one notification type must be enabled."
-                ));
-        }
+            return DomainErrors.NotificationErrors.InvalidState("At least one notification type must be enabled.");
 
-        return Result.Success(
-            new NotificationPreferences(email, push));
+        return new NotificationPreferences(email, push);
     }
 
     public static NotificationPreferences Default()
@@ -53,26 +42,21 @@ public sealed class NotificationPreferences : Entity
     public static readonly Guid DefaultNotificationId =
         Guid.Parse("018f3f0d-9c2c-7ab1-96da-4b821eac09f2");
 
-    // Update methods
-    public Result SetEmailNotifications(bool enabled)
+    public ErrorOr<Success> SetEmailNotifications(bool enabled)
     {
         if (!enabled && !PushNotifications)
-            return Result.Failure(
-                NotificationPreferencesError.InvalidState(
-                    "At least one notification type must be enabled."));
+            return DomainErrors.NotificationErrors.InvalidState("At least one notification type must be enabled.");
 
         EmailNotifications = enabled;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result SetPushNotifications(bool enabled)
+    public ErrorOr<Success> SetPushNotifications(bool enabled)
     {
         if (!enabled && !EmailNotifications)
-            return Result.Failure(
-                NotificationPreferencesError.InvalidState(
-                    "At least one notification type must be enabled."));
+            return DomainErrors.NotificationErrors.InvalidState("At least one notification type must be enabled.");
 
         PushNotifications = enabled;
-        return Result.Success();
+        return new Success();
     }
 }

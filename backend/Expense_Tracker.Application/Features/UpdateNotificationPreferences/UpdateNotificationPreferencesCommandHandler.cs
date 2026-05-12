@@ -1,54 +1,55 @@
-﻿using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.Users;
+using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.Users.Abstraction.NotificationPreferencesFolder;
-using MediatR;
+using ErrorOr;
+using Expense_Tracker.Domain.Errors;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Application.Features.UpdateNotificationPreferences;
 
 public sealed class UpdateNotificationPreferencesCommandHandler(
-    IAppDbContext db,
-    IUserDeviceRepository deviceRepository)
-    : IRequestHandler<UpdateNotificationPreferencesCommand, Result>
+    IRepository<Expense_Tracker.Domain.Users.User> users,
+    IRepository<NotificationPreferences> notificationPreferences,
+    IRepository<Expense_Tracker.Domain.PushNotifications.UserDevice> userDevices)
 {
-    public async Task<Result> Handle(
+    public async Task<ErrorOr<Success>> Handle(
         UpdateNotificationPreferencesCommand request,
         CancellationToken cancellationToken)
     {
         // Get user with preferences
-        User? user = await db.Users
+        Expense_Tracker.Domain.Users.User? user = await users.QueryTracked()
             .Include(u => u.NotificationPreferences)
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
         if (user is null)
-            return Result.Failure(DomainError.NotFound(nameof(User)));
+            return DomainErrors.GeneralErrors.NotFound(nameof(Expense_Tracker.Domain.Users.User));
 
         if (request.PushNotifications is false && request.EmailNotifications is false)
         {
-            return Result.Failure(
-                NotificationPreferencesError.InvalidState(
-                    "At least one of preferences must be enabled"));
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(NotificationPreferences),
+                "At least one of preferences must be enabled");
         }
 
         // Store the old push notification state to detect changes
         bool wasPushEnabled = user.NotificationPreferences?.PushNotifications ?? false;
 
         // Get or create notification preferences
-        NotificationPreferences? preferences = await db.NotificationPreferences
+        NotificationPreferences? preferences = await notificationPreferences.QueryTracked()
             .FirstOrDefaultAsync(
                 np => np.PushNotifications == request.PushNotifications
                    && np.EmailNotifications == request.EmailNotifications,
                 cancellationToken);
 
         if (preferences is null)
-            return Result.Failure(
-                NotificationPreferencesError.InvalidState(
-                    "Preferences not found"));
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(NotificationPreferences),
+                "Preferences not found");
 
         // Update user's notification preferences
-        user.UpdateNotificationPreferences(preferences.Id);
+        ErrorOr<Success> updateResult = user.UpdateNotificationPreferences(preferences.Id);
+        if (updateResult.IsError)
+            return updateResult.Errors;
 
         // Handle device activation/deactivation based on push notification state change
         if (wasPushEnabled && !preferences.PushNotifications)
@@ -62,20 +63,20 @@ public sealed class UpdateNotificationPreferencesCommandHandler(
             await ActivateUserDevicesAsync(request.UserId, cancellationToken);
         }
 
-        await db.SaveChangesAsync(cancellationToken);
-        return Result.Success();
+        await users.SaveChangesAsync(cancellationToken);
+        return new Success();
     }
 
     private async Task DeactivateUserDevicesAsync(
            Guid userId,
            CancellationToken cancellationToken)
     {
-        await db.UserDevices
+        await userDevices.QueryTracked()
             .Where(d => d.UserId == userId && d.IsActive)
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(d => d.IsActive, false)
-                    .SetProperty(d => d.LastSeenUtc, DateTime.UtcNow),
+                    .SetProperty(d => d.LastModifiedUtc, DateTimeOffset.UtcNow),
                 cancellationToken);
     }
 
@@ -83,12 +84,12 @@ public sealed class UpdateNotificationPreferencesCommandHandler(
         Guid userId,
         CancellationToken cancellationToken)
     {
-        await db.UserDevices
+        await userDevices.QueryTracked()
             .Where(d => d.UserId == userId && !d.IsActive)
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(d => d.IsActive, true)
-                    .SetProperty(d => d.LastSeenUtc, DateTime.UtcNow),
+                    .SetProperty(d => d.LastModifiedUtc, DateTimeOffset.UtcNow),
                 cancellationToken);
     }
 }

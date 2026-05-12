@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 namespace Expense_Tracker.Application.Constans;
 
@@ -9,15 +9,11 @@ public static class ValidationPatterns
 
     public const string Otp = "^[0-9]+$";
 
-
-
     // Strong password: at least 8 chars, one upper, one lower, one digit, one special
     public const string StrongPassword =
         @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?""':{}|<>]).{8,}$";
 
     public static bool IsEmail(string value) =>
            Regex.IsMatch(value, Email);
-
-
 
 }

@@ -8,4 +8,5 @@ public static class CustomClaimTypes
     public const string FamilyId = "family_id";
     public const string FamilyName = "family_name";
     public const string IsParent = "is_parent";
+    public const string DeviceId = "device_id";
 }

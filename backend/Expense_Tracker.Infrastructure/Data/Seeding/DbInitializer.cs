@@ -1,12 +1,13 @@
-﻿using Expense_Tracker.Application.Interfaces;
+﻿using ErrorOr;
+using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.CategoryFolder;
+using Expense_Tracker.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Infrastructure.Data.Seeding;
 
-public class DbInitializer(IAppDbContext context) : IDbInitializer
+public class DbInitializer(AppDbContext context) : IDbInitializer
 {
-
     public async Task SeedAsync()
     {
         await SeedCategoriesAsync();
@@ -14,7 +15,6 @@ public class DbInitializer(IAppDbContext context) : IDbInitializer
 
     private async Task SeedCategoriesAsync()
     {
-
         if (await context.Categories.AnyAsync())
         {
             return;
@@ -22,13 +22,12 @@ public class DbInitializer(IAppDbContext context) : IDbInitializer
 
         var categories = new List<Category>();
 
-        // Seed all category types
         foreach (CategoryType categoryType in Enum.GetValues<CategoryType>())
         {
             var categoryResult = Category.Create(categoryType);
-            if (categoryResult.IsSuccess)
+            if (!categoryResult.IsError)
             {
-                categories.Add(categoryResult.TryGetValue());
+                categories.Add(categoryResult.Value);
             }
         }
 

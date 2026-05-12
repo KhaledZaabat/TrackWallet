@@ -17,7 +17,7 @@ namespace Expense_Tracker.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -36,10 +36,13 @@ namespace Expense_Tracker.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<DateTime>("CreatedUtc")
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Data")
                         .HasColumnType("jsonb");
@@ -76,12 +79,12 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_Notifications_UserId");
 
-                    b.HasIndex("UserId", "IsRead", "CreatedUtc")
-                        .HasDatabaseName("IX_Notifications_UserId_IsRead_CreatedUtc")
+                    b.HasIndex("UserId", "IsRead", "CreatedAtUtc")
+                        .HasDatabaseName("IX_Notifications_UserId_IsRead_CreatedAtUtc")
                         .HasFilter("\"IsRead\" = false");
 
-                    b.HasIndex("UserId", "Type", "CreatedUtc")
-                        .HasDatabaseName("IX_Notifications_UserId_Type_CreatedUtc");
+                    b.HasIndex("UserId", "Type", "CreatedAtUtc")
+                        .HasDatabaseName("IX_Notifications_UserId_Type_CreatedAtUtc");
 
                     b.ToTable("Notifications", (string)null);
                 });
@@ -134,13 +137,22 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset>("OriginalIssuedAt")
+                        .HasColumnType("timestamptz");
+
+                    b.Property<Guid?>("ReplacedByTokenId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset?>("RevokedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Token")
+                    b.Property<Guid>("SessionFamilyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("TokenHash")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(32)
+                        .HasColumnType("bytea");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -149,10 +161,12 @@ namespace Expense_Tracker.Infrastructure.Migrations
 
                     b.HasIndex("ExpiresAt");
 
-                    b.HasIndex("Token")
+                    b.HasIndex("TokenHash")
                         .IsUnique();
 
                     b.HasIndex("ExpiresAt", "RevokedAt");
+
+                    b.HasIndex("SessionFamilyId", "DeviceId");
 
                     b.HasIndex("UserId", "DeviceId");
 
@@ -377,8 +391,11 @@ namespace Expense_Tracker.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedUtc")
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("DeviceToken")
                         .IsRequired()
@@ -388,13 +405,16 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastSeenUtc")
+                    b.Property<Guid>("LastModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("LastModifiedUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Platform")
                         .HasColumnType("integer");
 
-                    b.Property<string>("SubscribedTopics")
+                    b.PrimitiveCollection<string>("SubscribedTopics")
                         .IsRequired()
                         .HasColumnType("jsonb");
 

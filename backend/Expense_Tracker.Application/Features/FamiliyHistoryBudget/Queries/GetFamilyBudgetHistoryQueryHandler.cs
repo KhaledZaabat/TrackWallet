@@ -1,15 +1,17 @@
-﻿using Expense_Tracker.Contracts.Reponses.Family;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using Expense_Tracker.Domain.FamilyUserFolder;
+using Expense_Tracker.Application.Interfaces;
+using ErrorOr;
+using Expense_Tracker.Contracts.Reponses.Family;
 using Microsoft.EntityFrameworkCore;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.FamiliyHistoryBudget.Queries;
 
 public sealed class GetFamilyBudgetHistoryQueryHandler(
-    IAppDbContext db
-) : IRequestHandler<GetFamilyBudgetHistoryQuery, Result<List<BudgetHistoryItem>>>
+    IRepository<FamilyBudgetHistory> familyBudgetHistoryRepo
+)
 {
-    public async Task<Result<List<BudgetHistoryItem>>> Handle(
+    public async Task<ErrorOr<List<BudgetHistoryItem>>> Handle(
         GetFamilyBudgetHistoryQuery request,
         CancellationToken cancellationToken)
     {
@@ -21,8 +23,7 @@ public sealed class GetFamilyBudgetHistoryQueryHandler(
         DateTimeOffset thresholdDate = DateTimeOffset.UtcNow.AddMonths(-months);
 
         // Query budget history
-        var budgetHistory = await db.FamilyBudgetHistories
-            .AsNoTracking()
+        var budgetHistory = await familyBudgetHistoryRepo.Query()
             .Where(h =>
                 h.FamilyId == request.FamilyId &&
                 h.RecordedAtUtc >= thresholdDate)
@@ -33,8 +34,6 @@ public sealed class GetFamilyBudgetHistoryQueryHandler(
             ))
             .ToListAsync(cancellationToken);
 
-
-
-        return Result.Success(budgetHistory);
+        return budgetHistory;
     }
 }

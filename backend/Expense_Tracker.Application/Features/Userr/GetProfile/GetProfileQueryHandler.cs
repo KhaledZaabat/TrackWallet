@@ -1,27 +1,26 @@
-﻿using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using ErrorOr;
+using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.Userr.GetProfile;
 
 public sealed class GetProfileQueryHandler(
-    IAppDbContext db,
+    IRepository<User> userRepo,
     IUserContext userContext,
     [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder)
-    : IRequestHandler<GetProfileQuery, Result<UserProfileResponse>>
 {
-    public async Task<Result<UserProfileResponse>> Handle(
+    public async Task<ErrorOr<UserProfileResponse>> Handle(
         GetProfileQuery query,
         CancellationToken ct)
     {
         Guid? userId = userContext.UserId;
         if (userId is null)
-            return Result.Failure<UserProfileResponse>(UserError.NotFound());
+            return DomainErrors.UserErrors.NotFound();
 
-        UserProfileResponse? profile = await db.Users
+        UserProfileResponse? profile = await userRepo.QueryTracked()
             .Where(u => u.Id == userId)
             .Select(u => new UserProfileResponse(
                 u.Id,
@@ -39,8 +38,8 @@ public sealed class GetProfileQueryHandler(
             .FirstOrDefaultAsync(ct);
 
         if (profile is null)
-            return Result.Failure<UserProfileResponse>(UserError.NotFound());
+            return DomainErrors.UserErrors.NotFound();
 
-        return Result.Success(profile);
+        return profile;
     }
 }

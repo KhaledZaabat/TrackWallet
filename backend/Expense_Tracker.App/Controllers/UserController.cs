@@ -1,13 +1,12 @@
-﻿using Asp.Versioning;
-using Expense_Tracker.App.Helpers;
+using Asp.Versioning;
+using ErrorOr;
 using Expense_Tracker.Application.Features.UpdatePassword;
 using Expense_Tracker.Application.Features.Userr.GetProfile;
 using Expense_Tracker.Application.Features.Userr.UpdateProfile;
 using Expense_Tracker.Contracts.Requests.Identity;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Wolverine;
 
 namespace Expense_Tracker.App.Controllers;
 
@@ -19,7 +18,7 @@ namespace Expense_Tracker.App.Controllers;
 [ApiVersion("1.0")]
 [Authorize]
 [Produces("application/json")]
-public sealed class UserController(ISender sender) : ControllerBase
+public sealed class UserController(IMessageBus bus) : ControllerBase
 {
     /// <summary>
     /// Changes the authenticated user's password.
@@ -42,7 +41,9 @@ public sealed class UserController(ISender sender) : ControllerBase
     [HttpPost("update-password")]
     [EndpointName("UpdatePassword")]
     [EndpointSummary("Update the authenticated user's password")]
-    [EndpointDescription("Allows an authenticated user to change their password by providing the current password.")]
+    [EndpointDescription(
+        "Allows an authenticated user to change their password by providing the current password."
+    )]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -51,11 +52,12 @@ public sealed class UserController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdatePassword(
         [FromBody] UpdatePasswordRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        string userIpAddress = HttpContext.GetClientIp();
+        string userIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-        Result result = await sender.Send(
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(
             new UpdatePasswordCommand(
                 request.CurrentPassword,
                 request.NewPassword,
@@ -64,7 +66,7 @@ public sealed class UserController(ISender sender) : ControllerBase
             cancellationToken
         );
 
-        return result.ToActionResult(HttpContext);
+        return result.ToActionResult(this);
     }
 
     /// <summary>
@@ -80,16 +82,20 @@ public sealed class UserController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [EndpointSummary("Gets user profile.")]
-    [EndpointDescription("Returns the authenticated user's complete profile information including name, email, avatar, and notification preferences.")]
+    [EndpointDescription(
+        "Returns the authenticated user's complete profile information including name, email, avatar, and notification preferences."
+    )]
     [EndpointName("GetUserProfile")]
     [Authorize]
     public async Task<ActionResult<UserProfileResponse>> GetProfile(CancellationToken ct)
     {
         var query = new GetProfileQuery();
-        Result<UserProfileResponse> result = await sender.Send(query, ct);
-        return result.ToActionResult(HttpContext);
+        ErrorOr<UserProfileResponse> result = await bus.InvokeAsync<ErrorOr<UserProfileResponse>>(
+            query,
+            ct
+        );
+        return result.ToActionResult(this);
     }
-
 
     /// <summary>
     /// Updates the authenticated user's profile information.
@@ -111,20 +117,17 @@ public sealed class UserController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [EndpointSummary("Updates user profile.")]
-    [EndpointDescription("Updates the user's profile information including name, bio, and optional avatar image. Accepts multipart/form-data for file uploads.")]
+    [EndpointDescription(
+        "Updates the user's profile information including name, bio, and optional avatar image. Accepts multipart/form-data for file uploads."
+    )]
     [EndpointName("UpdateUserProfile")]
     [Authorize]
     public async Task<IActionResult> UpdateProfile(
         [FromForm] UpdateProfileCommand command,
-        CancellationToken ct)
+        CancellationToken ct
+    )
     {
-        Result result = await sender.Send(command, ct);
-        return result.ToActionResult(HttpContext);
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
+        return result.ToActionResult(this);
     }
 }
-
-
-
-
-
-

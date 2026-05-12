@@ -1,14 +1,11 @@
-﻿using Expense_Tracker.Application.Features.FilesFolder.Dtos;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using Expense_Tracker.Application.Features.FilesFolder.Dtos;
+using ErrorOr;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.FilesFolder.Queries.StreanFile;
 
 public class StreamFileQueryHandler(IFileService fileService)
-    : IRequestHandler<StreamFileQuery, Result<StreamFileDto>>
 {
-    public async Task<Result<StreamFileDto>> Handle(StreamFileQuery request, CancellationToken ct)
+    public async Task<ErrorOr<StreamFileDto>> Handle(StreamFileQuery request, CancellationToken ct)
    => await fileService.StreamAsync(request.Id, ct);
-
-
 }

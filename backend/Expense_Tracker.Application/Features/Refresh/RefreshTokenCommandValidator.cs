@@ -8,15 +8,10 @@ public sealed class RefreshTokenCommandValidator
 {
     public RefreshTokenCommandValidator()
     {
-        RuleFor(x => x.RefreshToken)
+        RuleFor(x => x.RawRefreshToken)
             .NotEmpty()
             .WithMessage("Refresh token is required.")
             .MaximumLength(512);
-
-        RuleFor(x => x.DeviceId)
-            .NotEmpty()
-            .WithMessage("DeviceId is required.")
-            .MaximumLength(128);
 
         RuleFor(x => x.FcmToken)
          .MaximumLength(ValidationLimits.FcmTokenMaxLength)

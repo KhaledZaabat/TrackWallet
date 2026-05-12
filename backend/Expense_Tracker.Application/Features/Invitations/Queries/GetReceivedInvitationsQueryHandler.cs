@@ -1,25 +1,32 @@
-﻿using Expense_Tracker.Contracts.Reponses.Inv;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Family = Expense_Tracker.Domain.FamilyFolder.Family;
+using Expense_Tracker.Application.Interfaces;
+using ErrorOr;
+using Expense_Tracker.Contracts.Reponses.Inv;
+using Expense_Tracker.Domain.FamilyFolder;
+using Expense_Tracker.Domain.Invitation;
 using Expense_Tracker.Domain.Invitation.Enums;
-using MediatR;
+using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.Invitations.Queries;
 
-public sealed class GetReceivedInvitationsQueryHandler(IAppDbContext db)
-    : IRequestHandler<GetReceivedInvitationsQuery, Result<List<InvitationResponse>>>
+public sealed class GetReceivedInvitationsQueryHandler(
+    IRepository<Invitation> invitationRepo,
+    IRepository<User> userRepo,
+    IRepository<global::Expense_Tracker.Domain.FamilyFolder.Family> familyRepo)
 {
-    public async Task<Result<List<InvitationResponse>>> Handle(
+    public async Task<ErrorOr<List<InvitationResponse>>> Handle(
         GetReceivedInvitationsQuery request,
         CancellationToken cancellationToken)
     {
         var query =
-            from i in db.Invitations
-            join inviter in db.Users on i.InviterUserId equals inviter.Id
-            join invitee in db.Users on i.InviteeUserId equals invitee.Id  // ✅ Added invitee join
-            join family in db.Families on i.FamilyId equals family.Id
+            from i in invitationRepo.QueryTracked()
+            join inviter in userRepo.QueryTracked() on i.InviterUserId equals inviter.Id
+            join invitee in userRepo.QueryTracked() on i.InviteeUserId equals invitee.Id
+            join family in familyRepo.QueryTracked() on i.FamilyId equals family.Id
             where i.InviteeUserId == request.UserId
-            select new { i, inviter, invitee, family };  // ✅ Added invitee to select
+            select new { i, inviter, invitee, family };
 
         if (request.Status.HasValue)
         {
@@ -47,6 +54,6 @@ public sealed class GetReceivedInvitationsQueryHandler(IAppDbContext db)
             ))
             .ToListAsync(cancellationToken);
 
-        return Result.Success(result);
+        return result;
     }
 }

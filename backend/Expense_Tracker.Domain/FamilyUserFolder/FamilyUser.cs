@@ -1,10 +1,9 @@
-﻿using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+﻿using ErrorOr;
+using Expense_Tracker.Domain.Common;
+using Expense_Tracker.Domain.Errors;
 using Expense_Tracker.Domain.FamilyFolder;
 
 namespace Expense_Tracker.Domain.FamilyUserFolder;
-
 
 public sealed class FamilyUser : Entity
 {
@@ -14,11 +13,9 @@ public sealed class FamilyUser : Entity
     public Guid InvitedById { get; private set; }
     public DateTimeOffset JoinedAtUtc { get; private set; }
 
-    // Navigation properties
     public Family Family { get; private set; } = null!;
     public Users.User User { get; private set; } = null!;
 
-    // EF Core constructor
     private FamilyUser() { }
 
     private FamilyUser(
@@ -35,23 +32,20 @@ public sealed class FamilyUser : Entity
         JoinedAtUtc = DateTimeOffset.UtcNow;
     }
 
-    public static Result<FamilyUser> Create(
+    public static ErrorOr<FamilyUser> Create(
         Guid familyId,
         Guid userId,
         bool isParent,
         Guid invitedById)
     {
         if (familyId == Guid.Empty)
-            return Result.Failure<FamilyUser>(
-                DomainError.InvalidState(nameof(FamilyUser), "Family ID is required."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(FamilyUser), "Family ID is required.");
 
         if (userId == Guid.Empty)
-            return Result.Failure<FamilyUser>(
-                DomainError.InvalidState(nameof(FamilyUser), "User ID is required."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(FamilyUser), "User ID is required.");
 
         if (invitedById == Guid.Empty)
-            return Result.Failure<FamilyUser>(
-                DomainError.InvalidState(nameof(FamilyUser), "Inviter ID is required."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(FamilyUser), "Inviter ID is required.");
 
         var familyUser = new FamilyUser(
             Guid.CreateVersion7(),
@@ -60,26 +54,24 @@ public sealed class FamilyUser : Entity
             isParent,
             invitedById);
 
-        return Result.Success(familyUser);
+        return familyUser;
     }
 
-    public Result PromoteToParent()
+    public ErrorOr<Success> PromoteToParent()
     {
         if (IsParent)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(FamilyUser), "User is already a parent."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(FamilyUser), "User is already a parent.");
 
         IsParent = true;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result DemoteToChild()
+    public ErrorOr<Success> DemoteToChild()
     {
         if (!IsParent)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(FamilyUser), "User is already a child."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(FamilyUser), "User is already a child.");
 
         IsParent = false;
-        return Result.Success();
+        return new Success();
     }
 }

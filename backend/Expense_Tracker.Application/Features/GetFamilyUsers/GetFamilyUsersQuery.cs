@@ -1,8 +1,5 @@
-﻿using Expense_Tracker.Contracts.Reponses.Family;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using Expense_Tracker.Contracts.Reponses.Family;
 
 namespace Expense_Tracker.Application.Features.GetFamilyUsers;
 
-public sealed record GetFamilyUsersQuery()
-    : IRequest<Result<List<FamilyUserSimpleResponse>>>;
+public sealed record GetFamilyUsersQuery();

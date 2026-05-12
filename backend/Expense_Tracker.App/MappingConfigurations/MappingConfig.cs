@@ -25,8 +25,6 @@ public class MappingConfig : IRegister
             .Map(dest => dest.UserId, src => src.dto.UserId)
             .Map(dest => dest.FullName, src => src.dto.FullName)
             .Map(dest => dest.Email, src => src.dto.Email)
-            .Map(dest => dest.JwtToken, src => src.dto.JwtToken)
-            .Map(dest => dest.RefreshToken, src => src.dto.RefreshToken)
             .Map(dest => dest.ProfileImageUrl, src => src.url)
             .Map(dest => dest.Families, src => src.families);
 
@@ -38,8 +36,6 @@ public class MappingConfig : IRegister
             .Map(dest => dest.UserId, src => src.dto.UserId)
             .Map(dest => dest.FullName, src => src.dto.FullName)
             .Map(dest => dest.Email, src => src.dto.Email)
-            .Map(dest => dest.JwtToken, src => src.dto.JwtToken)
-            .Map(dest => dest.RefreshToken, src => src.dto.RefreshToken)
             .Map(dest => dest.ProfileImageUrl, src => src.url);
 
         // ===============================
@@ -50,8 +46,6 @@ public class MappingConfig : IRegister
             .Map(dest => dest.UserId, src => src.UserId)
             .Map(dest => dest.FullName, src => src.FullName)
             .Map(dest => dest.Email, src => src.Email)
-            .Map(dest => dest.JwtToken, src => src.JwtToken)
-            .Map(dest => dest.RefreshToken, src => src.RefreshToken)
             .Map(dest => dest.ProfileImageUrl, src => (string?)null);
 
         // ===============================

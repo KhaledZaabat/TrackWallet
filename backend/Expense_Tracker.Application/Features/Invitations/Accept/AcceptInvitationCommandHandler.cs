@@ -1,54 +1,60 @@
-﻿using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.Users;
+using Expense_Tracker.Application.Interfaces;
+using ErrorOr;
+using Expense_Tracker.Application.Events;
 using Expense_Tracker.Domain.FamilyUserFolder;
 using Expense_Tracker.Domain.Invitation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wolverine;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.Invitations.Accept;
 
-public sealed class AcceptInvitationCommandHandler(IAppDbContext db)
-    : IRequestHandler<AcceptInvitationCommand, Result>
+public sealed class AcceptInvitationCommandHandler(
+    IRepository<Invitation> invitationRepo,
+    IRepository<FamilyUser> familyUserRepo,
+    IMessageBus bus)
 {
-    public async Task<Result> Handle(
+    public async Task<ErrorOr<Success>> Handle(
         AcceptInvitationCommand request,
         CancellationToken cancellationToken)
     {
         // 1. Get invitation
-        Invitation? invitation = await db.Invitations
+        Invitation? invitation = await invitationRepo.QueryTracked()
             .Include(i => i.Family)
             .FirstOrDefaultAsync(i => i.Id == request.InvitationId, cancellationToken);
 
         if (invitation is null)
-            return Result.Failure(
-                DomainError.NotFound(nameof(Invitation)));
+            return DomainErrors.GeneralErrors.NotFound(nameof(Invitation));
 
         // 2. Verify user is the invitee
         if (invitation.InviteeUserId != request.UserId)
-            return Result.Failure(
-                DomainError.Forbidden("You can only accept invitations sent to you."));
+            return DomainErrors.GeneralErrors.Forbidden("You can only accept invitations sent to you.");
 
         // 3. Accept invitation (domain logic)
-        Result acceptResult = invitation.Accept();
-        if (acceptResult.IsFailure)
-            return acceptResult;
+        ErrorOr<Success> acceptResult = invitation.Accept();
+        if (acceptResult.IsError)
+            return acceptResult.Errors;
 
         // 4. Add user to family
-        Result<FamilyUser> familyUserResult = FamilyUser.Create(
+        ErrorOr<FamilyUser> familyUserResult = FamilyUser.Create(
             invitation.FamilyId,
             invitation.InviteeUserId,
             invitation.IsParent,
             invitation.InviterUserId);
 
-        if (familyUserResult.IsFailure)
-            return Result.Failure(familyUserResult.TryGetError());
+        if (familyUserResult.IsError)
+            return familyUserResult.Errors;
 
-        FamilyUser familyUser = familyUserResult.TryGetValue();
-        db.FamilyUsers.Add(familyUser);
+        FamilyUser familyUser = familyUserResult.Value;
+        await familyUserRepo.AddAsync(familyUser);
 
         // 5. Save changes
-        await db.SaveChangesAsync(cancellationToken);
+        await invitationRepo.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        // 6. Publish event
+        await bus.PublishAsync(new InvitationAcceptedEvent(invitation));
+
+        return new Success();
     }
 }

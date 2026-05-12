@@ -1,15 +1,14 @@
-﻿using Expense_Tracker.Domain.CategoryFolder;
+﻿using ErrorOr;
+using Expense_Tracker.Domain.CategoryFolder;
 using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using Expense_Tracker.Domain.Events;
+using Expense_Tracker.Domain.Errors;
 using Expense_Tracker.Domain.FamilyFolder;
 using Expense_Tracker.Domain.TransactionFolder.Enums;
 using Expense_Tracker.Domain.Users;
 
 namespace Expense_Tracker.Domain.TransactionFolder;
 
-public sealed class Transaction : AggregateRoot, IAuditable
+public sealed class Transaction : Entity, IAuditable
 {
     public TransactionType Type { get; private set; }
     public decimal Amount { get; private set; }
@@ -17,23 +16,19 @@ public sealed class Transaction : AggregateRoot, IAuditable
     public string Title { get; private set; } = string.Empty;
     public string Notes { get; private set; } = string.Empty;
 
-    // Foreign Keys
     public Guid CreatedById { get; private set; }
     public Guid FamilyId { get; private set; }
     public Guid CategoryId { get; private set; }
 
-    // Navigation Properties
     public User? CreatedBy { get; private set; }
     public Family? Family { get; private set; }
     public Category? Category { get; private set; }
 
-    // Audit properties
     public DateTimeOffset CreatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;
     public Guid CreatedBy_AuditId { get; private set; } = Guid.Empty;
     public DateTimeOffset LastModifiedUtc { get; private set; } = DateTimeOffset.UtcNow;
     public Guid LastModifiedBy { get; private set; } = Guid.Empty;
 
-    // Explicit interface implementations for IAuditable
     DateTimeOffset ICreatable.CreatedAtUtc
     {
         get => CreatedAtUtc;
@@ -58,7 +53,6 @@ public sealed class Transaction : AggregateRoot, IAuditable
         set => LastModifiedBy = value;
     }
 
-    // EF Core constructor
     private Transaction() { }
 
     private Transaction(
@@ -83,7 +77,7 @@ public sealed class Transaction : AggregateRoot, IAuditable
         CreatedBy_AuditId = createdByID;
     }
 
-    public static Result<Transaction> Create(
+    public static ErrorOr<Transaction> Create(
         TransactionType type,
         decimal amount,
         DateOnly transactedOn,
@@ -94,24 +88,19 @@ public sealed class Transaction : AggregateRoot, IAuditable
         Guid categoryID)
     {
         if (string.IsNullOrWhiteSpace(title))
-            return Result.Failure<Transaction>(
-                DomainError.InvalidState(nameof(Transaction), "TransactionFolder title cannot be empty."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Transaction), "Transaction title cannot be empty.");
 
         if (amount <= 0)
-            return Result.Failure<Transaction>(
-                DomainError.InvalidState(nameof(Transaction), "Amount must be greater than zero."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Transaction), "Amount must be greater than zero.");
 
         if (createdByID == Guid.Empty)
-            return Result.Failure<Transaction>(
-                DomainError.InvalidState(nameof(Transaction), "CreatedBy ID cannot be empty."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Transaction), "CreatedBy ID cannot be empty.");
 
         if (familyID == Guid.Empty)
-            return Result.Failure<Transaction>(
-                DomainError.InvalidState(nameof(Transaction), "Family ID cannot be empty."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Transaction), "Family ID cannot be empty.");
 
         if (categoryID == Guid.Empty)
-            return Result.Failure<Transaction>(
-                DomainError.InvalidState(nameof(Transaction), "Category ID cannot be empty."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Transaction), "Category ID cannot be empty.");
 
         var transaction = new Transaction(
             Guid.CreateVersion7(),
@@ -123,63 +112,58 @@ public sealed class Transaction : AggregateRoot, IAuditable
             createdByID,
             familyID,
             categoryID);
-        transaction.AddDomainEvent(new TransactionCreatedEvent(transaction));
 
-        return Result.Success(transaction);
+        return transaction;
     }
 
-    public Result Rename(string newTitle)
+    public ErrorOr<Success> Rename(string newTitle)
     {
         if (string.IsNullOrWhiteSpace(newTitle))
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Transaction), "TransactionFolder title cannot be empty."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Transaction), "Transaction title cannot be empty.");
 
         Title = newTitle.Trim();
-        return Result.Success();
+        return new Success();
     }
 
-    public Result ChangeNotes(string newNotes)
+    public ErrorOr<Success> ChangeNotes(string newNotes)
     {
         Notes = newNotes ?? string.Empty;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result ChangeAmount(decimal newAmount)
+    public ErrorOr<Success> ChangeAmount(decimal newAmount)
     {
         if (newAmount <= 0)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Transaction), "Amount must be greater than zero."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Transaction), "Amount must be greater than zero.");
 
         Amount = newAmount;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result MoveToCategory(Guid newCategoryId)
+    public ErrorOr<Success> MoveToCategory(Guid newCategoryId)
     {
         if (newCategoryId == Guid.Empty)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Transaction), "Category ID cannot be empty."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Transaction), "Category ID cannot be empty.");
 
         CategoryId = newCategoryId;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result Reschedule(DateOnly newDate)
+    public ErrorOr<Success> Reschedule(DateOnly newDate)
     {
         TransactedOn = newDate;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result MarkAsIncome()
+    public ErrorOr<Success> MarkAsIncome()
     {
         Type = TransactionType.Income;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result MarkAsExpense()
+    public ErrorOr<Success> MarkAsExpense()
     {
         Type = TransactionType.Expense;
-        return Result.Success();
+        return new Success();
     }
 }
-

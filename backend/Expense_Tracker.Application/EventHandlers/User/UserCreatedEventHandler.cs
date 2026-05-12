@@ -1,8 +1,7 @@
-﻿using Expense_Tracker.Application.Common.Settings;
+using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Events;
-using MediatR;
+using Expense_Tracker.Application.Events;
 
 namespace Expense_Tracker.Application.EventHandlers.User;
 
@@ -12,7 +11,7 @@ public sealed class UserCreatedEventHandler(
     IEmailBodyBuilder _bodyBuilder,
     INotificationService _notification,
     OtpSettings _otpSettings
-) : INotificationHandler<UserCreatedEvent>
+)
 {
     public async Task Handle(UserCreatedEvent notification, CancellationToken cancellationToken)
     {

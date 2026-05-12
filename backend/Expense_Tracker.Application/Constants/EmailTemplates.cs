@@ -1,4 +1,4 @@
-﻿namespace Expense_Tracker.Application.Constants;
+namespace Expense_Tracker.Application.Constants;
 
 public static class EmailTemplates
 {
@@ -13,6 +13,5 @@ public static class EmailTemplates
     public const string InvitationAcceptedTemplate = "InvitationAccepted.html";
     public const string InvitationDeclinedTemplate = "InvitationDeclined.html";
     public const string InvitationCancelledTemplate = "InvitationCancelled.html";
-
 
 }

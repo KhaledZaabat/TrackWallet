@@ -1,4 +1,4 @@
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using ErrorOr;
 
 namespace Expense_Tracker.Domain.Common;
 
@@ -8,6 +8,5 @@ public interface ISoftDeletable
     Guid? DeletedById { get; set; }
     DateTimeOffset? DeletedOn { get; set; }
 
-    public Result SoftDelete(Guid deletedBy);
-
+    ErrorOr<Success> SoftDelete(Guid deletedBy);
 }

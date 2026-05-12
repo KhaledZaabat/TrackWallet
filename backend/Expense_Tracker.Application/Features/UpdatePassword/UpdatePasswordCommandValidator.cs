@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Expense_Tracker.Application.Constans;
 
 namespace Expense_Tracker.Application.Features.UpdatePassword;
@@ -8,7 +8,6 @@ public sealed class UpdatePasswordCommandValidator
 {
     public UpdatePasswordCommandValidator()
     {
-
 
         RuleFor(x => x.CurrentPassword)
             .NotEmpty().WithMessage(ValidationMessages.Required)

@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Domain.CategoryFolder;
+using Expense_Tracker.Domain.CategoryFolder;
 using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.Common.Identity;
 using Expense_Tracker.Domain.FamilyFolder;
@@ -10,20 +10,18 @@ using Expense_Tracker.Domain.TransactionFolder;
 using Expense_Tracker.Domain.Users;
 using Expense_Tracker.Domain.Users.Abstraction.NotificationPreferencesFolder;
 using Expense_Tracker.Infrastructure.Idenitity;
-using MediatR;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Infrastructure.Data;
 
 public class AppDbContext
-    (DbContextOptions<AppDbContext> options, IPublisher mediator)
-    : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IAppDbContext
+    (DbContextOptions<AppDbContext> options)
+    : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
 {
     public bool DisableCreationAudit { get; set; } = false;
     public bool DisableUpdateAudit { get; set; } = false;
     public bool DisableSoftDeleting { get; set; } = false;
-    public bool DisableDomainEvents { get; set; } = false;
 
     #region Identity
     public DbSet<ApplicationUser> IdentityUsers => Set<ApplicationUser>();
@@ -66,46 +64,11 @@ public class AppDbContext
     public DbSet<Transaction> Transactions => Set<Transaction>();
     #endregion
 
-    // ----------------------------
-    // SaveChanges + Domain Events
-    // ----------------------------
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        List<AggregateRoot> domainEntities = ChangeTracker.Entries()
-            .Where(e => e.Entity is AggregateRoot root && root.DomainEvents.Count > 0)
-            .Select(e => (AggregateRoot)e.Entity)
-            .ToList();
-
-        List<DomainEvent> domainEvents = domainEntities
-            .SelectMany(e => e.DomainEvents)
-            .ToList();
-
-        int result = await base.SaveChangesAsync(cancellationToken);
-
-        if (!DisableDomainEvents && domainEvents.Count > 0)
-        {
-            foreach (DomainEvent domainEvent in domainEvents)
-            {
-                await mediator.Publish(domainEvent, cancellationToken);
-            }
-
-            foreach (AggregateRoot entity in domainEntities)
-            {
-                entity.ClearDomainEvents();
-            }
-        }
-
-        return result;
-    }
-
-    // ----------------------------
-    // Model Configs
-    // ----------------------------
+   
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
-        // Automatically load all configurations in assembly
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }

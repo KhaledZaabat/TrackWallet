@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Application.Constans;
+using Expense_Tracker.Application.Constans;
 using Files.Contracts.Common;
 using FluentValidation;
 
@@ -44,9 +44,6 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
             .NotEmpty().WithMessage(ValidationMessages.Required)
             .LessThan(DateOnly.FromDateTime(DateTime.Today))
                 .WithMessage("Birth date must be in the past.");
-
-
-
 
         RuleFor(x => x.ProfileImage)
             .SetValidator(new FileNotEmptyValidator()!)

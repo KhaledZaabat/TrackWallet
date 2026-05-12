@@ -1,6 +1,6 @@
-﻿using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+﻿using ErrorOr;
+using Expense_Tracker.Domain.Common;
+using Expense_Tracker.Domain.Errors;
 using Expense_Tracker.Domain.FamilyFolder;
 
 namespace Expense_Tracker.Domain.FamilyUserFolder;
@@ -11,10 +11,8 @@ public sealed class FamilyBudgetHistory : Entity
     public decimal Budget { get; private set; }
     public DateTimeOffset RecordedAtUtc { get; private set; }
 
-    // Navigation property
     public Family Family { get; private set; } = null!;
 
-    // EF Core constructor
     private FamilyBudgetHistory() { }
 
     private FamilyBudgetHistory(
@@ -28,14 +26,13 @@ public sealed class FamilyBudgetHistory : Entity
         RecordedAtUtc = recordedAt;
     }
 
-    public static Result<FamilyBudgetHistory> Create(
+    public static ErrorOr<FamilyBudgetHistory> Create(
         Guid familyId,
         decimal budget,
         DateTimeOffset? recordedAt = null)
     {
         if (familyId == Guid.Empty)
-            return Result.Failure<FamilyBudgetHistory>(
-                DomainError.InvalidState(nameof(FamilyBudgetHistory), "Family ID is required."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(FamilyBudgetHistory), "Family ID is required.");
 
         var history = new FamilyBudgetHistory(
             Guid.CreateVersion7(),
@@ -43,6 +40,6 @@ public sealed class FamilyBudgetHistory : Entity
             budget,
             recordedAt ?? DateTimeOffset.UtcNow);
 
-        return Result.Success(history);
+        return history;
     }
 }

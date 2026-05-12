@@ -25,9 +25,8 @@ public sealed class NotificationConfiguration
             .IsRequired()
             .HasMaxLength(1000);
 
-        // Use native PostgreSQL JSONB for better performance
         builder.Property(x => x.Data)
-            .HasColumnType("jsonb")  // JSONB is faster than JSON for queries
+            .HasColumnType("jsonb")  
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => string.IsNullOrEmpty(v)
@@ -39,7 +38,7 @@ public sealed class NotificationConfiguration
             .IsRequired()
             .HasDefaultValue(false);
 
-        builder.Property(x => x.CreatedUtc)
+        builder.Property(x => x.CreatedAtUtc)
             .IsRequired()
             .HasDefaultValueSql("NOW()");
 
@@ -55,13 +54,13 @@ public sealed class NotificationConfiguration
             .HasDatabaseName("IX_Notifications_UserId");
 
         // Query unread notifications (most common query)
-        builder.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedUtc })
-            .HasDatabaseName("IX_Notifications_UserId_IsRead_CreatedUtc")
+        builder.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAtUtc })
+            .HasDatabaseName("IX_Notifications_UserId_IsRead_CreatedAtUtc")
             .HasFilter("\"IsRead\" = false");  // Partial index for unread only
 
         // Query by notification type
-        builder.HasIndex(x => new { x.UserId, x.Type, x.CreatedUtc })
-            .HasDatabaseName("IX_Notifications_UserId_Type_CreatedUtc");
+        builder.HasIndex(x => new { x.UserId, x.Type, x.CreatedAtUtc })
+            .HasDatabaseName("IX_Notifications_UserId_Type_CreatedAtUtc");
 
         // Query by actor (who triggered the notification)
         builder.HasIndex(x => x.ActorUserId)

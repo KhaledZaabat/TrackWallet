@@ -1,5 +1,8 @@
-﻿using Asp.Versioning;
-using Expense_Tracker.App.Helpers;
+using Asp.Versioning;
+using ErrorOr;
+using Expense_Tracker.App.Auth;
+using Expense_Tracker.Application.Common.Settings;
+using Expense_Tracker.Application.Features;
 using Expense_Tracker.Application.Features.Identity.Commands.ConfirmAccount;
 using Expense_Tracker.Application.Features.Identity.Commands.ForgotPassword;
 using Expense_Tracker.Application.Features.Identity.Commands.Logout;
@@ -11,18 +14,12 @@ using Expense_Tracker.Application.Features.Refresh;
 using Expense_Tracker.Application.Features.Register;
 using Expense_Tracker.Contracts.Reponses.Identity;
 using Expense_Tracker.Contracts.Requests.Identity;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Wolverine;
+
 namespace Expense_Tracker.App.Controllers;
-
-
-
-
-
-
-
-
 
 /// <summary>
 /// Handles all identity-related actions such as login, token refresh,
@@ -34,37 +31,54 @@ namespace Expense_Tracker.App.Controllers;
 [Produces("application/json")]
 [Consumes("application/json")]
 [ApiVersion("1.0")]
-
-public sealed class IdentityController(ISender sender) : ControllerBase
+public sealed class IdentityController(
+    IMessageBus bus,
+    IAuthCookieWriter authCookies,
+    IOptionsMonitor<AuthCookieOptions> cookieOptions
+) : ControllerBase
 {
-
-
     /// <summary>
     /// Authenticates a user using email + password credentials.
     /// </summary>
+    [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Authenticates a user by email.")]
-    [EndpointDescription("Validates email and password and returns a JWT + Refresh token pair as http only cookie  .")]
+    [EndpointDescription(
+        "Validates email and password and returns a JWT + Refresh token pair as http only cookie  ."
+    )]
     public async Task<ActionResult<AuthResponse>> Login(
         [FromBody] LoginRequest request,
-        CancellationToken ct)
+        CancellationToken ct
+    )
     {
         LoginCommand command = new(
             request.Email,
             request.Password,
             request.DeviceId,
-            request.FcmToken);
+            request.FcmToken
+        );
 
-        Result<AuthResponse> result = await sender.Send(command, ct);
+       ErrorOr<AuthCommandResult> result = await bus.InvokeAsync<ErrorOr<AuthCommandResult>>(
+            command,
+            ct
+        );
 
-        return result.ToActionResult(HttpContext);
+        if (result.IsError)
+            return this.Problem(result.Errors);
+
+        AuthCommandResult value = result.Value;
+
+        // R2.1, R3.1, R12.2 — issue all three auth cookies through the single writer (R22.10).
+        authCookies.WriteAccessCookie(HttpContext, value.AccessToken, value.AccessExpiresAt);
+        authCookies.WriteRefreshCookie(HttpContext, value.RefreshToken, value.RefreshExpiresAt);
+        authCookies.IssueCsrfCookie(HttpContext);
+
+        return value.Response;
     }
-
-
 
     /// <summary>
     /// Registers a new user using email credentials.
@@ -81,6 +95,7 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     /// <returns>
     /// Returns 200 OK if registration succeeds.
     /// </returns>
+    [AllowAnonymous]
     [HttpPost("register")]
     [Consumes("multipart/form-data")] // Add this
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -88,11 +103,14 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Register user by email")]
-    [EndpointDescription("Creates a new user account using email credentials and sends a verification OTP.")]
+    [EndpointDescription(
+        "Creates a new user account using email credentials and sends a verification OTP."
+    )]
     [EndpointName("Register")]
     public async Task<IActionResult> Register(
         [FromForm] RegisterRequest request,
-        CancellationToken ct)
+        CancellationToken ct
+    )
     {
         var command = new RegisterCommand(
             request.Email,
@@ -104,11 +122,9 @@ public sealed class IdentityController(ISender sender) : ControllerBase
             request.ProfileImage
         );
 
-        Result result = await sender.Send(command, ct);
-        return result.ToActionResult(HttpContext);
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
+        return result.ToActionResult(this);
     }
-
-
 
     /// <summary>
     /// Resends account confirmation OTP to email or phone.
@@ -116,6 +132,7 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     /// <param name="request">Object containing email or phone.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Success if OTP resent, or failure if already confirmed or user not found.</returns>
+    [AllowAnonymous]
     [HttpPost("confirm-account/otp/resend")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -127,14 +144,14 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     [EndpointName("ResendConfirmationOtp")]
     public async Task<IActionResult> ResendConfirmationOtp(
         [FromBody] ResendConfirmationRequest request,
-        CancellationToken ct)
+        CancellationToken ct
+    )
     {
         var command = new ResendConfirmationCommand(request.Email);
 
-        Result result = await sender.Send(command, ct);
-        return result.ToActionResult(HttpContext);
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
+        return result.ToActionResult(this);
     }
-
 
     /// <summary>
     /// Confirms a user account (email) using a valid OTP.
@@ -146,6 +163,7 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     /// <response code="400">Invalid data or expired OTP.</response>
     /// <response code="404">User not found.</response>
     /// <response code="500">Internal server error.</response>
+    [AllowAnonymous]
     [HttpPost("confirm-account")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -154,14 +172,16 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     [EndpointSummary("Confirms a user account using OTP.")]
     [EndpointDescription("Validates OTP for email or phone and activates the user account.")]
     [EndpointName("ConfirmAccount")]
-    public async Task<IActionResult> ConfirmAccount([FromBody] ConfirmAccountRequest request, CancellationToken ct)
+    public async Task<IActionResult> ConfirmAccount(
+        [FromBody] ConfirmAccountRequest request,
+        CancellationToken ct
+    )
     {
         var command = new ConfirmAccountCommand(request.Email, request.Otp);
 
-        Result result = await sender.Send(command, ct);
-        return result.ToActionResult(HttpContext);
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
+        return result.ToActionResult(this);
     }
-
 
     /// <summary>
     /// Refreshes the access and refresh tokens.
@@ -173,22 +193,36 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     [EndpointSummary("Refreshes JWT token pair.")]
     public async Task<ActionResult<AuthResponse>> RefreshToken(
-    [FromBody] RefreshTokenRequest request,
-    CancellationToken ct)
+        [FromBody] RefreshTokenRequest request,
+        CancellationToken ct
+    )
     {
+        AuthCookieOptions cookieOpts = cookieOptions.CurrentValue;
 
-        RefreshTokenCommand command = new(
-            request.RefreshToken,
-            request.DeviceId,
-            request.FcmToken);
+        // R15.1, R15.3 — raw refresh MUST come from the cookie; the body is ignored.
+        string? rawRefresh = HttpContext.Request.Cookies[cookieOpts.RefreshCookieName];
+        if (string.IsNullOrEmpty(rawRefresh))
+            return Unauthorized();
 
-        Result<AuthResponse> result = await sender.Send(command, ct);
+        RefreshTokenCommand command = new(rawRefresh, request.FcmToken);
 
-        return result.ToActionResult(HttpContext);
+        ErrorOr<AuthCommandResult> result = await bus.InvokeAsync<ErrorOr<AuthCommandResult>>(
+            command,
+            ct
+        );
+
+        if (result.IsError)
+            return this.Problem(result.Errors);
+
+        AuthCommandResult value = result.Value;
+
+        // R2.2, R3.2, R12.2 — rotate cookies and refresh CSRF on success.
+        authCookies.WriteAccessCookie(HttpContext, value.AccessToken, value.AccessExpiresAt);
+        authCookies.WriteRefreshCookie(HttpContext, value.RefreshToken, value.RefreshExpiresAt);
+        authCookies.RefreshCsrfCookie(HttpContext);
+
+        return value.Response;
     }
-
-
-
 
     /// <summary>
     /// Sends and Resend an OTP code to the user for resetting their password.
@@ -203,6 +237,7 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     /// <response code="404">User not found.</response>
     /// <response code="409">User email or phone is not confirmed.</response>
     /// <response code="500">Internal server error.</response>
+    [AllowAnonymous]
     [HttpPost("reset-password/otp/send")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -214,13 +249,13 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     [EndpointName("SendResetPasswordOtp")]
     public async Task<IActionResult> SendResetPasswordOtp(
         [FromBody] ResetPasswordOtpSendRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var command = new ResetPasswordOtpSendCommand(request.Email);
-        Result res = await sender.Send(command, cancellationToken);
-        return res.ToActionResult(HttpContext);
+        ErrorOr<Success> res = await bus.InvokeAsync<ErrorOr<Success>>(command, cancellationToken);
+        return res.ToActionResult(this);
     }
-
 
     /// <summary>
     /// Verifies a password-reset OTP sent to the user.
@@ -234,6 +269,7 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     /// <response code="400">Invalid OTP format or expired OTP.</response>
     /// <response code="404">User or OTP key not found.</response>
     /// <response code="500">Internal server error.</response>
+    [AllowAnonymous]
     [HttpPost("reset-password/otp/verify")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -244,15 +280,13 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     [EndpointName("VerifyResetPasswordOtp")]
     public async Task<IActionResult> VerifyResetPasswordOtp(
         [FromBody] VerifyOtpRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var command = new VerifyOtpCommand(request.Email, request.Otp);
-        Result res = await sender.Send(command, cancellationToken);
-        return res.ToActionResult(HttpContext);
+        ErrorOr<Success> res = await bus.InvokeAsync<ErrorOr<Success>>(command, cancellationToken);
+        return res.ToActionResult(this);
     }
-
-
-
 
     /// <summary>
     /// Resets the user password after OTP verification.
@@ -267,6 +301,7 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     /// <response code="404">User not found.</response>
     /// <response code="409">User has not confirmed email/phone.</response>
     /// <response code="500">Internal server error.</response>
+    [AllowAnonymous]
     [HttpPost("reset-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -278,17 +313,18 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     [EndpointName("ResetPassword")]
     public async Task<IActionResult> ResetPassword(
         [FromBody] ResetPasswordRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        string userIpAddress = HttpContext.GetClientIp();
+        string userIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
         var command = new ResetPasswordCommand(request.Email, request.NewPassword, userIpAddress);
-        Result result = await sender.Send(command, cancellationToken);
-        return result.ToActionResult(HttpContext);
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(
+            command,
+            cancellationToken
+        );
+        return result.ToActionResult(this);
     }
-
-
-
 
     /// <summary>
     /// Logs out the current user by revoking their latest active refresh token.
@@ -308,10 +344,21 @@ public sealed class IdentityController(ISender sender) : ControllerBase
     [EndpointName("Logout")]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken ct)
     {
-        Result result = await sender.Send(new LogoutCommand(request.DeviceId, request.FcmToken), ct);
-        return result.ToActionResult(HttpContext);
+        // R14.4 — set the skip marker BEFORE dispatching so SilentRefreshMiddleware
+        // does not attempt a rotation on the response path for this request.
+        HttpContext.Items["AuthLogoutInProgress"] = true;
+
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(
+            new LogoutCommand(request.DeviceId, request.FcmToken),
+            ct
+        );
+
+        if (result.IsError)
+            return this.Problem(result.Errors);
+
+        // R14.2 — clear access + refresh + CSRF with the exact attributes used on write (R22.9).
+        authCookies.ClearAuthCookies(HttpContext);
+
+        return Ok();
     }
-
-
-
 }

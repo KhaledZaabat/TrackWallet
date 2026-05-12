@@ -1,37 +1,39 @@
-﻿using Expense_Tracker.Application.Constans;
+using User = Expense_Tracker.Domain.Users.User;
+using Expense_Tracker.Application.Constans;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Events;
+using Expense_Tracker.Application.Events;
+using Expense_Tracker.Domain.FamilyFolder;
 using Expense_Tracker.Domain.PushNotifications.Enums;
-using MediatR;
+using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Application.EventHandlers.Inv;
 
 public sealed class InvitationAcceptedEventHandler(
-    IAppDbContext context,
+    IRepository<global::Expense_Tracker.Domain.Users.User> users,
+    IRepository<Family> families,
     IUnifiedNotificationDispatcher dispatcher,
     IEmailTemplateLoader templateLoader,
     IEmailBodyBuilder bodyBuilder,
     INotificationService notification)
-    : INotificationHandler<InvitationAcceptedEvent>
 {
     public async Task Handle(
         InvitationAcceptedEvent notification,
         CancellationToken ct)
     {
         // Get invitee, inviter, and family information
-        var inviteeInfo = await context.Users
+        var inviteeInfo = await users.Query()
             .Where(u => u.Id == notification.Invitation.InviteeUserId)
             .Select(u => u.UserName)
             .SingleOrDefaultAsync(ct);
 
-        var inviterInfo = await context.Users
+        var inviterInfo = await users.Query()
             .Where(u => u.Id == notification.Invitation.InviterUserId)
             .Select(u => new { u.UserName, u.Email, u.NotificationPreferences.EmailNotifications })
             .SingleOrDefaultAsync(ct);
 
-        var familyInfo = await context.Families
+        var familyInfo = await families.Query()
             .Where(f => f.Id == notification.Invitation.FamilyId)
             .Select(f => f.Name)
             .SingleOrDefaultAsync(ct);

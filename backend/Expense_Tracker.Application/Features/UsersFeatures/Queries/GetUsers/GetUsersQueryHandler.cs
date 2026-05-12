@@ -1,16 +1,17 @@
-﻿namespace Expense_Tracker.Application.Features.UsersFeatures.Queries.GetUsers;
+using Expense_Tracker.Domain.Users;
+using Expense_Tracker.Application.Interfaces;
+namespace Expense_Tracker.Application.Features.UsersFeatures.Queries.GetUsers;
 
 //public sealed class GetUsersQueryHandler(
-//    IAppDbContext db
-//) : IRequestHandler<GetUsersQuery, Result<IReadOnlyList<UserListItemDto>>>
+//    IRepository<User> userRepo
+//)
 //{
-//    public async Task<Result<IReadOnlyList<UserListItemDto>>> Handle(
+//    public async Task<ErrorOr<IReadOnlyList<UserListItemDto>>> Handle(
 //        GetUsersQuery request,
 //        CancellationToken ct)
 //    {
 //        IQueryable<User> query =
-//            db.Users
-//              .AsNoTracking()
+//            userRepo.Query()
 //              .IgnoreQueryFilters();
 
 //        if (request.Role is not null)
@@ -29,6 +30,6 @@
 //                ))
 //                .ToListAsync(ct);
 
-//        return Result.Success<IReadOnlyList<UserListItemDto>>(users);
+//        return users;
 //    }
 //}

@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Application.Common.Settings;
+using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Constans;
 using FluentValidation;
 
@@ -16,7 +16,6 @@ public sealed class ConfirmAccountCommandValidator
         RuleFor(x => x.Email)
             .Matches(ValidationPatterns.Email).WithMessage(ValidationMessages.InvalidEmail)
             .MaximumLength(ValidationLimits.EmailMaxLength);
-
 
         // Phone rules
 

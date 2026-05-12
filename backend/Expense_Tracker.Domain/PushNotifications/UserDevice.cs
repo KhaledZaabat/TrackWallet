@@ -1,21 +1,23 @@
-﻿using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+﻿using ErrorOr;
+using Expense_Tracker.Domain.Common;
+using Expense_Tracker.Domain.Errors;
 using Expense_Tracker.Domain.PushNotifications.Enums;
 
 namespace Expense_Tracker.Domain.PushNotifications;
 
-public sealed class UserDevice : Entity
+public sealed class UserDevice : Entity, IAuditable
 {
     public Guid? UserId { get; private set; }
     public string DeviceToken { get; private set; }
     public PushPlatform Platform { get; private set; }
     public bool IsActive { get; private set; }
-    public DateTime CreatedUtc { get; private set; }
-    public DateTime? LastSeenUtc { get; private set; }
     public List<string> SubscribedTopics { get; private set; } = new();
+    public DateTimeOffset CreatedAtUtc { get; set; }
+    public Guid CreatedBy { get; set; }
+    public DateTimeOffset LastModifiedUtc { get; set; }
+    public Guid LastModifiedBy { get; set; }
 
-    private UserDevice() { } // EF
+    private UserDevice() { }
 
     private UserDevice(Guid id, string deviceToken, PushPlatform platform)
     {
@@ -26,7 +28,6 @@ public sealed class UserDevice : Entity
         DeviceToken = deviceToken;
         Platform = platform;
         IsActive = true;
-        CreatedUtc = DateTime.UtcNow;
         SubscribedTopics = new List<string>();
     }
 
@@ -42,43 +43,39 @@ public sealed class UserDevice : Entity
 
         UserId = userId;
         IsActive = true;
-        LastSeenUtc = DateTime.UtcNow;
     }
 
     public void UnbindUser()
     {
         UserId = null;
-        SubscribedTopics.Clear(); // Clear topics when unbinding
-        LastSeenUtc = DateTime.UtcNow;
+        SubscribedTopics.Clear();
     }
 
     public void Deactivate()
     {
         IsActive = false;
-        LastSeenUtc = DateTime.UtcNow;
     }
 
     public void Activate()
     {
         IsActive = true;
-        LastSeenUtc = DateTime.UtcNow;
     }
 
     public void Touch()
     {
-        LastSeenUtc = DateTime.UtcNow;
+        LastModifiedUtc = DateTimeOffset.UtcNow;
     }
 
-    public Result SubscribeToTopic(string topic)
+    public ErrorOr<Success> SubscribeToTopic(string topic)
     {
         if (string.IsNullOrWhiteSpace(topic))
-            Result.Failure(DomainError.InvalidState(nameof(UserDevice), "topic can not be empty"));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(UserDevice), "Topic cannot be empty.");
+
         if (!SubscribedTopics.Contains(topic))
-        {
             SubscribedTopics.Add(topic);
-        }
+
         Touch();
-        return Result.Success();
+        return new Success();
     }
 
     public void UnsubscribeFromTopic(string topic)

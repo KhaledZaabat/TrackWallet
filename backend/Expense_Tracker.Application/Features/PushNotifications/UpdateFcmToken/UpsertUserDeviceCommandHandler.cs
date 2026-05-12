@@ -1,33 +1,41 @@
-﻿using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Domain.PushNotifications;
+using ErrorOr;
+using Expense_Tracker.Domain.Errors;
+using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Application.Features.PushNotifications.UpdateFcmToken;
 
 public sealed class UpsertUserDeviceCommandHandler(
     IUserContext userContext,
-    IUserDeviceRepository userDeviceRepository,
-    IAppDbContext db
-) : IRequestHandler<UpsertUserDeviceCommand, Result>
+    IRepository<UserDevice> userDevices
+)
 {
-    public async Task<Result> Handle(
+    public async Task<ErrorOr<Success>> Handle(
         UpsertUserDeviceCommand request,
         CancellationToken cancellationToken)
     {
         Guid? userId = userContext.UserId;
 
         if (userId is null)
-            return Result.Failure(UserError.Unauthorized());
+            return DomainErrors.UserErrors.Unauthorized();
 
-        await userDeviceRepository.UpsertAsync(
-            userId.Value,
+        UserDevice? device = await userDevices.QueryTracked()
+            .SingleOrDefaultAsync(x => x.DeviceToken == request.FcmToken, cancellationToken);
+
+        if (device != null)
+        {
+            device.BindToUser(userId.Value);
+            device.Touch();
+            return new Success();
+        }
+
+        UserDevice newDevice = UserDevice.Create(
             request.FcmToken,
-            Domain.PushNotifications.Enums.PushPlatform.Android,
-            cancellationToken);
+            Domain.PushNotifications.Enums.PushPlatform.Android);
+        newDevice.BindToUser(userId.Value);
+        await userDevices.AddAsync(newDevice, cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result.Success();
+        return new Success();
     }
 }

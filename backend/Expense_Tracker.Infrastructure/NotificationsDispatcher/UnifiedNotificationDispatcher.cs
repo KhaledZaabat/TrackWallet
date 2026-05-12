@@ -1,8 +1,11 @@
-﻿using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Infrastructure.Data;
 using Hangfire;
 
+namespace Expense_Tracker.Infrastructure.NotificationsDispatcher;
+
 public sealed class UnifiedNotificationDispatcher(
-    IAppDbContext context,
+    AppDbContext context,
     IBackgroundJobClient backgroundJobs)
     : IUnifiedNotificationDispatcher, IScopedService
 {
@@ -10,12 +13,8 @@ public sealed class UnifiedNotificationDispatcher(
         DomainNotification notification,
         CancellationToken ct)
     {
-        context.DisableDomainEvents = true;
         context.Notifications.Add(notification);
-        await context.SaveChangesAsync(ct);
-        context.DisableDomainEvents = false;
         backgroundJobs.Enqueue<NotificationDispatchJob>(
             job => job.ExecuteAsync(notification.Id, CancellationToken.None));
     }
-
 }

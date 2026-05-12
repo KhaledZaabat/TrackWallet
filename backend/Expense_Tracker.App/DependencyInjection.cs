@@ -1,8 +1,10 @@
-﻿using Asp.Versioning;
+using System.Reflection;
+using Asp.Versioning;
+using Expense_Tracker.App.Auth;
 using Expense_Tracker.App.Implemntation;
-using Expense_Tracker.Application.Common.Behaivors;
 using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Infrastructure.Data;
 using Expense_Tracker.Infrastructure.Data.Interceptors;
 using Expense_Tracker.Infrastructure.Email;
@@ -13,8 +15,9 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
 using MapsterMapper;
-using MediatR;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -25,19 +28,16 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Resend;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Reflection;
 
 namespace Expense_Tracker.App;
 
-
-
 public static class ServiceRegistration
 {
-    public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddPresentation(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
-
-
-
         services
             .AddAssemblyScanningConfiguration()
             .AddInfrastructure(configuration)
@@ -45,9 +45,9 @@ public static class ServiceRegistration
             .AddAssemblyScanningConfiguration()
             .AddIdentityConfiguration()
             .AddJwtConfiguration(configuration)
+            .AddCookieAuthConfiguration()
             .AddControllersWithVersioning()
             .AddSwaggerDocs()
-            .AddMediatRAndPipeline()
             .AddFluentValidationPipeline()
             .AddCorsPolicy()
             .AddCache()
@@ -60,21 +60,24 @@ public static class ServiceRegistration
             .AddUrlBuilders()
             .AddFamilyContext();
 
-
-
         return services;
     }
 
-
-    private static IServiceCollection AddAssemblyScanningConfiguration(this IServiceCollection services)
+    private static IServiceCollection AddAssemblyScanningConfiguration(
+        this IServiceCollection services
+    )
     {
-
-
-        services.Scan(scan => scan
-            .FromAssembliesOf(typeof(AppDbContext))
-            .AddClasses(c => c.AssignableTo<IScopedService>()).AsImplementedInterfaces().WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo<ITransientService>()).AsImplementedInterfaces().WithTransientLifetime()
-            .AddClasses(c => c.AssignableTo<ISingletonService>()).AsImplementedInterfaces().WithSingletonLifetime()
+        services.Scan(scan =>
+            scan.FromAssembliesOf(typeof(AppDbContext), typeof(ServiceRegistration))
+                .AddClasses(c => c.AssignableTo<IScopedService>())
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+                .AddClasses(c => c.AssignableTo<ITransientService>())
+                .AsImplementedInterfaces()
+                .WithTransientLifetime()
+                .AddClasses(c => c.AssignableTo<ISingletonService>())
+                .AsImplementedInterfaces()
+                .WithSingletonLifetime()
         );
 
         return services;
@@ -82,27 +85,28 @@ public static class ServiceRegistration
 
     private static IServiceCollection AddIdentityConfiguration(this IServiceCollection services)
     {
-        services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
-        {
-            options.Password.RequireDigit = true;
-            options.Password.RequiredLength = 8;
-            options.Password.RequireUppercase = true;
-            options.Password.RequireLowercase = true;
-            options.Password.RequireNonAlphanumeric = false;
+        services
+            .AddIdentity<ApplicationUser, ApplicationRole>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 8;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireNonAlphanumeric = false;
 
-            options.User.RequireUniqueEmail = false;
-            options.SignIn.RequireConfirmedAccount = true;
-        })
-        .AddEntityFrameworkStores<AppDbContext>()
-        .AddDefaultTokenProviders();
+                options.User.RequireUniqueEmail = false;
+                options.SignIn.RequireConfirmedAccount = true;
+            })
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
 
         return services;
     }
 
-
     private static IServiceCollection AddJwtConfiguration(
-     this IServiceCollection services,
-     IConfiguration configuration)
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         services
             .AddOptions<JwtSettings>()
@@ -110,8 +114,7 @@ public static class ServiceRegistration
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddSingleton(sp =>
-            sp.GetRequiredService<IOptions<JwtSettings>>().Value);
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
         services
             .AddAuthentication(options =>
@@ -123,13 +126,16 @@ public static class ServiceRegistration
 
         services.ConfigureOptions<JwtBearerOptionsConfigurator>();
 
-        services.AddAuthentication()
+        services
+            .AddAuthentication()
             .AddGoogle(options =>
             {
-                options.ClientId = configuration["Authentication:Google:ClientId"]
+                options.ClientId =
+                    configuration["Authentication:Google:ClientId"]
                     ?? throw new InvalidOperationException("Google ClientId is missing");
 
-                options.ClientSecret = configuration["Authentication:Google:ClientSecret"]
+                options.ClientSecret =
+                    configuration["Authentication:Google:ClientSecret"]
                     ?? throw new InvalidOperationException("Google ClientSecret is missing");
 
                 options.CallbackPath = "/signin-google";
@@ -138,36 +144,73 @@ public static class ServiceRegistration
 
                 options.Scope.Add("email");
                 options.Scope.Add("profile");
-
             });
 
         return services;
     }
 
+    private static IServiceCollection AddCookieAuthConfiguration(this IServiceCollection services)
+    {
+        services
+            .AddOptions<AuthCookieOptions>()
+            .BindConfiguration(AuthCookieOptions.SectionName)
+            .ValidateDataAnnotations()
+            .Validate(
+                o => o.AccessCookieName != o.RefreshCookieName,
+                "Access and Refresh cookie names must differ."
+            )
+            .ValidateOnStart();
+
+        services
+            .AddOptions<CsrfOptions>()
+            .BindConfiguration(CsrfOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        // R12.1 — register IAntiforgery with attributes driven by CsrfOptions
+        // (R22.4 non-HttpOnly, R22.5 Secure always, R22.6 SameSite from options).
+        // Post-configure after BindConfiguration so the runtime DI graph isn't materialized
+        // at registration time (avoids the BuildServiceProvider anti-pattern that breaks
+        // Wolverine code generation).
+        services.AddAntiforgery();
+        services.AddOptions<AntiforgeryOptions>().Configure<IOptions<CsrfOptions>>((options, csrfOpts) =>
+        {
+            var csrf = csrfOpts.Value;
+            options.Cookie.Name = csrf.CookieName;
+            options.Cookie.HttpOnly = false; // R22.4
+            options.Cookie.SameSite = csrf.SameSite; // R22.6
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // R22.5
+            options.HeaderName = csrf.HeaderName;
+        });
+
+        // R22.8 — fail fast on invalid auth cookie configuration in non-Development environments.
+        services.AddHostedService<AuthCookieStartupValidator>();
+
+        return services;
+    }
 
     private static IServiceCollection AddControllersWithVersioning(this IServiceCollection services)
     {
         services.AddControllers();
 
-        services.AddApiVersioning(options =>
-        {
-            options.DefaultApiVersion = new ApiVersion(1, 0);
-            options.AssumeDefaultVersionWhenUnspecified = true;
-            options.ReportApiVersions = true;
-            options.ApiVersionReader = new HeaderApiVersionReader("X-API-Version");
-        })
-        .AddMvc()
-         .AddApiExplorer(options =>
-         {
-             options.GroupNameFormat = "'v'VVV";
-             options.SubstituteApiVersionInUrl = true;
-             options.DefaultApiVersion = new ApiVersion(1, 0);
-             options.AssumeDefaultVersionWhenUnspecified = true;
-
-         });
+        services
+            .AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+                options.ApiVersionReader = new HeaderApiVersionReader("X-API-Version");
+            })
+            .AddMvc()
+            .AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+            });
 
         return services;
-
     }
 
     public static IServiceCollection AddSwaggerDocs(this IServiceCollection services)
@@ -177,41 +220,22 @@ public static class ServiceRegistration
 
         services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Title = "TrackWallet API",
-                Version = "v1"
-            });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "TrackWallet API", Version = "v1" });
 
+            options.DocInclusionPredicate(
+                (documentName, apiDesc) =>
+                {
+                    if (!apiDesc.TryGetMethodInfo(out MethodInfo methodInfo))
+                        return true;
 
-            options.DocInclusionPredicate((documentName, apiDesc) =>
-            {
-                if (!apiDesc.TryGetMethodInfo(out MethodInfo methodInfo))
-                    return true;
+                    var versions = methodInfo
+                        .DeclaringType?.GetCustomAttributes(typeof(ApiVersionAttribute), true)
+                        .OfType<ApiVersionAttribute>()
+                        .SelectMany(a => a.Versions);
 
-                var versions = methodInfo.DeclaringType?
-                    .GetCustomAttributes(typeof(ApiVersionAttribute), true)
-                    .OfType<ApiVersionAttribute>()
-                    .SelectMany(a => a.Versions);
-
-
-                return versions?.Any(v => $"v{v.MajorVersion}" == documentName) ?? true;
-            });
-        });
-
-        return services;
-    }
-
-
-    private static IServiceCollection AddMediatRAndPipeline(this IServiceCollection services)
-    {
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblyContaining<IAppDbContext>();
-
-
-            Mediator.LicenseKey = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ikx1Y2t5UGVubnlTb2Z0d2FyZUxpY2Vuc2VLZXkvYmJiMTNhY2I1OTkwNGQ4OWI0Y2IxYzg1ZjA4OGNjZjkiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2x1Y2t5cGVubnlzb2Z0d2FyZS5jb20iLCJhdWQiOiJMdWNreVBlbm55U29mdHdhcmUiLCJleHAiOiIxNzk0MjY4ODAwIiwiaWF0IjoiMTc2MjczMjg3OCIsImFjY291bnRfaWQiOiIwMTlhNmIxMGUyZTc3NDNhYmE1ZmIyNjI5MDQ2ZDJkOCIsImN1c3RvbWVyX2lkIjoiY3RtXzAxazluaDJhczk5MXp0cjIybTljY2I5YnI4Iiwic3ViX2lkIjoiLSIsImVkaXRpb24iOiIwIiwidHlwZSI6IjIifQ.EUJriLiiZ0vFJ0OTqGjUE2_FYtGiYvlOYIQCkwwGt8otj-n40PINMUxX1SHz2JxIDZcTkgtVSsNA2iLhzxvi1LzLCRSVXCLCxpOeWwv8EF3-sMkJoXLPlIhobVZV4iMKsGhRyMDYzjKJlSkdlx8OxRZQa23pX0a8IOouLgU1wwNSMyV10ASto3rd-8bK9zOGWJXA9QV5GO-GgykJSL_Qo9Q3cXprvdWQoxIC0DjrKHExfNCzgpEQ9qJWoo5gtahmwX7qsx0W1UPX0a5F5fyw6R5o4ANg5da9m-as0KacAw1wmM2_hIc1sfH4NcGmQ_dpoJ9qkqiBuaCFXxq_Szal3g";
-
+                    return versions?.Any(v => $"v{v.MajorVersion}" == documentName) ?? true;
+                }
+            );
         });
 
         return services;
@@ -219,38 +243,34 @@ public static class ServiceRegistration
 
     private static IServiceCollection AddFluentValidationPipeline(this IServiceCollection services)
     {
-        services.AddValidatorsFromAssemblyContaining<IAppDbContext>();
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-
-        // model binding validation
-        // services.AddFluentValidationAutoValidation();
+        services.AddValidatorsFromAssemblyContaining<IRepository<Entity>>();
 
         return services;
     }
-
 
     private static IServiceCollection AddCorsPolicy(this IServiceCollection services)
     {
         services.AddCors(options =>
         {
-            options.AddPolicy("AllowFrontend", policy =>
-                policy
-                    .WithOrigins("http://localhost:3000")
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials());
+            options.AddPolicy(
+                "AllowFrontend",
+                policy =>
+                    policy
+                        .WithOrigins("http://localhost:3000")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials()
+            );
         });
 
         return services;
     }
 
-
-
     public static IServiceCollection AddInfrastructure(
-     this IServiceCollection services,
-     IConfiguration configuration)
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
-
         services.AddScoped<UpdatableEntityInterceptor>();
         services.AddScoped<CreatableEntityInterceptor>();
 
@@ -262,37 +282,28 @@ public static class ServiceRegistration
         //    options.UseSqlServer(connectionString));
 
         var connectionString = configuration.GetConnectionString("PostgreSqlConnection");
-        services.AddDbContext<AppDbContext>((sp, options) =>
-    options
-    .UseNpgsql(connectionString)
-
-        .AddInterceptors(
-        sp.GetRequiredService<CreatableEntityInterceptor>(),
-        sp.GetRequiredService<UpdatableEntityInterceptor>(),
-        sp.GetRequiredService<SoftDeleteEntityInterceptor>())
-
+        services.AddDbContext<AppDbContext>(
+            (sp, options) =>
+                options
+                    .UseNpgsql(connectionString)
+                    .AddInterceptors(
+                        sp.GetRequiredService<CreatableEntityInterceptor>(),
+                        sp.GetRequiredService<UpdatableEntityInterceptor>(),
+                        sp.GetRequiredService<SoftDeleteEntityInterceptor>()
+                    )
         );
 
-
-
-
-
-
-        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         return services;
     }
 
-    public static IServiceCollection AddCache(
-     this IServiceCollection services)
+    public static IServiceCollection AddCache(this IServiceCollection services)
     {
         services.AddMemoryCache();
 
-
         return services;
-
     }
-
 
     //public static IServiceCollection AddMessageSending(
     // this IServiceCollection services,
@@ -300,17 +311,16 @@ public static class ServiceRegistration
     //{
     //    services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
 
-
     //    services.AddScoped<IEmailSender, EmailSender>();
-
 
     //    return services;
 
     //}
 
     public static IServiceCollection AddMessageSending(
-         this IServiceCollection services,
-         IConfiguration configuration)
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         services.Configure<ResendSettings>(configuration.GetSection("Resend"));
 
@@ -329,13 +339,22 @@ public static class ServiceRegistration
         return services;
     }
 
-    private static IServiceCollection ConfigureBackGroundJobs(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection ConfigureBackGroundJobs(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
-        services.AddHangfire(Hangfireconfiguration => Hangfireconfiguration
-         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-         .UseSimpleAssemblyNameTypeSerializer()
-         .UseRecommendedSerializerSettings()
-         .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(configuration.GetConnectionString("HangfirePostgreConnection"))));
+        services.AddHangfire(Hangfireconfiguration =>
+            Hangfireconfiguration
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(o =>
+                    o.UseNpgsqlConnection(
+                        configuration.GetConnectionString("HangfirePostgreConnection")
+                    )
+                )
+        );
 
         //  .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
 
@@ -344,11 +363,8 @@ public static class ServiceRegistration
         return services;
     }
 
-
-
     private static IServiceCollection ConfigureForwardedHeaders(this IServiceCollection services)
     {
-
         _ = services.Configure<ForwardedHeadersOptions>(static options =>
         {
             options.ForwardedHeaders =
@@ -363,13 +379,14 @@ public static class ServiceRegistration
         });
         return services;
     }
+
     private static IServiceCollection ConfigureMappings(this IServiceCollection services)
     {
         var config = TypeAdapterConfig.GlobalSettings;
 
         // Scan API and Application projects
         config.Scan(typeof(ServiceRegistration).Assembly);
-        config.Scan(typeof(IAppDbContext).Assembly);
+        config.Scan(typeof(IRepository<>).Assembly);
 
         services.AddSingleton(config);
         services.AddScoped<IMapper, ServiceMapper>();
@@ -379,14 +396,16 @@ public static class ServiceRegistration
 
     private static IServiceCollection ConfigureProblems(this IServiceCollection services)
     {
-        services.AddProblemDetails(options =>
-        {
-            options.CustomizeProblemDetails = context =>
+        services
+            .AddProblemDetails(options =>
             {
-                context.ProblemDetails.Instance =
-                    $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
-            };
-        }).AddProblemDetails();
+                options.CustomizeProblemDetails = context =>
+                {
+                    context.ProblemDetails.Instance =
+                        $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
+                };
+            })
+            .AddProblemDetails();
         return services;
     }
 
@@ -395,7 +414,6 @@ public static class ServiceRegistration
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddScoped<IUserContext, HttpUserContext>();
 
-
         return services;
     }
 
@@ -403,53 +421,55 @@ public static class ServiceRegistration
     {
         services.AddScoped<IFamilyContext, HttpFamilyContext>();
 
-
         return services;
     }
-
 
     private static IServiceCollection RegisterOtpSettings(this IServiceCollection services)
     {
         services
-    .AddOptions<OtpSettings>()
-    .BindConfiguration(OtpSettings.SectionName)
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+            .AddOptions<OtpSettings>()
+            .BindConfiguration(OtpSettings.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
-        services.AddSingleton(sp =>
-              sp.GetRequiredService<IOptions<OtpSettings>>().Value);
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<OtpSettings>>().Value);
         return services;
-
     }
-
 
     private static IServiceCollection AddUrlBuilders(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
         services.AddSingleton<IUrlHelperFactory, UrlHelperFactory>();
 
-        services.AddKeyedScoped<IUrlBuilder, FileUrlBuilder>("files", (provider, key) =>
-        {
-            var accessor = provider.GetRequiredService<IHttpContextAccessor>();
+        services.AddKeyedScoped<IUrlBuilder, FileUrlBuilder>(
+            "files",
+            (provider, key) =>
+            {
+                var accessor = provider.GetRequiredService<IHttpContextAccessor>();
 
-            HttpContext? httpContext = accessor.HttpContext;
-            if (httpContext == null)
-                throw new InvalidOperationException("IUrlBuilder cannot be created outside an HTTP request.");
+                HttpContext? httpContext = accessor.HttpContext;
+                if (httpContext == null)
+                    throw new InvalidOperationException(
+                        "IUrlBuilder cannot be created outside an HTTP request."
+                    );
 
-            var factory = provider.GetRequiredService<IUrlHelperFactory>();
+                var factory = provider.GetRequiredService<IUrlHelperFactory>();
 
-            var actionContext = new ActionContext(
-                httpContext,
-                httpContext.GetRouteData(),
-                new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
-            );
+                var actionContext = new ActionContext(
+                    httpContext,
+                    httpContext.GetRouteData(),
+                    new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor()
+                );
 
-            IUrlHelper urlHelper = factory.GetUrlHelper(actionContext);
+                IUrlHelper urlHelper = factory.GetUrlHelper(actionContext);
 
-            return new FileUrlBuilder(httpContext, urlHelper);
-        });
+                return new FileUrlBuilder(httpContext, urlHelper);
+            }
+        );
+
+    
+        services.AddScoped<IUrlBuilder>(sp => sp.GetRequiredKeyedService<IUrlBuilder>("files"));
 
         return services;
     }
-
 }

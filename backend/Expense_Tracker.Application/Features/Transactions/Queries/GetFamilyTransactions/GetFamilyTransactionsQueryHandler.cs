@@ -1,19 +1,20 @@
-﻿using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Domain.TransactionFolder;
+using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Category;
 using Expense_Tracker.Contracts.Reponses.Transaction;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.Transactions.Queries.GetFamilyTransactions;
 
 public sealed class GetFamilyTransactionsQueryHandler(
-    IAppDbContext db,
+    IRepository<Transaction> transactionRepo,
     [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder
-) : IRequestHandler<GetFamilyTransactionsQuery, Result<CursorPagedResponse<TransactionItem>>>
+)
 {
-    public async Task<Result<CursorPagedResponse<TransactionItem>>> Handle(
+    public async Task<ErrorOr<CursorPagedResponse<TransactionItem>>> Handle(
         GetFamilyTransactionsQuery request,
         CancellationToken cancellationToken)
     {
@@ -32,8 +33,7 @@ public sealed class GetFamilyTransactionsQueryHandler(
         int size = request.PageSize is <= 0 or > 50 ? 20 : request.PageSize;
 
         // Build query with cursor pagination and filters
-        var query = db.Transactions
-            .AsNoTracking()
+        var query = transactionRepo.Query()
             .Where(t =>
                 t.FamilyId == request.FamilyId &&
                 t.CreatedAtUtc < cursor);
@@ -100,11 +100,10 @@ public sealed class GetFamilyTransactionsQueryHandler(
         // Handle empty results
         if (transactions.Count == 0)
         {
-            return Result.Success(
-                new CursorPagedResponse<TransactionItem>(
-                    Items: Array.Empty<TransactionItem>(),
-                    NextCursor: null,
-                    HasNextPage: false));
+            return new CursorPagedResponse<TransactionItem>(
+                Items: Array.Empty<TransactionItem>(),
+                NextCursor: null,
+                HasNextPage: false);
         }
 
         // Calculate next cursor
@@ -113,10 +112,9 @@ public sealed class GetFamilyTransactionsQueryHandler(
             : null;
 
         // Build response
-        return Result.Success(
-            new CursorPagedResponse<TransactionItem>(
-                Items: transactions,
-                NextCursor: nextCursor,
-                HasNextPage: nextCursor is not null));
+        return new CursorPagedResponse<TransactionItem>(
+            Items: transactions,
+            NextCursor: nextCursor,
+            HasNextPage: nextCursor is not null);
     }
 }

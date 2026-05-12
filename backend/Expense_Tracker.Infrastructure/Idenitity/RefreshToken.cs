@@ -1,17 +1,17 @@
-﻿using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-
+﻿using ErrorOr;
+using Expense_Tracker.Domain.Common;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Domain.Common.Identity;
 
-
 public sealed partial class RefreshToken : Entity
 {
-    public string Token { get; private set; } = string.Empty;
+    public byte[] TokenHash { get; private set; } = Array.Empty<byte>();
     public Guid UserId { get; private set; } = Guid.Empty;
-
     public string DeviceId { get; private set; } = string.Empty;
-
+    public Guid SessionFamilyId { get; private set; } = Guid.Empty;
+    public DateTimeOffset OriginalIssuedAt { get; private set; }
+    public Guid? ReplacedByTokenId { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset ExpiresAt { get; private set; }
     public DateTimeOffset? RevokedAt { get; private set; }
@@ -24,76 +24,110 @@ public sealed partial class RefreshToken : Entity
 
     private RefreshToken(
         Guid id,
-        string token,
+        byte[] tokenHash,
         Guid userId,
         string deviceId,
-        DateTimeOffset expiresAt)
+        Guid sessionFamilyId,
+        DateTimeOffset originalIssuedAt,
+        DateTimeOffset expiresAt
+    )
     {
         Id = id;
-        Token = token;
+        TokenHash = tokenHash;
         UserId = userId;
         DeviceId = deviceId;
+        SessionFamilyId = sessionFamilyId;
+        OriginalIssuedAt = originalIssuedAt;
         CreatedAt = DateTimeOffset.UtcNow;
         ExpiresAt = expiresAt;
     }
 
-    public static Result<RefreshToken> Create(
-        string token,
+    public static ErrorOr<RefreshToken> Create(
+        byte[] tokenHash,
         Guid userId,
         string deviceId,
-        TimeSpan lifetime)
+        Guid sessionFamilyId,
+        DateTimeOffset originalIssuedAt,
+        TimeSpan lifetime
+    )
     {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            return Result.Failure<RefreshToken>(
-                DomainError.InvalidState(nameof(RefreshToken), "Token is required."));
-        }
+        if (tokenHash is null || tokenHash.Length == 0)
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "TokenHash is required."
+            );
 
         if (userId == Guid.Empty)
-        {
-            return Result.Failure<RefreshToken>(
-                DomainError.InvalidState(nameof(RefreshToken), "UserId is required."));
-        }
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "UserId is required."
+            );
 
         if (string.IsNullOrWhiteSpace(deviceId))
-        {
-            return Result.Failure<RefreshToken>(
-                DomainError.InvalidState(nameof(RefreshToken), "DeviceId is required."));
-        }
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "DeviceId is required."
+            );
+
+        if (sessionFamilyId == Guid.Empty)
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "SessionFamilyId is required."
+            );
 
         if (lifetime <= TimeSpan.Zero)
-        {
-            return Result.Failure<RefreshToken>(
-                DomainError.InvalidState(nameof(RefreshToken), "Lifetime must be greater than zero."));
-        }
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "Lifetime must be greater than zero."
+            );
 
         DateTimeOffset expires = DateTimeOffset.UtcNow.Add(lifetime);
 
-        return Result.Success(
-            new RefreshToken(
-                Guid.CreateVersion7(),
-                token,
-                userId,
-                deviceId,
-                expires
-            ));
+        return new RefreshToken(
+            Guid.CreateVersion7(),
+            tokenHash,
+            userId,
+            deviceId,
+            sessionFamilyId,
+            originalIssuedAt,
+            expires
+        );
     }
 
-    public Result Revoke()
+    public ErrorOr<Success> Revoke()
     {
         if (IsExpired)
-        {
-            return Result.Failure(
-                DomainError.InvalidState(nameof(RefreshToken), "Cannot revoke an expired refresh token."));
-        }
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "Cannot revoke an expired refresh token."
+            );
 
         if (IsRevoked)
-        {
-            return Result.Failure(
-                DomainError.InvalidState(nameof(RefreshToken), "Refresh token is already revoked."));
-        }
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "Refresh token is already revoked."
+            );
 
         RevokedAt = DateTimeOffset.UtcNow;
-        return Result.Success();
+        return new Success();
+    }
+
+    public ErrorOr<Success> MarkReplacedBy(Guid successorId)
+    {
+        if (successorId == Guid.Empty)
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "Successor token id is required."
+            );
+
+        if (IsRevoked)
+            return DomainErrors.GeneralErrors.InvalidState(
+                nameof(RefreshToken),
+                "Refresh token is already revoked."
+            );
+
+        RevokedAt = DateTimeOffset.UtcNow;
+        ReplacedByTokenId = successorId;
+        return new Success();
     }
 }

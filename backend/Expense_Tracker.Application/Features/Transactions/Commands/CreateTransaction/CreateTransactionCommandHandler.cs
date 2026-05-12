@@ -1,49 +1,53 @@
-﻿using Expense_Tracker.Application.Interfaces;
+using Family = Expense_Tracker.Domain.FamilyFolder.Family;
+using Expense_Tracker.Domain.FamilyFolder;
+using Expense_Tracker.Domain.FamilyUserFolder;
+using Expense_Tracker.Application.Events;
+using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Category;
 using Expense_Tracker.Contracts.Reponses.Transaction;
 using Expense_Tracker.Domain.CategoryFolder;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.TransactionFolder;
+using ErrorOr;
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Wolverine;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.Transactions.Commands.CreateTransaction;
 
 public sealed class CreateTransactionCommandHandler(
-    IAppDbContext db,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder
-) : IRequestHandler<CreateTransactionCommand, Result<TransactionResponse>>
+    IRepository<Transaction> transactionRepo,
+    IRepository<global::Expense_Tracker.Domain.FamilyFolder.Family> familyRepo,
+    IRepository<FamilyUser> familyUserRepo,
+    IRepository<Category> categoryRepo,
+    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
+    IMessageBus bus
+)
 {
-    public async Task<Result<TransactionResponse>> Handle(
+    public async Task<ErrorOr<TransactionResponse>> Handle(
         CreateTransactionCommand request,
         CancellationToken cancellationToken)
     {
         // 1. Verify user is a member of the family
-        var isMember = await db.FamilyUsers
-            .AsNoTracking()
+        var isMember = await familyUserRepo.Query()
             .AnyAsync(fu =>
                 fu.UserId == request.UserId &&
                 fu.FamilyId == request.FamilyId,
                 cancellationToken);
 
         if (!isMember)
-            return Result.Failure<TransactionResponse>(
-                DomainError.NotFound("User is not a member of this family."));
+            return DomainErrors.GeneralErrors.NotFound("User is not a member of this family.");
 
         // 2. Verify category exists
-        var categoryExists = await db.Categories
-            .AsNoTracking()
+        var categoryExists = await categoryRepo.Query()
             .AnyAsync(c => c.Id == request.CategoryId, cancellationToken);
 
         if (!categoryExists)
-            return Result.Failure<TransactionResponse>(
-                DomainError.NotFound(nameof(Category)));
+            return DomainErrors.GeneralErrors.NotFound(nameof(Category));
 
         // 3. Create transaction
-        Result<Transaction> transactionResult = Transaction.Create(
+        var transactionResult = Transaction.Create(
             type: request.Type,
             amount: request.Amount,
             transactedOn: request.TransactedOn,
@@ -54,32 +58,33 @@ public sealed class CreateTransactionCommandHandler(
             categoryID: request.CategoryId
         );
 
-        if (transactionResult.IsFailure)
-            return Result.Failure<TransactionResponse>(transactionResult.TryGetError());
+        if (transactionResult.IsError)
+            return transactionResult.Errors;
 
-        Transaction transaction = transactionResult.TryGetValue();
+        Transaction transaction = transactionResult.Value;
 
         // 4. Update family budget
-        var family = await db.Families
+        var family = await familyRepo.QueryTracked()
             .FirstOrDefaultAsync(f => f.Id == request.FamilyId, cancellationToken);
 
         if (family is null)
-            return Result.Failure<TransactionResponse>(
-                DomainError.NotFound(nameof(Family)));
+            return DomainErrors.GeneralErrors.NotFound(nameof(Family));
 
         bool isExpense = request.Type == Domain.TransactionFolder.Enums.TransactionType.Expense;
-        Result budgetResult = family.ApplyTransaction(request.Amount, isExpense);
+        var budgetResult = family.ApplyTransaction(request.Amount, isExpense);
 
-        if (budgetResult.IsFailure)
-            return Result.Failure<TransactionResponse>(budgetResult.TryGetError());
+        if (budgetResult.IsError)
+            return budgetResult.Errors;
 
         // 5. Save transaction and updated family
-        db.Transactions.Add(transaction);
-        await db.SaveChangesAsync(cancellationToken);
+        await transactionRepo.AddAsync(transaction);
+        await transactionRepo.SaveChangesAsync(cancellationToken);
 
-        // 6. Get complete transaction details for response
-        var transactionResponse = await db.Transactions
-            .AsNoTracking()
+        // 6. Publish event
+        await bus.PublishAsync(new TransactionCreatedEvent(transaction));
+
+        // 7. Get complete transaction details for response
+        var transactionResponse = await transactionRepo.Query()
             .Where(t => t.Id == transaction.Id)
             .Select(t => new TransactionResponse(
                 TransactionId: t.Id,
@@ -104,9 +109,8 @@ public sealed class CreateTransactionCommandHandler(
             .FirstOrDefaultAsync(cancellationToken);
 
         if (transactionResponse is null)
-            return Result.Failure<TransactionResponse>(
-                DomainError.NotFound(nameof(Transaction)));
+            return DomainErrors.GeneralErrors.NotFound(nameof(Transaction));
 
-        return Result.Success(transactionResponse);
+        return transactionResponse;
     }
 }

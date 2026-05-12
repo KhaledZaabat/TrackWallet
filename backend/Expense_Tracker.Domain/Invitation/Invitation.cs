@@ -1,13 +1,12 @@
-﻿using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using Expense_Tracker.Domain.Events;
+﻿using ErrorOr;
+using Expense_Tracker.Domain.Common;
+using Expense_Tracker.Domain.Errors;
 using Expense_Tracker.Domain.FamilyFolder;
 using Expense_Tracker.Domain.Invitation.Enums;
 
 namespace Expense_Tracker.Domain.Invitation;
 
-public sealed class Invitation : AggregateRoot
+public sealed class Invitation : Entity
 {
     public Guid InviteeUserId { get; private set; }
     public Guid InviterUserId { get; private set; }
@@ -16,10 +15,8 @@ public sealed class Invitation : AggregateRoot
     public DateTimeOffset SentAtUtc { get; private set; }
     public InvitationStatus Status { get; private set; }
 
-    // Navigation properties
     public Family Family { get; private set; } = null!;
 
-    // EF Core constructor
     private Invitation() { }
 
     private Invitation(
@@ -27,8 +24,7 @@ public sealed class Invitation : AggregateRoot
         Guid inviteeUserId,
         Guid inviterUserId,
         Guid familyId,
-        bool isParent
-       ) : base(id)
+        bool isParent) : base(id)
     {
         InviteeUserId = inviteeUserId;
         InviterUserId = inviterUserId;
@@ -36,99 +32,72 @@ public sealed class Invitation : AggregateRoot
         IsParent = isParent;
         SentAtUtc = DateTimeOffset.UtcNow;
         Status = InvitationStatus.Pending;
-
-
     }
 
-    public static Result<Invitation> Create(
+    public static ErrorOr<Invitation> Create(
         Guid inviteeUserId,
         Guid inviterUserId,
         Guid familyId,
-        bool isParent,
-        bool fireEvent = true)
+        bool isParent)
     {
         if (inviteeUserId == Guid.Empty)
-            return Result.Failure<Invitation>(
-                DomainError.InvalidState(nameof(Invitation), "Invitee user ID is required."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Invitation), "Invitee user ID is required.");
 
         if (inviterUserId == Guid.Empty)
-            return Result.Failure<Invitation>(
-                DomainError.InvalidState(nameof(Invitation), "Inviter user ID is required."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Invitation), "Inviter user ID is required.");
 
         if (familyId == Guid.Empty)
-            return Result.Failure<Invitation>(
-                DomainError.InvalidState(nameof(Invitation), "Family ID is required."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Invitation), "Family ID is required.");
 
         if (inviteeUserId == inviterUserId)
-            return Result.Failure<Invitation>(
-                DomainError.InvalidState(nameof(Invitation), "Cannot invite yourself."));
+            return DomainErrors.InvitationErrors.SelfInvite();
 
         var invitation = new Invitation(
             Guid.CreateVersion7(),
             inviteeUserId,
             inviterUserId,
             familyId,
-            isParent
-           );
-        if (fireEvent)
-            invitation.AddDomainEvent(
-         new InvitationCreatedEvent(invitation));
+            isParent);
 
-        return Result.Success(invitation);
+        return invitation;
     }
 
-    public Result Accept()
+    public ErrorOr<Success> Accept()
     {
         if (Status == InvitationStatus.Accepted)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Invitation), "Invitation already accepted."));
+            return DomainErrors.InvitationErrors.AlreadyAccepted();
 
         if (Status == InvitationStatus.Declined)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Invitation), "Invitation was declined and cannot be accepted."));
+            return DomainErrors.InvitationErrors.AlreadyDeclined();
 
         if (Status == InvitationStatus.Cancelled)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Invitation), "Invitation was cancelled and cannot be accepted."));
-
-
+            return DomainErrors.InvitationErrors.Cancelled();
 
         Status = InvitationStatus.Accepted;
-        AddDomainEvent(new InvitationAcceptedEvent(this));
-
-        return Result.Success();
+        return new Success();
     }
 
-    public Result Decline()
+    public ErrorOr<Success> Decline()
     {
         if (Status == InvitationStatus.Declined)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Invitation), "Invitation already declined."));
+            return DomainErrors.InvitationErrors.AlreadyDeclined();
 
         if (Status == InvitationStatus.Accepted)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Invitation), "Invitation was accepted and cannot be declined."));
+            return DomainErrors.GeneralErrors.InvalidState(nameof(Invitation), "Invitation was accepted and cannot be declined.");
 
         if (Status == InvitationStatus.Cancelled)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Invitation), "Invitation was cancelled."));
+            return DomainErrors.InvitationErrors.Cancelled();
 
         Status = InvitationStatus.Declined;
-        AddDomainEvent(new InvitationDeclinedEvent(this));
-
-        return Result.Success();
+        return new Success();
     }
 
-    public Result Cancel(Guid requesterId)
+    public ErrorOr<Success> Cancel(Guid requesterId)
     {
-
         if (Status != InvitationStatus.Pending)
-            return Result.Failure(
-                DomainError.InvalidState(nameof(Invitation), "Only pending invitations can be cancelled."));
+            return DomainErrors.InvitationErrors.NotPending();
 
         Status = InvitationStatus.Cancelled;
-        AddDomainEvent(new InvitationCancelledEvent(this));
-
-        return Result.Success();
+        return new Success();
     }
 }

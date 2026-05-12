@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Expense_Tracker.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.Common;
 
 namespace Expense_Tracker.Infrastructure.Data.Interceptors;
@@ -26,7 +26,7 @@ public sealed class UpdatableEntityInterceptor(IUserContext userContext) : SaveC
 
     private void ApplyUpdateAudit(DbContextEventData eventData)
     {
-        if (eventData.Context is not IAppDbContext context)
+        if (eventData.Context is not AppDbContext context)
             return;
 
         if (context.DisableUpdateAudit)

@@ -1,9 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Expense_Tracker.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Expense_Tracker.Application.Interfaces;
+using ErrorOr;
 using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Infrastructure.Data;
+
+namespace Expense_Tracker.Infrastructure.Data.Interceptors;
 
 public sealed class SoftDeleteEntityInterceptor(IUserContext userContext)
     : SaveChangesInterceptor
@@ -27,7 +30,7 @@ public sealed class SoftDeleteEntityInterceptor(IUserContext userContext)
 
     private void ApplySoftDelete(DbContextEventData eventData)
     {
-        if (eventData.Context is not IAppDbContext context)
+        if (eventData.Context is not AppDbContext context)
             return;
 
         if (context.DisableSoftDeleting)
@@ -43,12 +46,12 @@ public sealed class SoftDeleteEntityInterceptor(IUserContext userContext)
 
         foreach (EntityEntry<ISoftDeletable> entry in entries)
         {
-            Result result = entry.Entity.SoftDelete(deletedBy);
+            ErrorOr<Success> result = entry.Entity.SoftDelete(deletedBy);
 
-            if (result.IsFailure)
+            if (result.IsError)
             {
                 throw new InvalidOperationException(
-                    result.TryGetError().Description);
+                    result.Errors[0].Description);
             }
 
             entry.State = EntityState.Modified;

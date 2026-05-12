@@ -1,8 +1,7 @@
-﻿using Expense_Tracker.Application.Common.Settings;
+using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
-using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,7 +14,7 @@ public sealed class ResendConfirmationEventHandler(
     IEmailBodyBuilder _bodyBuilder,
     INotificationService _notification,
     OtpSettings _otpSettings
-) : INotificationHandler<ResendConfirmationEvent>
+)
 {
     public async Task Handle(ResendConfirmationEvent notification, CancellationToken cancellationToken)
     {

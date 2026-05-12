@@ -22,8 +22,8 @@ public sealed class UserDeviceConfiguration
 
         builder.Property(x => x.Platform).IsRequired();
         builder.Property(x => x.IsActive).IsRequired();
-        builder.Property(x => x.CreatedUtc).IsRequired();
-        builder.Property(x => x.LastSeenUtc);
+        builder.Property(x => x.CreatedAtUtc).IsRequired();
+        builder.Property(x => x.LastModifiedUtc);
 
         var comparer = new ValueComparer<List<string>>(
             (c1, c2) => c1!.SequenceEqual(c2!),

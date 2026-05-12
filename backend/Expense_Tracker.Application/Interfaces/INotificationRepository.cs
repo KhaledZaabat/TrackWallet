@@ -1,10 +1,10 @@
-﻿using Expense_Tracker.Domain.Common.ResultPattern.Result;
+﻿using ErrorOr;
 
 namespace Expense_Tracker.Application.Interfaces;
 
 public interface INotificationRepository
 {
-    Task<Result> MarkAsReadAsync(
+    Task<ErrorOr<Success>> MarkAsReadAsync(
         Guid notificationId,
         Guid userId,
         CancellationToken cancellationToken);
@@ -16,6 +16,4 @@ public interface INotificationRepository
     Task<IReadOnlyList<DomainNotification>> GetByUserAsync(
         Guid userId,
         CancellationToken cancellationToken);
-
-
 }

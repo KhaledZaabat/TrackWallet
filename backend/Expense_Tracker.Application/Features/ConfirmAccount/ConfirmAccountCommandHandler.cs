@@ -1,30 +1,26 @@
-﻿using Expense_Tracker.Application.Common.Errors;
+using ErrorOr;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.Identity.Commands.ConfirmAccount;
 
-public sealed class ConfirmAccountCommandHandler(IOtpService _otpService, IIdentityService IdentityService, IAppDbContext db) : IRequestHandler<ConfirmAccountCommand, Result>
+public sealed class ConfirmAccountCommandHandler(IOtpService _otpService, IIdentityService IdentityService)
 {
 
-
-    public async Task<Result> Handle(ConfirmAccountCommand request, CancellationToken ct)
+    public async Task<ErrorOr<Success>> Handle(ConfirmAccountCommand request, CancellationToken ct)
     {
         string key = $"confirm:{request.Email.ToLowerInvariant()}";
-
-
 
         bool valid = _otpService.Validate(key, request.Otp);
 
         if (!valid)
-            return Result.Failure(OtpError.InvalidOrExpired());
+            return DomainErrors.OtpErrors.InvalidOrExpired();
 
         // Mark user as confirmed (email )
-        Result<Guid> res = await IdentityService.ConfirmUserAsync(request.Email, ct);
-        if (res.IsFailure)
-            return Result.Failure(res.TryGetError());
+        ErrorOr<Guid> res = await IdentityService.ConfirmUserAsync(request.Email, ct);
+        if (res.IsError)
+            return res.Errors;
 
-        return Result.Success();
+        return new Success();
     }
 }

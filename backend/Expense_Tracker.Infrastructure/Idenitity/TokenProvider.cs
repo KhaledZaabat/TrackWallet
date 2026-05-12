@@ -3,7 +3,7 @@ using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Dtos;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Identity;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using ErrorOr;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -18,7 +18,7 @@ public sealed class TokenProvider(
     /// <summary>
     /// Generates JWT token without family context (for initial login)
     /// </summary>
-    public async Task<Result<AuthDto>> GenerateJwtTokenAsync(
+    public async Task<ErrorOr<AuthDto>> GenerateJwtTokenAsync(
         AuthenticatedUser user,
         string deviceId,
         CancellationToken ct = default)
@@ -33,7 +33,7 @@ public sealed class TokenProvider(
     /// <summary>
     /// Generates JWT token with family context (for family selection)
     /// </summary>
-    public async Task<Result<AuthDto>> GenerateJwtTokenWithFamilyAsync(
+    public async Task<ErrorOr<AuthDto>> GenerateJwtTokenWithFamilyAsync(
         AuthenticatedUser user,
         string deviceId,
         FamilyContextDto? familyContext,
@@ -42,7 +42,7 @@ public sealed class TokenProvider(
         DateTime expiresAt =
             DateTime.UtcNow.AddMinutes(jwt.AccessTokenExpirationMinutes);
 
-        List<Claim> claims = BuildClaims(user, familyContext);
+        List<Claim> claims = BuildClaims(user, deviceId, familyContext);
 
         SecurityTokenDescriptor descriptor = new()
         {
@@ -60,33 +60,38 @@ public sealed class TokenProvider(
         SecurityToken securityToken = handler.CreateToken(descriptor);
         string accessToken = handler.WriteToken(securityToken);
 
-        Result revokeResult = await refreshTokens.RevokeActiveTokensAsync(
+        ErrorOr<Success> revokeResult = await refreshTokens.RevokeActiveTokensAsync(
             user.Id,
             deviceId,
             ct);
 
-        if (revokeResult.IsFailure)
-            return Result.Failure<AuthDto>(revokeResult.TryGetError());
+        if (revokeResult.IsError)
+            return revokeResult.Errors[0];
 
-        TokenResponse refresh = GenerateRefreshToken();
+        Guid sessionFamilyId = Guid.CreateVersion7();
+        DateTimeOffset originalIssuedAt = DateTimeOffset.UtcNow;
+        string rawRefresh = GenerateOpaqueRefreshToken();
+        DateTimeOffset refreshExpiresAt =
+            originalIssuedAt.AddDays(jwt.RefreshTokenExpirationDays);
 
-        Result addResult = await refreshTokens.AddAsync(
+        ErrorOr<Success> addResult = await refreshTokens.AddNewSessionAsync(
             user.Id,
-            refresh.Token,
+            rawRefresh,
             deviceId,
+            sessionFamilyId,
+            originalIssuedAt,
             ct);
 
-        if (addResult.IsFailure)
-            return Result.Failure<AuthDto>(addResult.TryGetError());
+        if (addResult.IsError)
+            return addResult.Errors[0];
 
-        return Result.Success(
-            new AuthDto(
+        return new AuthDto(
                 user.Id.ToString(),
                 user.Email,
                 user.UserName,
                 new TokenResponse(accessToken, expiresAt),
-                refresh,
-                familyContext));
+                new TokenResponse(rawRefresh, refreshExpiresAt.UtcDateTime),
+                familyContext);
     }
 
     public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
@@ -102,7 +107,7 @@ public sealed class TokenProvider(
             ValidateAudience = true,
             ValidAudience = jwt.Audience,
             ValidateLifetime = false,
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.FromSeconds(jwt.ClockSkewSeconds)
         };
 
         JwtSecurityTokenHandler handler = new();
@@ -124,18 +129,52 @@ public sealed class TokenProvider(
         }
     }
 
-    private TokenResponse GenerateRefreshToken()
+    /// <summary>
+    /// Mints only an access token (no refresh-token rotation or persistence side effect).
+    /// Used by the silent-refresh middleware's success path (R5.3, R17.4, R19.1).
+    /// </summary>
+    public Task<AccessTokenResult> GenerateAccessTokenOnlyAsync(
+        AuthenticatedUser user,
+        FamilyContextDto? family,
+        string deviceId,
+        CancellationToken ct)
     {
-        string token = Convert.ToBase64String(
-            RandomNumberGenerator.GetBytes(64));
+        DateTime expiresAt =
+            DateTime.UtcNow.AddMinutes(jwt.AccessTokenExpirationMinutes);
 
-        return new TokenResponse(
-            token,
-            DateTime.UtcNow.AddDays(jwt.RefreshTokenExpirationDays));
+        List<Claim> claims = BuildClaims(user, deviceId, family);
+
+        SecurityTokenDescriptor descriptor = new()
+        {
+            Subject = new ClaimsIdentity(claims),
+            Issuer = jwt.Issuer,
+            Audience = jwt.Audience,
+            Expires = expiresAt,
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwt.SecretKey)),
+                SecurityAlgorithms.HmacSha256)
+        };
+
+        JwtSecurityTokenHandler handler = new();
+        SecurityToken securityToken = handler.CreateToken(descriptor);
+        string accessToken = handler.WriteToken(securityToken);
+
+        return Task.FromResult(
+            new AccessTokenResult(
+                accessToken,
+                new DateTimeOffset(expiresAt, TimeSpan.Zero)));
     }
+
+    private static string GenerateOpaqueRefreshToken()
+        => Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+
+    private static string Base64UrlEncode(byte[] bytes)
+        => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
     private static List<Claim> BuildClaims(
         AuthenticatedUser user,
+        string deviceId,
         FamilyContextDto? familyContext)
     {
         List<Claim> claims =
@@ -144,6 +183,11 @@ public sealed class TokenProvider(
             new(JwtRegisteredClaimNames.Jti, Guid.CreateVersion7().ToString()),
             new(CustomClaimTypes.UserId, user.Id.ToString())
         ];
+
+        if (!string.IsNullOrWhiteSpace(deviceId))
+        {
+            claims.Add(new Claim(CustomClaimTypes.DeviceId, deviceId));
+        }
 
         if (!string.IsNullOrWhiteSpace(user.Email))
         {

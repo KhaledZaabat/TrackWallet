@@ -1,58 +1,55 @@
-﻿using Expense_Tracker.Application.Constants;
+using ErrorOr;
+using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Features.FilesFolder.Commads.UploadImage;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Responses.Files;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.Users;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Expense_Tracker.Domain.Errors;
+using Wolverine;
 
 namespace Expense_Tracker.Application.Features.Userr.UpdateProfile;
 
 public sealed class UpdateProfileCommandHandler(
-    IAppDbContext db,
+    IRepository<User> userRepo,
     IUserContext userContext,
-    ISender sender,
+    IMessageBus bus,
     IFileService fileService)
-    : IRequestHandler<UpdateProfileCommand, Result>
 {
-    public async Task<Result> Handle(UpdateProfileCommand cmd, CancellationToken ct)
+    public async Task<ErrorOr<Success>> Handle(UpdateProfileCommand cmd, CancellationToken ct)
     {
         Guid? userId = userContext.UserId;
         if (userId is null)
-            return Result.Failure(UserError.NotFound());
+            return DomainErrors.UserErrors.NotFound();
 
-        User? user = await db.Users
+        User? user = await userRepo.QueryTracked()
             .FirstOrDefaultAsync(u => u.Id == userId, ct);
 
         if (user is null)
-            return Result.Failure(UserError.NotFound());
-
-
+            return DomainErrors.UserErrors.NotFound();
 
         // Update FullName if provided
         if (!string.IsNullOrWhiteSpace(cmd.FullName))
         {
-            Result updateResult = user.UpdateFullName(cmd.FullName);
-            if (updateResult.IsFailure)
-                return Result.Failure(updateResult.TryGetError());
+            var updateResult = user.UpdateFullName(cmd.FullName);
+            if (updateResult.IsError)
+                return updateResult.FirstError;
         }
 
         // Update BirthDate if provided
         if (cmd.BirthDate.HasValue)
         {
-            Result updateResult = user.UpdateBirthDate(cmd.BirthDate.Value);
-            if (updateResult.IsFailure)
-                return Result.Failure(updateResult.TryGetError());
+            var updateResult = user.UpdateBirthDate(cmd.BirthDate.Value);
+            if (updateResult.IsError)
+                return updateResult.FirstError;
         }
 
         // Update Gender if provided
         if (cmd.IsMale.HasValue)
         {
-            Result updateResult = user.UpdateGender(cmd.IsMale.Value);
-            if (updateResult.IsFailure)
-                return Result.Failure(updateResult.TryGetError());
+            var updateResult = user.UpdateGender(cmd.IsMale.Value);
+            if (updateResult.IsError)
+                return updateResult.FirstError;
         }
 
         // Update ProfileImage if provided
@@ -63,9 +60,9 @@ public sealed class UpdateProfileCommandHandler(
             {
                 if (user.ProfileImageFileId is Guid oldId && oldId != Guid.Empty)
                 {
-                    Result del = await fileService.DeleteAsync(oldId, ct);
-                    if (del.IsFailure)
-                        return Result.Failure(del.TryGetError());
+                    var delResult = await fileService.DeleteAsync(oldId, ct);
+                    if (delResult.IsError)
+                        return delResult.FirstError;
                 }
 
             }
@@ -77,17 +74,17 @@ public sealed class UpdateProfileCommandHandler(
                 Image: cmd.ProfileImage
             );
 
-            Result<UploadImageResponse> uploadResult = await sender.Send(uploadImageCommand, ct);
-            if (uploadResult.IsFailure)
-                return Result.Failure(uploadResult.TryGetError());
+            var uploadResult = await bus.InvokeAsync<ErrorOr<UploadImageResponse>>(uploadImageCommand, ct);
+            if (uploadResult.IsError)
+                return uploadResult.FirstError;
 
-            Result assignResult = user.AssignProfileImage(uploadResult.TryGetValue().FileId);
-            if (assignResult.IsFailure)
-                return Result.Failure(assignResult.TryGetError());
+            var assignResult = user.AssignProfileImage(uploadResult.Value.FileId);
+            if (assignResult.IsError)
+                return assignResult.FirstError;
         }
 
-        await db.SaveChangesAsync(ct);
+        await userRepo.SaveChangesAsync(ct);
 
-        return Result.Success();
+        return new Success();
     }
 }

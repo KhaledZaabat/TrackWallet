@@ -1,6 +1,7 @@
-﻿using Expense_Tracker.Domain.Common;
+﻿using ErrorOr;
+using Expense_Tracker.Domain.Common;
 using Expense_Tracker.Domain.Common.Identity;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.Errors;
 using Microsoft.AspNetCore.Identity;
 using System.Net.Mail;
 
@@ -31,80 +32,58 @@ public sealed class ApplicationUser : IdentityUser<Guid>, ISoftDeletable
         set => DeletedOn = value;
     }
 
+    private ApplicationUser() { }
 
-
-    private ApplicationUser() { } // EF Core
-
-    public static Result<ApplicationUser> Create(string Email, string UserName)
+    public static ErrorOr<ApplicationUser> Create(string Email, string UserName)
     {
-        // Email null or empty
         if (string.IsNullOrWhiteSpace(Email))
-        {
-            return Result.Failure<ApplicationUser>(
-                IdentityUserError.Validation("Email cannot be empty.")
-            );
-        }
+            return DomainErrors.IdentityErrors.EmptyEmail();
 
-        // Full name null or empty
         if (string.IsNullOrWhiteSpace(UserName))
-        {
-            return Result.Failure<ApplicationUser>(
-                IdentityUserError.Validation("Full name cannot be empty.")
-            );
-        }
+            return DomainErrors.IdentityErrors.EmptyFullName();
 
-        // Email format validation
         try
         {
             _ = new MailAddress(Email);
         }
         catch
         {
-            return Result.Failure<ApplicationUser>(
-                IdentityUserError.Validation("Email format is invalid.")
-            );
+            return DomainErrors.IdentityErrors.InvalidEmail();
         }
 
         var user = new ApplicationUser
         {
             Id = Guid.CreateVersion7(),
-
-
             Email = Email,
             NormalizedEmail = Email.ToUpperInvariant(),
-
             UserName = UserName,
             NormalizedUserName = UserName.ToUpperInvariant(),
-
         };
 
-
-        return Result.Success(user);
+        return user;
     }
 
-    public Result SoftDelete(Guid deletedBy)
+    public ErrorOr<Success> SoftDelete(Guid deletedBy)
     {
         if (IsDeleted)
-            return Result.Failure(
-                IdentityUserError.Validation("User is already deleted."));
+            return DomainErrors.IdentityErrors.InvalidPermissions("User is already deleted.");
 
         IsDeleted = true;
         DeletedById = deletedBy;
         DeletedOn = DateTimeOffset.UtcNow;
 
-        return Result.Success();
+        return new Success();
     }
 
-    public Result Restore()
+    public ErrorOr<Success> Restore()
     {
         if (!IsDeleted)
-            return Result.Failure(
-                IdentityUserError.Validation("User is not deleted."));
+            return DomainErrors.IdentityErrors.InvalidPermissions("User is not deleted.");
 
         IsDeleted = false;
         DeletedById = null;
         DeletedOn = null;
 
-        return Result.Success();
+        return new Success();
     }
 }

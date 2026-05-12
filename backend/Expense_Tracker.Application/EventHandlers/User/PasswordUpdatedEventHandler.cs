@@ -1,12 +1,10 @@
-﻿using Expense_Tracker.Application.Constants;
+using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
-using MediatR;
 
 namespace Expense_Tracker.Application.EventHandlers.User;
 
 public sealed class PasswordUpdatedEventHandler(IEmailTemplateLoader _templateLoader, IEmailBodyBuilder _bodyBuilder, INotificationService _notification)
-    : INotificationHandler<PasswordUpdatedEvent>
 {
 
     public async Task Handle(

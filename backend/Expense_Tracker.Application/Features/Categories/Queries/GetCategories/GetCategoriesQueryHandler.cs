@@ -1,25 +1,24 @@
-﻿using Expense_Tracker.Contracts.Reponses.Category;
+using ErrorOr;
+using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Contracts.Reponses.Category;
 using Expense_Tracker.Domain.CategoryFolder;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Mapster;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Application.Features.Categories.Queries.GetCategories;
 
-public sealed class GetCategoriesQueryHandler(IAppDbContext db)
-    : IRequestHandler<GetCategoriesQuery, Result<List<CategoryResponse>>>
+public sealed class GetCategoriesQueryHandler(IRepository<Category> categories)
 {
-    public async Task<Result<List<CategoryResponse>>> Handle(
+    public async Task<ErrorOr<List<CategoryResponse>>> Handle(
         GetCategoriesQuery request,
         CancellationToken cancellationToken)
     {
-        List<Category> categories = await db.Categories
+        List<Category> list = await categories.Query()
             .OrderBy(c => c.Name)
             .ToListAsync(cancellationToken);
 
-        List<CategoryResponse> response = categories.Adapt<List<CategoryResponse>>();
+        List<CategoryResponse> response = list.Adapt<List<CategoryResponse>>();
 
-        return Result.Success(response);
+        return response;
     }
 }

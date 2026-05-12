@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Expense_Tracker.Infrastructure.FCM;
 
 public sealed class UserDeviceRepository(
-    IAppDbContext db,
+    IRepository<UserDevice> db,
     IFcmTopicService topicService) : IUserDeviceRepository, IScopedService
 {
     public async Task UpsertAsync(
@@ -16,7 +16,7 @@ public sealed class UserDeviceRepository(
         PushPlatform platform,
         CancellationToken cancellationToken)
     {
-        UserDevice? device = await db.UserDevices
+        UserDevice? device = await db.QueryTracked()
             .SingleOrDefaultAsync(x => x.DeviceToken == token, cancellationToken);
 
         if (device != null)
@@ -28,12 +28,12 @@ public sealed class UserDeviceRepository(
 
         UserDevice newDevice = UserDevice.Create(token, platform);
         newDevice.BindToUser(userId);
-        await db.UserDevices.AddAsync(newDevice, cancellationToken);
+        await db.AddAsync(newDevice, cancellationToken);
     }
 
     public async Task UnbindDeviceAsync(string token, CancellationToken cancellationToken)
     {
-        UserDevice? device = await db.UserDevices
+        UserDevice? device = await db.QueryTracked()
             .SingleOrDefaultAsync(x => x.DeviceToken == token, cancellationToken);
 
         if (device is null)
@@ -53,7 +53,7 @@ public sealed class UserDeviceRepository(
 
     public async Task ClearUserAsync(Guid userId, CancellationToken cancellationToken)
     {
-        List<UserDevice> devices = await db.UserDevices
+        List<UserDevice> devices = await db.QueryTracked()
             .Where(x => x.UserId == userId)
             .ToListAsync(cancellationToken);
 
@@ -75,7 +75,7 @@ public sealed class UserDeviceRepository(
         Guid userId,
         CancellationToken cancellationToken)
     {
-        return await db.UserDevices
+        return await db.Query()
             .Where(x => x.UserId == userId && x.IsActive)
             .Select(x => x.DeviceToken)
             .ToListAsync(cancellationToken);
@@ -83,12 +83,12 @@ public sealed class UserDeviceRepository(
 
     public async Task RemoveTokenAsync(string token, CancellationToken cancellationToken)
     {
-        UserDevice? device = await db.UserDevices
+        UserDevice? device = await db.QueryTracked()
             .SingleOrDefaultAsync(x => x.DeviceToken == token, cancellationToken);
 
         if (device != null)
         {
-            db.UserDevices.Remove(device);
+            db.Remove(device);
         }
     }
 
@@ -96,7 +96,7 @@ public sealed class UserDeviceRepository(
         Guid userId,
         CancellationToken cancellationToken)
     {
-        return await db.UserDevices
+        return await db.Query()
             .Where(x => x.UserId == userId && x.IsActive)
             .Select(x => x.DeviceToken)
             .ToListAsync(cancellationToken);
@@ -107,7 +107,7 @@ public sealed class UserDeviceRepository(
         string topic,
         CancellationToken cancellationToken)
     {
-        List<UserDevice> devices = await db.UserDevices
+        List<UserDevice> devices = await db.QueryTracked()
             .Where(x => x.UserId == userId && x.IsActive)
             .ToListAsync(cancellationToken);
 
@@ -131,7 +131,7 @@ public sealed class UserDeviceRepository(
         string topic,
         CancellationToken cancellationToken)
     {
-        List<UserDevice> devices = await db.UserDevices
+        List<UserDevice> devices = await db.QueryTracked()
             .Where(x => x.UserId == userId)
             .ToListAsync(cancellationToken);
 

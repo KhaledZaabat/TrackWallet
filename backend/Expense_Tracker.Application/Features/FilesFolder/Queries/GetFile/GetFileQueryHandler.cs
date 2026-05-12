@@ -1,17 +1,12 @@
-﻿using Expense_Tracker.Application.Features.FilesFolder.Dtos;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using Expense_Tracker.Application.Features.FilesFolder.Dtos;
+using ErrorOr;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.FilesFolder.Queries.GetFile;
 
 public class GetFileQueryHandler(IFileService fileService)
-    : IRequestHandler<GetFileQuery, Result<FileDto>>
 {
-    public async Task<Result<FileDto>> Handle(GetFileQuery request, CancellationToken ct)
+    public async Task<ErrorOr<FileDto>> Handle(GetFileQuery request, CancellationToken ct)
 
     => await fileService.DownloadAsync(request.Id, ct);
-
-
-
-
 }

@@ -1,19 +1,12 @@
-﻿using Expense_Tracker.Application.Common.Settings;
+using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
-using MediatR;
 
 namespace Expense_Tracker.Application.EventHandlers.ForgotPassword;
 
 public sealed class ForgotPasswordEventHandler(IOtpService _otpService, IEmailTemplateLoader _templateLoader, IEmailBodyBuilder _bodyBuilder, INotificationService _notification, OtpSettings otpSettings)
-    : INotificationHandler<ForgotPasswordEvent>
 {
-
-
-
-
-
 
     public async Task Handle(ForgotPasswordEvent notification, CancellationToken cancellationToken)
     {

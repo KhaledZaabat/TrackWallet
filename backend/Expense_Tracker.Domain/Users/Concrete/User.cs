@@ -1,7 +1,6 @@
-﻿using Expense_Tracker.Domain.Common;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using Expense_Tracker.Domain.Events;
+﻿using ErrorOr;
+using Expense_Tracker.Domain.Common;
+using Expense_Tracker.Domain.Errors;
 using Expense_Tracker.Domain.Files;
 using Expense_Tracker.Domain.TransactionFolder;
 using Expense_Tracker.Domain.Users.Abstraction.NotificationPreferencesFolder;
@@ -9,7 +8,7 @@ using System.Net.Mail;
 
 namespace Expense_Tracker.Domain.Users;
 
-public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
+public sealed class User : Entity, IAuditable, ISoftDeletable
 {
     public Guid? ProfileImageFileId { get; private set; }
     public UploadedFile? ProfileImage { get; private set; }
@@ -24,22 +23,17 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
     public ICollection<DomainNotification> Notifications { get; private set; } = new List<DomainNotification>();
     public Guid NotificationPreferencesId { get; private set; } = NotificationPreferences.DefaultNotificationId;
     public NotificationPreferences NotificationPreferences { get; private set; }
-    // Audit properties
     public DateTimeOffset CreatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;
     public Guid CreatedBy { get; private set; } = Guid.Empty;
     public DateTimeOffset LastModifiedUtc { get; private set; } = DateTimeOffset.UtcNow;
     public Guid LastModifiedBy { get; private set; } = Guid.Empty;
 
-    // Soft delete properties
     public bool IsDeleted { get; private set; }
     public Guid? DeletedById { get; private set; } = Guid.Empty;
     public DateTimeOffset? DeletedOn { get; private set; }
 
     public ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
 
-
-
-    // Explicit interface implementations for IAuditable
     DateTimeOffset ICreatable.CreatedAtUtc
     {
         get => CreatedAtUtc;
@@ -64,7 +58,6 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         set => LastModifiedBy = value;
     }
 
-    // Explicit interface implementations for ISoftDeletable
     bool ISoftDeletable.IsDeleted
     {
         get => IsDeleted;
@@ -83,7 +76,6 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         set => DeletedOn = value;
     }
 
-    // EF Core constructor
     private User() { }
 
     private User(
@@ -101,32 +93,28 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         IsMale = isMale;
     }
 
-    /// <summary>
-    /// Creates a domain user. Id must be the same Guid as the Identity ApplicationUser.Id.
-    /// </summary>
-    public static Result<User> Create(
+    public static ErrorOr<User> Create(
         Guid id,
         string fullName,
         string userName,
         string email,
         DateOnly? birthDate = null,
-        bool? isMale = null,
-        bool fireEvent = true)
+        bool? isMale = null)
     {
         if (id == Guid.Empty)
-            return Result.Failure<User>(UserError.InvalidSubmission("User Id is required."));
+            return DomainErrors.UserErrors.InvalidSubmission("User Id is required.");
 
         if (string.IsNullOrWhiteSpace(fullName))
-            return Result.Failure<User>(UserError.InvalidSubmission("Full name is required."));
+            return DomainErrors.UserErrors.InvalidSubmission("Full name is required.");
 
         if (string.IsNullOrWhiteSpace(userName))
-            return Result.Failure<User>(UserError.InvalidSubmission("Username is required."));
+            return DomainErrors.UserErrors.InvalidSubmission("Username is required.");
 
         if (userName.Length > 50)
-            return Result.Failure<User>(UserError.InvalidSubmission("Username cannot exceed 50 characters."));
+            return DomainErrors.UserErrors.InvalidSubmission("Username cannot exceed 50 characters.");
 
         if (string.IsNullOrWhiteSpace(email))
-            return Result.Failure<User>(UserError.InvalidSubmission("Email is required."));
+            return DomainErrors.UserErrors.InvalidSubmission("Email is required.");
 
         try
         {
@@ -134,11 +122,11 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         }
         catch
         {
-            return Result.Failure<User>(UserError.InvalidSubmission("Invalid email format."));
+            return DomainErrors.UserErrors.InvalidSubmission("Invalid email format.");
         }
 
         if (birthDate is not null && birthDate >= DateOnly.FromDateTime(DateTime.Today))
-            return Result.Failure<User>(UserError.InvalidSubmission("Birth date must be in the past."));
+            return DomainErrors.UserErrors.InvalidSubmission("Birth date must be in the past.");
 
         var user = new User(
             id,
@@ -147,58 +135,48 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
             email.Trim().ToLowerInvariant(),
             birthDate,
             isMale
-
         );
 
-        if (fireEvent)
-            user.AddDomainEvent(new UserCreatedEvent(user));
-
-        return Result.Success(user);
+        return user;
     }
 
-    public void FireUserCreatedEvent()
-    {
-        this.AddDomainEvent(new UserCreatedEvent(this));
-    }
-
-    public Result AssignProfileImage(Guid fileId)
+    public ErrorOr<Success> AssignProfileImage(Guid fileId)
     {
         if (fileId == Guid.Empty)
-            return Result.Failure(
-                UserError.InvalidSubmission("Profile image id cannot be empty."));
+            return DomainErrors.UserErrors.InvalidSubmission("Profile image id cannot be empty.");
 
         ProfileImageFileId = fileId;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result UpdateFullName(string fullName)
+    public ErrorOr<Success> UpdateFullName(string fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName))
-            return Result.Failure(UserError.InvalidSubmission("Full name cannot be empty."));
+            return DomainErrors.UserErrors.InvalidSubmission("Full name cannot be empty.");
 
         if (fullName.Length > 100)
-            return Result.Failure(UserError.InvalidSubmission("Full name cannot exceed 100 characters."));
+            return DomainErrors.UserErrors.InvalidSubmission("Full name cannot exceed 100 characters.");
 
         FullName = fullName.Trim();
-        return Result.Success();
+        return new Success();
     }
 
-    public Result UpdateUserName(string userName)
+    public ErrorOr<Success> UpdateUserName(string userName)
     {
         if (string.IsNullOrWhiteSpace(userName))
-            return Result.Failure(UserError.InvalidSubmission("Username cannot be empty."));
+            return DomainErrors.UserErrors.InvalidSubmission("Username cannot be empty.");
 
         if (userName.Length > 50)
-            return Result.Failure(UserError.InvalidSubmission("Username cannot exceed 50 characters."));
+            return DomainErrors.UserErrors.InvalidSubmission("Username cannot exceed 50 characters.");
 
         UserName = userName.Trim();
-        return Result.Success();
+        return new Success();
     }
 
-    public Result UpdateEmail(string email)
+    public ErrorOr<Success> UpdateEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
-            return Result.Failure(UserError.InvalidSubmission("Email cannot be empty."));
+            return DomainErrors.UserErrors.InvalidSubmission("Email cannot be empty.");
 
         try
         {
@@ -206,52 +184,44 @@ public sealed class User : AggregateRoot, IAuditable, ISoftDeletable
         }
         catch
         {
-            return Result.Failure(UserError.InvalidSubmission("Invalid email format."));
+            return DomainErrors.UserErrors.InvalidSubmission("Invalid email format.");
         }
 
         Email = email.Trim().ToLowerInvariant();
-        return Result.Success();
+        return new Success();
     }
 
-    public Result UpdateBirthDate(DateOnly birthDate)
+    public ErrorOr<Success> UpdateBirthDate(DateOnly birthDate)
     {
         if (birthDate >= DateOnly.FromDateTime(DateTime.Today))
-            return Result.Failure(UserError.InvalidSubmission("Birth date must be in the past."));
+            return DomainErrors.UserErrors.InvalidSubmission("Birth date must be in the past.");
 
         BirthDate = birthDate;
-        return Result.Success();
+        return new Success();
     }
 
-    public Result UpdateGender(bool isMale)
+    public ErrorOr<Success> UpdateGender(bool isMale)
     {
         IsMale = isMale;
-        return Result.Success();
+        return new Success();
     }
 
-
-
-    public Result SoftDelete(Guid deletedBy)
+    public ErrorOr<Success> SoftDelete(Guid deletedBy)
     {
         if (IsDeleted)
-        {
-            return Result.Failure(
-                DomainError.InvalidState(nameof(User), "User is already deleted."));
-        }
+            return DomainErrors.GeneralErrors.InvalidState(nameof(User), "User is already deleted.");
 
         IsDeleted = true;
         DeletedById = deletedBy;
         DeletedOn = DateTimeOffset.UtcNow;
 
-        // Clear sensitive data
         Email = $"deleted_{Id}@deleted.local";
-        return Result.Success();
+        return new Success();
     }
 
-    public Result UpdateNotificationPreferences(Guid npId)
+    public ErrorOr<Success> UpdateNotificationPreferences(Guid npId)
     {
-
-
         NotificationPreferencesId = npId;
-        return Result.Success();
+        return new Success();
     }
 }

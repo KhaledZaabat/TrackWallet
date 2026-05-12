@@ -1,12 +1,15 @@
-﻿using Expense_Tracker.Domain.FamilyFolder;
+using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.FamilyUserFolder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using ErrorOr;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Jobs;
 
 public sealed class RecordFamilyBudgetsJob(
-    IAppDbContext db,
+    IRepository<Expense_Tracker.Domain.FamilyFolder.Family> familiesRepo,
+    IRepository<FamilyBudgetHistory> familyBudgetHistoriesRepo,
     ILogger<RecordFamilyBudgetsJob> logger)
 {
     public async Task ExecuteAsync(CancellationToken cancellationToken = default)
@@ -15,23 +18,20 @@ public sealed class RecordFamilyBudgetsJob(
 
         try
         {
-            // Get all active families
-            List<Family> families = await db.Families
+            List<Expense_Tracker.Domain.FamilyFolder.Family> families = await familiesRepo.QueryTracked()
                 .Where(f => !f.IsDeleted)
                 .ToListAsync(cancellationToken);
 
             logger.LogInformation("Found {Count} families to record", families.Count);
 
-
             var historiesToAdd = families
                 .Select(f => FamilyBudgetHistory.Create(f.Id, f.CurrentBudget, DateTimeOffset.UtcNow))
-                .Where(r => r.IsSuccess)
-                .Select(r => r.TryGetValue())
+                .Where(r => !r.IsError)
+                .Select(r => r.Value)
                 .ToList();
 
-            // Add all at once
-            db.FamilyBudgetHistories.AddRange(historiesToAdd);
-            await db.SaveChangesAsync(cancellationToken);
+            await familyBudgetHistoriesRepo.AddRangeAsync(historiesToAdd, cancellationToken);
+            await familyBudgetHistoriesRepo.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation(
                 "Completed daily family budget recording job. Recorded {Count} histories.",

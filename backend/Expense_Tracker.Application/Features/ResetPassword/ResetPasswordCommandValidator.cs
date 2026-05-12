@@ -1,4 +1,4 @@
-﻿using Expense_Tracker.Application.Constans;
+using Expense_Tracker.Application.Constans;
 using FluentValidation;
 
 namespace Expense_Tracker.Application.Features.Identity.Commands.ResetPassword;
@@ -16,7 +16,6 @@ public sealed class ResetPasswordCommandValidator
         RuleFor(x => x.Email)
             .Matches(ValidationPatterns.Email).WithMessage(ValidationMessages.InvalidEmail)
             .MaximumLength(ValidationLimits.EmailMaxLength);
-
 
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage(ValidationMessages.PasswordRequired)

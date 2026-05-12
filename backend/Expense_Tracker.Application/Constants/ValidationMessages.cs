@@ -1,4 +1,4 @@
-﻿namespace Expense_Tracker.Application.Constans;
+namespace Expense_Tracker.Application.Constans;
 
 public static class ValidationMessages
 {
@@ -28,10 +28,7 @@ public static class ValidationMessages
 
     public const string InvalidDeviceId = "Device ID is invalid.";
 
-
     public const string InvalidFcmToken = "Invalid FCM token.";
 
-
 }
-
 

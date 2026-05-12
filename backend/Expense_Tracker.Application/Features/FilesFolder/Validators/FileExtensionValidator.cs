@@ -1,8 +1,7 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 
 namespace Files.Contracts.Common;
-
 
 /// <summary>
 /// Base validator for file extension lists. Use concrete subclasses (e.g. ImageExtensionValidator).

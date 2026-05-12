@@ -1,21 +1,21 @@
-﻿using Expense_Tracker.Application.Features.FilesFolder.Dtos;
+﻿using ErrorOr;
+using Expense_Tracker.Application.Features.FilesFolder.Dtos;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using Expense_Tracker.Domain.Errors;
 using Expense_Tracker.Domain.Files;
+using Expense_Tracker.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Infrastructure.Services;
 
-public class FileService(IAppDbContext db, IWebHostEnvironment env) : IFileService, IScopedService
+public class FileService(AppDbContext db, IWebHostEnvironment env) : IFileService, IScopedService
 {
     private readonly string _rootPath = Path.Combine(env.ContentRootPath, "AppData");
 
-    // ---------------------------------------------------------
-    //  Upload a single file (not primary)
-    // ---------------------------------------------------------
-    public async Task<Result<Guid>> UploadAsync(
+    
+    public async Task<ErrorOr<Guid>> UploadAsync(
         string entityType,
         Guid entityId,
         string folder,
@@ -23,25 +23,23 @@ public class FileService(IAppDbContext db, IWebHostEnvironment env) : IFileServi
         CancellationToken ct = default)
     {
         if (file is null || file.Length == 0)
-            return Result.Failure<Guid>(FileError.EmptyFile());
+            return DomainErrors.FileErrors.Empty();
 
         var uploadedResult = await Save(file, entityType, entityId, folder, isPrimary: false, ct);
 
-        if (uploadedResult.IsFailure)
-            return Result.Failure<Guid>(uploadedResult.TryGetError());
+        if (uploadedResult.IsError)
+            return uploadedResult.Errors;
 
-        var uploaded = uploadedResult.TryGetValue();
+        var uploaded = uploadedResult.Value;
 
         await db.UploadedFiles.AddAsync(uploaded, ct);
         await db.SaveChangesAsync(ct);
 
-        return Result.Success(uploaded.Id);
+        return uploaded.Id;
     }
 
-    // ---------------------------------------------------------
-    //  Upload many files (none are primary)
-    // ---------------------------------------------------------
-    public async Task<Result<IEnumerable<Guid>>> UploadManyAsync(
+   
+    public async Task<ErrorOr<IEnumerable<Guid>>> UploadManyAsync(
         string entityType,
         Guid entityId,
         string folder,
@@ -57,25 +55,25 @@ public class FileService(IAppDbContext db, IWebHostEnvironment env) : IFileServi
 
             var saved = await Save(file, entityType, entityId, folder, isPrimary: false, ct);
 
-            if (saved.IsFailure)
-                return Result.Failure<IEnumerable<Guid>>(saved.TryGetError());
+            if (saved.IsError)
+                return saved.Errors;
 
-            list.Add(saved.TryGetValue());
+            list.Add(saved.Value);
         }
 
         if (list.Count == 0)
-            return Result.Failure<IEnumerable<Guid>>(FileError.UploadFailed("All files are invalid."));
+            return DomainErrors.FileErrors.UploadFailed("All files are invalid.");
 
         await db.UploadedFiles.AddRangeAsync(list, ct);
         await db.SaveChangesAsync(ct);
 
-        return Result.Success(list.Select(f => f.Id));
+        return list.Select(f => f.Id).ToList();
     }
 
     // ---------------------------------------------------------
     //  Upload an IMAGE (supports primary flag)
     // ---------------------------------------------------------
-    public async Task<Result<Guid>> UploadImageAsync(
+    public async Task<ErrorOr<Guid>> UploadImageAsync(
         string entityType,
         Guid entityId,
         string folder,
@@ -84,53 +82,53 @@ public class FileService(IAppDbContext db, IWebHostEnvironment env) : IFileServi
         CancellationToken ct = default)
     {
         if (image is null || image.Length == 0)
-            return Result.Failure<Guid>(FileError.EmptyFile());
+            return DomainErrors.FileErrors.Empty();
 
         var saved = await Save(image, entityType, entityId, folder, isPrimary, ct);
 
-        if (saved.IsFailure)
-            return Result.Failure<Guid>(saved.TryGetError());
+        if (saved.IsError)
+            return saved.Errors;
 
-        var file = saved.TryGetValue();
+        var file = saved.Value;
 
         await db.UploadedFiles.AddAsync(file, ct);
         await db.SaveChangesAsync(ct);
 
-        return Result.Success(file.Id);
+        return file.Id;
     }
 
     // ---------------------------------------------------------
     //  Download file
     // ---------------------------------------------------------
-    public async Task<Result<FileDto>> DownloadAsync(Guid id, CancellationToken ct = default)
+    public async Task<ErrorOr<FileDto>> DownloadAsync(Guid id, CancellationToken ct = default)
     {
         var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
         if (file is null)
-            return Result.Failure<FileDto>(FileError.FileNotFound());
+            return DomainErrors.FileErrors.NotFound();
 
         var path = Path.Combine(_rootPath, file.Folder, file.StoredFileName);
 
         if (!System.IO.File.Exists(path))
-            return Result.Failure<FileDto>(FileError.FileNotFound());
+            return DomainErrors.FileErrors.NotFound();
 
         var bytes = await System.IO.File.ReadAllBytesAsync(path, ct);
 
-        return Result.Success(new FileDto(bytes, file.ContentType, file.FileName));
+        return new FileDto(bytes, file.ContentType, file.FileName);
     }
 
     // ---------------------------------------------------------
     //  Stream file
     // ---------------------------------------------------------
-    public async Task<Result<StreamFileDto>> StreamAsync(Guid id, CancellationToken ct = default)
+    public async Task<ErrorOr<StreamFileDto>> StreamAsync(Guid id, CancellationToken ct = default)
     {
         var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
         if (file is null)
-            return Result.Failure<StreamFileDto>(FileError.FileNotFound());
+            return DomainErrors.FileErrors.NotFound();
 
         var path = Path.Combine(_rootPath, file.Folder, file.StoredFileName);
 
         if (!System.IO.File.Exists(path))
-            return Result.Failure<StreamFileDto>(FileError.FileNotFound());
+            return DomainErrors.FileErrors.NotFound();
 
         var stream = new FileStream(
             path,
@@ -140,17 +138,17 @@ public class FileService(IAppDbContext db, IWebHostEnvironment env) : IFileServi
             64 * 1024,
             useAsync: true);
 
-        return Result.Success(new StreamFileDto(stream, file.ContentType, file.FileName));
+        return new StreamFileDto(stream, file.ContentType, file.FileName);
     }
 
     // ---------------------------------------------------------
     //  Delete file
     // ---------------------------------------------------------
-    public async Task<Result> DeleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<ErrorOr<Success>> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
         if (file is null)
-            return Result.Failure(FileError.FileNotFound());
+            return DomainErrors.FileErrors.NotFound();
 
         string path = Path.Combine(_rootPath, file.Folder, file.StoredFileName);
 
@@ -160,23 +158,23 @@ public class FileService(IAppDbContext db, IWebHostEnvironment env) : IFileServi
         db.UploadedFiles.Remove(file);
         await db.SaveChangesAsync(ct);
 
-        return Result.Success();
+        return new Success();
     }
 
     // ---------------------------------------------------------
     //  Delete many files
     // ---------------------------------------------------------
-    public async Task<Result> DeleteManyAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
+    public async Task<ErrorOr<Success>> DeleteManyAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
     {
         if (ids is null || !ids.Any())
-            return Result.Failure(FileError.InvalidFileType("No file IDs provided."));
+            return DomainErrors.FileErrors.InvalidType("No file IDs provided.");
 
         var files = await db.UploadedFiles
             .Where(f => ids.Contains(f.Id))
             .ToListAsync(ct);
 
         if (files.Count == 0)
-            return Result.Failure(FileError.FileNotFound("No files found for provided IDs."));
+            return DomainErrors.FileErrors.NotFound("No files found for provided IDs.");
 
         foreach (var file in files)
         {
@@ -192,13 +190,13 @@ public class FileService(IAppDbContext db, IWebHostEnvironment env) : IFileServi
         db.UploadedFiles.RemoveRange(files);
         await db.SaveChangesAsync(ct);
 
-        return Result.Success();
+        return new Success();
     }
 
     // ---------------------------------------------------------
     //  Core SAVE method 
     // ---------------------------------------------------------
-    private async Task<Result<UploadedFile>> Save(
+    private async Task<ErrorOr<UploadedFile>> Save(
         IFormFile file,
         string entityType,
         Guid entityId,

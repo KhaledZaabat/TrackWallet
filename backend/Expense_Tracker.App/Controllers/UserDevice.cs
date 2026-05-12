@@ -1,11 +1,10 @@
-﻿using Asp.Versioning;
-using Expense_Tracker.App.Helpers;
+using Asp.Versioning;
+using ErrorOr;
 using Expense_Tracker.Application.Features.PushNotifications.UpdateFcmToken;
 using Expense_Tracker.Contracts.Requests.PushNotifications;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Wolverine;
 
 namespace Expense_Tracker.App.Controllers;
 
@@ -13,20 +12,19 @@ namespace Expense_Tracker.App.Controllers;
 [ApiController]
 [Authorize]
 [ApiVersion("1.0")]
-
-public sealed class UserDeviceController(ISender sender) : ControllerBase
+public sealed class UserDeviceController(IMessageBus bus) : ControllerBase
 {
     [HttpPost("upsert")]
     public async Task<IActionResult> Upsert(
         [FromBody] UpsertUserDeviceRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        Result result = await sender.Send(
-            new UpsertUserDeviceCommand(
-                request.FcmToken
-            ),
-            cancellationToken);
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(
+            new UpsertUserDeviceCommand(request.FcmToken),
+            cancellationToken
+        );
 
-        return result.ToActionResult(HttpContext);
+        return result.ToActionResult(this);
     }
 }

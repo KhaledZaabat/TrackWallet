@@ -1,28 +1,30 @@
-﻿using Expense_Tracker.Application.Interfaces;
+using Family = Expense_Tracker.Domain.FamilyFolder.Family;
+using Expense_Tracker.Domain.FamilyFolder;
+using Expense_Tracker.Domain.FamilyUserFolder;
+using ErrorOr;
+using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Family;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.GetFamilyUsers;
 
-public sealed class GetFamilyUsersQueryHandler(IAppDbContext db, IFamilyContext familyContext)
-: IRequestHandler<GetFamilyUsersQuery, Result<List<FamilyUserSimpleResponse>>>
+public sealed class GetFamilyUsersQueryHandler(
+    IRepository<global::Expense_Tracker.Domain.FamilyFolder.Family> familyRepo,
+    IRepository<FamilyUser> familyUserRepo,
+    IFamilyContext familyContext)
 {
-    public async Task<Result<List<FamilyUserSimpleResponse>>> Handle(
+    public async Task<ErrorOr<List<FamilyUserSimpleResponse>>> Handle(
         GetFamilyUsersQuery request,
         CancellationToken cancellationToken)
     {
-        bool familyExists = await db.Families
+        bool familyExists = await familyRepo.QueryTracked()
             .AnyAsync(f => f.Id == familyContext.FamilyId, cancellationToken);
 
         if (!familyExists)
-            return Result.Failure<List<FamilyUserSimpleResponse>>(
-                DomainError.NotFound("Family"));
+            return DomainErrors.GeneralErrors.NotFound("Family");
 
-        var users = await db.FamilyUsers
-            .AsNoTracking()
+        var users = await familyUserRepo.Query()
             .Where(fu => fu.FamilyId == familyContext.FamilyId)
             .Select(fu => new FamilyUserSimpleResponse(
                 UserId: fu.User.Id,
@@ -30,6 +32,6 @@ public sealed class GetFamilyUsersQueryHandler(IAppDbContext db, IFamilyContext 
             ))
             .ToListAsync(cancellationToken);
 
-        return Result.Success(users);
+        return users;
     }
 }

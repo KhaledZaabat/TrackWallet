@@ -1,26 +1,26 @@
-﻿using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Domain.FamilyUserFolder;
+using ErrorOr;
+using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Family;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.Family.Queries.GetUserFamilies;
 
 public sealed class GetUserFamiliesQueryHandler(
-    IAppDbContext db,
+    IRepository<FamilyUser> familyUserRepo,
     [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder
-) : IRequestHandler<GetUserFamiliesQuery, Result<List<FamilyResponse>>>
+)
 {
-    public async Task<Result<List<FamilyResponse>>> Handle(
+    public async Task<ErrorOr<List<FamilyResponse>>> Handle(
         GetUserFamiliesQuery request,
         CancellationToken cancellationToken)
     {
         Guid userId = request.userId;
 
         // Get all families where the user is a member with all related data
-        var familiesData = await db.FamilyUsers
-            .AsNoTracking()
+        var familiesData = await familyUserRepo.Query()
             .Where(fu => fu.UserId == userId && !fu.Family.IsDeleted)
             .Select(fu => new
             {
@@ -29,7 +29,7 @@ public sealed class GetUserFamiliesQueryHandler(
                 CurrentBudget = fu.Family.CurrentBudget,
                 FamilyBio = fu.Family.FamilyBio,
 
-                Members = db.FamilyUsers
+                Members = familyUserRepo.Query()
                     .Where(member => member.FamilyId == fu.Family.Id && !member.User.IsDeleted)
                     .Select(member => new
                     {
@@ -68,6 +68,6 @@ public sealed class GetUserFamiliesQueryHandler(
         }).ToList();
 
         // Return successful result with all families
-        return Result.Success(familyResponses);
+        return familyResponses;
     }
 }

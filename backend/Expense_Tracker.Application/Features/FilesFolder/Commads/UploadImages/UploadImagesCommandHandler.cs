@@ -1,12 +1,11 @@
-﻿using Expense_Tracker.Domain.Common.ResultPattern.Result;
-using MediatR;
+using ErrorOr;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.FilesFolder.Commads.UploadImages;
 
 public class UploadImagesCommandHandler(IFileService fileService)
-    : IRequestHandler<UploadImagesCommand, Result<IEnumerable<Guid>>>
 {
-    public async Task<Result<IEnumerable<Guid>>> Handle(UploadImagesCommand request, CancellationToken ct)
+    public async Task<ErrorOr<IEnumerable<Guid>>> Handle(UploadImagesCommand request, CancellationToken ct)
     {
         return await fileService.UploadManyAsync(
             request.EntityType,

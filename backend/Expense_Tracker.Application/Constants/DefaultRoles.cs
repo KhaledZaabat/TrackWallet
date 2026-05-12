@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 
 namespace Expense_Tracker.Application.Constants;
 
@@ -7,8 +7,6 @@ public static class DefaultRoles
 
     public const string Parent = "Parent";
     public const string Child = "Child";
-
-
 
     public static IReadOnlyList<string> GetAll()
     {

@@ -1,63 +1,63 @@
-﻿using Expense_Tracker.Contracts.Reponses.Family;
-using Expense_Tracker.Domain.Common.ResultPattern.Error;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
+using DomainFamily = Expense_Tracker.Domain.FamilyFolder.Family;
+using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Contracts.Reponses.Family;
+using Expense_Tracker.Domain.FamilyFolder;
 using Expense_Tracker.Domain.FamilyUserFolder;
 using Expense_Tracker.Domain.Users;
-using MediatR;
+using ErrorOr;
 using Microsoft.EntityFrameworkCore;
+using Expense_Tracker.Domain.Errors;
 
 namespace Expense_Tracker.Application.Features.Family.Commands.CreateFamily;
 
 public sealed class CreateFamilyCommandHandler(
-    IAppDbContext db
-) : IRequestHandler<CreateFamilyCommand, Result<CreateFamilyResponse>>
+    IRepository<User> users,
+    IRepository<DomainFamily> families,
+    IRepository<FamilyUser> familyUsers
+)
 {
-    public async Task<Result<CreateFamilyResponse>> Handle(
+    public async Task<ErrorOr<CreateFamilyResponse>> Handle(
         CreateFamilyCommand request,
         CancellationToken cancellationToken)
     {
         // 1. Verify user exists
-        var userExists = await db.Users
-            .AsNoTracking()
+        var userExists = await users.Query()
             .AnyAsync(u => u.Id == request.UserId, cancellationToken);
 
         if (!userExists)
-            return Result.Failure<CreateFamilyResponse>(
-                DomainError.NotFound(nameof(User)));
+            return DomainErrors.GeneralErrors.NotFound(nameof(User));
 
         // 2. Create family
-        Result<Domain.FamilyFolder.Family> familyResult = Domain.FamilyFolder.Family.Create(
+        var familyResult = DomainFamily.Create(
             name: request.Name,
             currentBudget: request.InitialBudget,
             createdBy: request.UserId,
             familyBio: request.FamilyBio
         );
 
-        if (familyResult.IsFailure)
-            return Result.Failure<CreateFamilyResponse>(familyResult.TryGetError());
+        if (familyResult.IsError)
+            return familyResult.Errors;
 
-        Domain.FamilyFolder.Family family = familyResult.TryGetValue();
+        DomainFamily family = familyResult.Value;
 
         // 3. Add creator as parent member
-        Result<FamilyUser> familyUserResult = FamilyUser.Create(
+        var familyUserResult = FamilyUser.Create(
             familyId: family.Id,
             userId: request.UserId,
             isParent: true,
             invitedById: request.UserId
         );
 
-        if (familyUserResult.IsFailure)
-            return Result.Failure<CreateFamilyResponse>(familyUserResult.TryGetError());
+        if (familyUserResult.IsError)
+            return familyUserResult.Errors;
 
-        FamilyUser familyUser = familyUserResult.TryGetValue();
-
-
+        FamilyUser familyUser = familyUserResult.Value;
 
         // 5. Save all entities
-        db.Families.Add(family);
-        db.FamilyUsers.Add(familyUser);
+        await families.AddAsync(family, cancellationToken);
+        await familyUsers.AddAsync(familyUser, cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
+        await families.SaveChangesAsync(cancellationToken);
 
         // 6. Build response
         var response = new CreateFamilyResponse(
@@ -70,6 +70,6 @@ public sealed class CreateFamilyCommandHandler(
             MemberCount: 1
         );
 
-        return Result.Success(response);
+        return response;
     }
 }

@@ -1,32 +1,35 @@
-﻿using Expense_Tracker.Application.Constants;
+using User = Expense_Tracker.Domain.Users.User;
+using Expense_Tracker.Domain.TransactionFolder;
+using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Events;
+using Expense_Tracker.Application.Events;
+using Expense_Tracker.Domain.FamilyFolder;
 using Expense_Tracker.Domain.PushNotifications.Enums;
 using Expense_Tracker.Domain.TransactionFolder.Enums;
-using MediatR;
+using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Application.EventHandlers.Inv;
 
 public sealed class TransactionCreatedEventHandler(
-    IAppDbContext context,
+    IRepository<global::Expense_Tracker.Domain.Users.User> users,
+    IRepository<Family> families,
     IFcmTopicService fcmTopicService)
-    : INotificationHandler<TransactionCreatedEvent>
 {
     public async Task Handle(
         TransactionCreatedEvent notification,
         CancellationToken ct)
     {
-        var transaction = notification.transaction;
+        var transaction = notification.Transaction;
 
         // Fetch creator name
-        var creatorName = await context.Users
+        var creatorName = await users.Query()
             .Where(u => u.Id == transaction.CreatedById)
             .Select(u => u.UserName)
             .SingleOrDefaultAsync(ct);
 
         // Fetch family name
-        var familyName = await context.Families
+        var familyName = await families.Query()
             .Where(f => f.Id == transaction.FamilyId)
             .Select(f => f.Name)
             .SingleOrDefaultAsync(ct);

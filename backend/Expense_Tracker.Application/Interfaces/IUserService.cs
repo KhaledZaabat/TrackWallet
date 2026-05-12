@@ -1,4 +1,4 @@
-﻿//using Expense_Tracker.Domain.Common.ResultPattern.Result;
+//using Expense_Tracker.Domain.Common.ResultPattern.Result;
 //using Expense_Tracker.Domain.Users;
 
 //namespace Expense_Tracker.Application.Interfaces;
@@ -10,6 +10,4 @@
 //    Task<Result> ChangeDisplayNameAsync(string identityUserId, string newDisplayName, CancellationToken ct);
 
 //}
-
-
 

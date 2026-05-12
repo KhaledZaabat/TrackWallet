@@ -1,8 +1,6 @@
-﻿using Expense_Tracker.Contracts.Reponses.Transaction;
+using Expense_Tracker.Contracts.Reponses.Transaction;
 using Expense_Tracker.Domain.CategoryFolder;
-using Expense_Tracker.Domain.Common.ResultPattern.Result;
 using Expense_Tracker.Domain.TransactionFolder.Enums;
-using MediatR;
 
 namespace Expense_Tracker.Application.Features.Transactions.Queries.GetFamilyTransactions;
 
@@ -15,8 +13,7 @@ public sealed record GetFamilyTransactionsQuery(
     decimal? MinAmount = null,
     decimal? MaxAmount = null,
     Guid? CreatorId = null
-) : IRequest<Result<CursorPagedResponse<TransactionItem>>>;
-
+);
 
 public sealed record CursorPagedResponse<T>(
     IReadOnlyList<T> Items,
