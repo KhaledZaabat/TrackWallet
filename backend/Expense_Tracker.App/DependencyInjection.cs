@@ -238,7 +238,7 @@ public static class ServiceRegistration
                 "AllowFrontend",
                 policy =>
                     policy
-                        .WithOrigins("http://localhost:3000", "https://localhost:7067")
+                        .WithOrigins("http://localhost:3000", "https://localhost:7067", "https://localhost:4200")
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                         .AllowCredentials()

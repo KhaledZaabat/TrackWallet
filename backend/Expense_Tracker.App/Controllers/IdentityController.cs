@@ -12,6 +12,7 @@ using Expense_Tracker.Application.Features.Identity.Commands.VerifyOtp;
 using Expense_Tracker.Application.Features.Login;
 using Expense_Tracker.Application.Features.Refresh;
 using Expense_Tracker.Application.Features.Register;
+using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Identity;
 using Expense_Tracker.Contracts.Requests.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -247,8 +248,6 @@ public sealed class IdentityController(
     [EndpointName("Logout")]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken ct)
     {
-        // R14.4 — set the skip marker BEFORE dispatching so SilentRefreshMiddleware
-        // does not attempt a rotation on the response path for this request.
         HttpContext.Items["AuthLogoutInProgress"] = true;
 
         ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(
@@ -259,9 +258,44 @@ public sealed class IdentityController(
         if (result.IsError)
             return this.Problem(result.Errors);
 
-        // R14.2 — clear access + refresh + CSRF with the exact attributes used on write (R22.9).
         authCookies.ClearAuthCookies(HttpContext);
 
         return Ok();
     }
+[Authorize]
+[HttpGet("me")]
+[ProducesResponseType(typeof(MeResponse), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Returns the authenticated user's profile.")]
+[EndpointName("GetMe")]
+public async Task<ActionResult<MeResponse>> Me(
+    [FromServices] IUserContext userContext,
+    CancellationToken ct)
+{
+    if (userContext.UserId is not { } userId)
+        return Unauthorized();
+
+    ErrorOr<MeResult> result = await bus.InvokeAsync<ErrorOr<MeResult>>(
+        new GetMeQuery(userId),
+        ct
+    );
+
+    if (result.IsError)
+        return this.Problem(result.Errors);
+
+    MeResult value = result.Value;
+
+    return new MeResponse(
+        value.Id,
+        value.Email,
+        value.UserName,
+        value.FullName,
+        value.BirthDate,
+        value.IsMale,
+        value.ProfileImageUrl
+    );
 }
+}
+
