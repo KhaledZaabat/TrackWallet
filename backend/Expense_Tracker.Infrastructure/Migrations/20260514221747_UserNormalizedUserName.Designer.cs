@@ -3,6 +3,7 @@ using System;
 using Expense_Tracker.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Expense_Tracker.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514221747_UserNormalizedUserName")]
+    partial class UserNormalizedUserName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,73 @@ namespace Expense_Tracker.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("DomainNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("jsonb");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId")
+                        .HasDatabaseName("IX_Notifications_ActorUserId")
+                        .HasFilter("\"ActorUserId\" IS NOT NULL");
+
+                    b.HasIndex("Data")
+                        .HasDatabaseName("IX_Notifications_Data_GIN");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Data"), "gin");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_Notifications_UserId");
+
+                    b.HasIndex("UserId", "IsRead", "CreatedAtUtc")
+                        .HasDatabaseName("IX_Notifications_UserId_IsRead_CreatedAtUtc")
+                        .HasFilter("\"IsRead\" = false");
+
+                    b.HasIndex("UserId", "Type", "CreatedAtUtc")
+                        .HasDatabaseName("IX_Notifications_UserId_Type_CreatedAtUtc");
+
+                    b.ToTable("Notifications", (string)null);
+                });
 
             modelBuilder.Entity("Expense_Tracker.Domain.CategoryFolder.Category", b =>
                 {
@@ -316,89 +386,6 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.HasIndex("InviteeUserId", "FamilyId", "Status");
 
                     b.ToTable("Invitations", (string)null);
-                });
-
-            modelBuilder.Entity("Expense_Tracker.Domain.PushNotifications.DomainNotification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ActorUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("IconKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<bool>("IsRead")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Payload")
-                        .HasColumnType("jsonb");
-
-                    b.Property<DateTimeOffset?>("ReadAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ResourceUri")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("Severity")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActorUserId");
-
-                    b.HasIndex("UserId", "CreatedAtUtc")
-                        .IsDescending(false, true)
-                        .HasDatabaseName("IX_Notifications_UserId_CreatedAtUtc");
-
-                    b.HasIndex("UserId", "Category", "CreatedAtUtc")
-                        .HasDatabaseName("IX_Notifications_UserId_Category_CreatedAtUtc");
-
-                    b.HasIndex("UserId", "IsRead", "CreatedAtUtc")
-                        .HasDatabaseName("IX_Notifications_UserId_Unread")
-                        .HasFilter("\"IsRead\" = false");
-
-                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Expense_Tracker.Domain.PushNotifications.UserDevice", b =>
@@ -844,6 +831,20 @@ namespace Expense_Tracker.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("DomainNotification", b =>
+                {
+                    b.HasOne("Expense_Tracker.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Expense_Tracker.Domain.Users.User", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Expense_Tracker.Domain.Common.Identity.RefreshToken", b =>
                 {
                     b.HasOne("Expense_Tracker.Infrastructure.Idenitity.ApplicationUser", null)
@@ -914,20 +915,6 @@ namespace Expense_Tracker.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Family");
-                });
-
-            modelBuilder.Entity("Expense_Tracker.Domain.PushNotifications.DomainNotification", b =>
-                {
-                    b.HasOne("Expense_Tracker.Domain.Users.User", null)
-                        .WithMany()
-                        .HasForeignKey("ActorUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Expense_Tracker.Domain.Users.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Expense_Tracker.Domain.PushNotifications.UserDevice", b =>
@@ -1043,6 +1030,8 @@ namespace Expense_Tracker.Infrastructure.Migrations
 
             modelBuilder.Entity("Expense_Tracker.Domain.Users.User", b =>
                 {
+                    b.Navigation("Notifications");
+
                     b.Navigation("Transactions");
                 });
 

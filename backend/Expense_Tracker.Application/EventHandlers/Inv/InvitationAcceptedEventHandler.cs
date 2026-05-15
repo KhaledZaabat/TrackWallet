@@ -1,10 +1,9 @@
-using User = Expense_Tracker.Domain.Users.User;
-using Expense_Tracker.Application.Constans;
 using Expense_Tracker.Application.Constants;
-using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Application.Events;
+using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Application.Notifications;
 using Expense_Tracker.Domain.FamilyFolder;
-using Expense_Tracker.Domain.PushNotifications.Enums;
+using Expense_Tracker.Domain.PushNotifications;
 using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,42 +13,37 @@ public sealed class InvitationAcceptedEventHandler(
     IRepository<global::Expense_Tracker.Domain.Users.User> users,
     IRepository<Family> families,
     IUnifiedNotificationDispatcher dispatcher,
+    INotificationBuilder notificationBuilder,
     IEmailTemplateLoader templateLoader,
     IEmailBodyBuilder bodyBuilder,
     INotificationService notification)
 {
-    public async Task Handle(
-        InvitationAcceptedEvent notification,
-        CancellationToken ct)
+    public async Task Handle(InvitationAcceptedEvent e, CancellationToken ct)
     {
-        var inviteeInfo = await users.Query()
-            .Where(u => u.Id == notification.Invitation.InviteeUserId)
+        string? inviteeName = await users.Query()
+            .Where(u => u.Id == e.Invitation.InviteeUserId)
             .Select(u => u.UserName)
             .SingleOrDefaultAsync(ct);
 
         var inviterInfo = await users.Query()
-            .Where(u => u.Id == notification.Invitation.InviterUserId)
+            .Where(u => u.Id == e.Invitation.InviterUserId)
             .Select(u => new { u.UserName, u.Email, u.NotificationPreferences.EmailNotifications })
             .SingleOrDefaultAsync(ct);
 
-        var familyInfo = await families.Query()
-            .Where(f => f.Id == notification.Invitation.FamilyId)
+        string? familyName = await families.Query()
+            .Where(f => f.Id == e.Invitation.FamilyId)
             .Select(f => f.Name)
             .SingleOrDefaultAsync(ct);
 
-        DomainNotification domainNotification = DomainNotification.Create(
-            userId: notification.Invitation.InviterUserId,
-            title: "✅ Invitation accepted",
-            body: $"{inviteeInfo} accepted your invitation to {familyInfo}",
-            type: NotificationType.InvitationAccepted,
-            actorUserId: notification.Invitation.InviteeUserId,
-            data: new Dictionary<string, string>
-            {
-                [NotificationDataKeys.INVITATION_ID] = notification.Invitation.Id.ToString(),
-                [NotificationDataKeys.FAMILY_ID] = notification.Invitation.FamilyId.ToString(),
-                [NotificationDataKeys.INVITEE_USER_ID] = notification.Invitation.InviteeUserId.ToString(),
-                ["action"] = "open-family"
-            });
+        DomainNotification domainNotification = notificationBuilder.Build(
+            recipientUserId: e.Invitation.InviterUserId,
+            actorUserId: e.Invitation.InviteeUserId,
+            payload: new InvitationAcceptedPayload(
+                InvitationId: e.Invitation.Id,
+                FamilyId: e.Invitation.FamilyId,
+                FamilyName: familyName ?? string.Empty,
+                InviteeUserId: e.Invitation.InviteeUserId,
+                InviteeUserName: inviteeName ?? string.Empty));
 
         await dispatcher.EnqueueAsync(domainNotification, ct);
 
@@ -57,9 +51,9 @@ public sealed class InvitationAcceptedEventHandler(
         {
             await SendAcceptedEmailAsync(
                 inviterInfo.Email,
-                inviterInfo.UserName,
-                inviteeInfo,
-                familyInfo,
+                inviterInfo.UserName ?? string.Empty,
+                inviteeName ?? string.Empty,
+                familyName ?? string.Empty,
                 ct);
         }
     }
@@ -71,21 +65,20 @@ public sealed class InvitationAcceptedEventHandler(
         string familyName,
         CancellationToken ct)
     {
-        var template = await templateLoader.LoadTemplateAsync(
-            EmailTemplates.InvitationAcceptedTemplate,
-            ct);
+        string template = await templateLoader.LoadTemplateAsync(
+            EmailTemplates.InvitationAcceptedTemplate, ct);
 
-        var body = bodyBuilder.Build(template, new Dictionary<string, string>
+        string body = bodyBuilder.Build(template, new Dictionary<string, string>
         {
             ["InviterName"] = inviterName,
             ["InviteeName"] = inviteeName,
             ["FamilyName"] = familyName,
-            ["AppLink"] = "expensetracker://family"
+            ["AppLink"] = "/families",
         });
 
         await notification.SendEmailAsync(
             to: email,
-            subject: $"✅ {inviteeName} accepted your invitation!",
+            subject: $"{inviteeName} accepted your invitation",
             htmBody: body,
             cancellationToken: ct);
     }

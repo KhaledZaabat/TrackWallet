@@ -20,7 +20,12 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(50);
 
-        builder.HasIndex(u => u.UserName)
+        builder.Property(u => u.NormalizedUserName)
+            .IsRequired()
+            .HasMaxLength(50);
+
+       
+        builder.HasIndex(u => u.NormalizedUserName)
             .IsUnique();
 
         builder.Property(u => u.Email)
@@ -63,11 +68,6 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         // Soft delete
         builder.HasQueryFilter(u => !u.IsDeleted);
-        // Notifications relationship
-        builder.HasMany(u => u.Notifications)
-            .WithOne()
-            .HasForeignKey(n => n.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(u => u.IsDeleted);
 
         builder

@@ -1,12 +1,14 @@
-﻿
+﻿using System.Text.Json;
 using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Domain.PushNotifications;
 using FirebaseAdmin.Messaging;
 
 namespace Expense_Tracker.Infrastructure.FCM;
 
-public sealed class FcmTopicService()
-    : IFcmTopicService, IScopedService
+public sealed class FcmTopicService : IFcmTopicService, IScopedService
 {
+    private static readonly JsonSerializerOptions PayloadJsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task SubscribeToTopicAsync(
         IEnumerable<string> deviceTokens,
         string topic,
@@ -16,14 +18,8 @@ public sealed class FcmTopicService()
         if (tokens.Count == 0)
             return;
 
-        var sanitizedTopic = SanitizeTopicName(topic);
-
-        TopicManagementResponse response = await FirebaseMessaging
-            .DefaultInstance
-            .SubscribeToTopicAsync(tokens, sanitizedTopic);
-
-
-
+        await FirebaseMessaging.DefaultInstance
+            .SubscribeToTopicAsync(tokens, SanitizeTopicName(topic));
     }
 
     public async Task UnsubscribeFromTopicAsync(
@@ -35,11 +31,8 @@ public sealed class FcmTopicService()
         if (tokens.Count == 0)
             return;
 
-        var sanitizedTopic = SanitizeTopicName(topic);
-
-        await FirebaseMessaging
-            .DefaultInstance
-            .UnsubscribeFromTopicAsync(tokens, sanitizedTopic);
+        await FirebaseMessaging.DefaultInstance
+            .UnsubscribeFromTopicAsync(tokens, SanitizeTopicName(topic));
     }
 
     public async Task SendToTopicAsync(
@@ -47,38 +40,39 @@ public sealed class FcmTopicService()
         DomainNotification notification,
         CancellationToken cancellationToken = default)
     {
-        var sanitizedTopic = SanitizeTopicName(topic);
-
         Message message = new()
         {
-            Topic = sanitizedTopic,
+            Topic = SanitizeTopicName(topic),
             Notification = new Notification
             {
                 Title = notification.Title,
-                Body = notification.Body
+                Body = notification.Body,
             },
-            Data = BuildData(notification)
+            Data = BuildData(notification),
         };
 
-        await FirebaseMessaging
-            .DefaultInstance
-            .SendAsync(message, cancellationToken);
+        await FirebaseMessaging.DefaultInstance.SendAsync(message, cancellationToken);
     }
 
     private static Dictionary<string, string> BuildData(DomainNotification notification)
     {
-        Dictionary<string, string> data =
-            notification.Data ?? new Dictionary<string, string>();
+        var data = new Dictionary<string, string>(capacity: 6)
+        {
+            ["notificationId"] = notification.Id.ToString(),
+            ["type"] = notification.Type.ToString(),
+            ["category"] = notification.Category.ToString(),
+            ["severity"] = notification.Severity.ToString(),
+            ["iconKey"] = notification.IconKey,
+        };
 
-        data["notificationId"] = notification.Id.ToString();
-        data["type"] = notification.Type.ToString();
+        if (!string.IsNullOrEmpty(notification.ResourceUri))
+            data["resourceUri"] = notification.ResourceUri;
+
+        if (notification.Payload is not null)
+            data["payload"] = JsonSerializer.Serialize(notification.Payload, PayloadJsonOptions);
 
         return data;
     }
 
-    private static string SanitizeTopicName(string topic)
-    {
-        return topic.Replace("-", "_");
-    }
+    private static string SanitizeTopicName(string topic) => topic.Replace("-", "_");
 }
-

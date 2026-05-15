@@ -15,12 +15,15 @@ public sealed class User : Entity, IAuditable, ISoftDeletable
 
     public string FullName { get; private set; } = string.Empty;
     public string UserName { get; private set; } = string.Empty;
+
+
+    public string NormalizedUserName { get; private set; } = string.Empty;
+
     public string Email { get; private set; } = string.Empty;
 
     public DateOnly? BirthDate { get; private set; }
     public bool? IsMale { get; private set; }
 
-    public ICollection<DomainNotification> Notifications { get; private set; } = new List<DomainNotification>();
     public Guid NotificationPreferencesId { get; private set; } = NotificationPreferences.DefaultNotificationId;
     public NotificationPreferences NotificationPreferences { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;
@@ -88,10 +91,15 @@ public sealed class User : Entity, IAuditable, ISoftDeletable
     {
         FullName = fullName;
         UserName = userName;
+        NormalizedUserName = Normalize(userName);
         Email = email;
         BirthDate = birthDate;
         IsMale = isMale;
     }
+
+
+    public static string Normalize(string userName) =>
+        userName?.Trim().ToUpperInvariant() ?? string.Empty;
 
     public static ErrorOr<User> Create(
         Guid id,
@@ -170,6 +178,7 @@ public sealed class User : Entity, IAuditable, ISoftDeletable
             return DomainErrors.UserErrors.InvalidSubmission("Username cannot exceed 50 characters.");
 
         UserName = userName.Trim();
+        NormalizedUserName = Normalize(userName);
         return new Success();
     }
 

@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using ErrorOr;
+using Expense_Tracker.Application.Features.CheckUsername;
 using Expense_Tracker.Application.Features.UpdatePassword;
 using Expense_Tracker.Application.Features.Userr.GetProfile;
 using Expense_Tracker.Application.Features.Userr.UpdateProfile;
@@ -16,6 +17,24 @@ namespace Expense_Tracker.App.Controllers;
 [Produces("application/json")]
 public sealed class UserController(IMessageBus bus) : ControllerBase
 {
+    [HttpGet("check-username")]
+    [AllowAnonymous]
+    [EndpointName("CheckUsername")]
+    [EndpointSummary("Checks if a username is available.")]
+    [ProducesResponseType(typeof(UsernameAvailabilityResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<UsernameAvailabilityResponse>> CheckUsername(
+        [FromQuery] string username,
+        CancellationToken cancellationToken)
+    {
+        var query = new CheckUsernameQuery(username);
+        ErrorOr<UsernameAvailabilityResponse> result = await bus.InvokeAsync<ErrorOr<UsernameAvailabilityResponse>>(
+            query,
+            cancellationToken
+        );
+        return result.ToActionResult(this);
+    }
+
     [HttpPost("update-password")]
     [EndpointName("UpdatePassword")]
     [EndpointSummary("Update the authenticated user's password")]

@@ -1,11 +1,9 @@
-using User = Expense_Tracker.Domain.Users.User;
-using Expense_Tracker.Domain.TransactionFolder;
 using Expense_Tracker.Application.Constants;
-using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Application.Events;
+using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Application.Notifications;
 using Expense_Tracker.Domain.FamilyFolder;
-using Expense_Tracker.Domain.PushNotifications.Enums;
-using Expense_Tracker.Domain.TransactionFolder.Enums;
+using Expense_Tracker.Domain.PushNotifications;
 using Expense_Tracker.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,52 +12,37 @@ namespace Expense_Tracker.Application.EventHandlers.Inv;
 public sealed class TransactionCreatedEventHandler(
     IRepository<global::Expense_Tracker.Domain.Users.User> users,
     IRepository<Family> families,
-    IFcmTopicService fcmTopicService)
+    IFcmTopicService fcmTopicService,
+    INotificationBuilder notificationBuilder)
 {
-    public async Task Handle(
-        TransactionCreatedEvent notification,
-        CancellationToken ct)
+    public async Task Handle(TransactionCreatedEvent e, CancellationToken ct)
     {
-        var transaction = notification.Transaction;
+        var transaction = e.Transaction;
 
-        var creatorName = await users.Query()
+        string? creatorName = await users.Query()
             .Where(u => u.Id == transaction.CreatedById)
             .Select(u => u.UserName)
             .SingleOrDefaultAsync(ct);
 
-        var familyName = await families.Query()
+        string? familyName = await families.Query()
             .Where(f => f.Id == transaction.FamilyId)
             .Select(f => f.Name)
             .SingleOrDefaultAsync(ct);
 
-        var title = transaction.Type == TransactionType.Expense
-            ? "💸 New expense added"
-            : "💰 New income added";
-
-        var body =
-            $"{creatorName} added {transaction.Amount} in {familyName} Family";
-
-        var domainNotification = DomainNotification.Create(
-            userId: transaction.CreatedById, // topic-based
-            title: title,
-            body: body,
-            type: NotificationType.TransactionCreated,
+        DomainNotification domainNotification = notificationBuilder.Build(
+            recipientUserId: transaction.CreatedById,
             actorUserId: transaction.CreatedById,
-            data: new Dictionary<string, string>
-            {
-                ["transactionId"] = transaction.Id.ToString(),
-                ["familyId"] = transaction.FamilyId.ToString(),
-                ["categoryId"] = transaction.CategoryId.ToString(),
-                ["amount"] = transaction.Amount.ToString(),
-                ["transactionType"] = transaction.Type.ToString(),
-                ["action"] = "open-transaction"
-            });
+            payload: new TransactionCreatedPayload(
+                TransactionId: transaction.Id,
+                FamilyId: transaction.FamilyId,
+                FamilyName: familyName ?? string.Empty,
+                CategoryId: transaction.CategoryId,
+                Amount: transaction.Amount,
+                TransactionType: transaction.Type.ToString(),
+                CreatorUserId: transaction.CreatedById,
+                CreatorUserName: creatorName ?? string.Empty));
 
-        var familyTopic = Topics.getFamilyTopic(transaction.FamilyId);
-
-        await fcmTopicService.SendToTopicAsync(
-            familyTopic,
-            domainNotification,
-            ct);
+        string familyTopic = Topics.getFamilyTopic(transaction.FamilyId);
+        await fcmTopicService.SendToTopicAsync(familyTopic, domainNotification, ct);
     }
 }
