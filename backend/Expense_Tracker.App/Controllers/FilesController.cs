@@ -64,7 +64,8 @@ public sealed class FilesController(IMessageBus bus) : ControllerBase
     {
         ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(
             new DeleteFileCommand(id),
-            ct);
+            ct
+        );
 
         return result.Match<IActionResult>(_ => NoContent(), errs => this.Problem(errs));
     }
@@ -82,17 +83,10 @@ public sealed class FilesController(IMessageBus bus) : ControllerBase
 
         FileDto file = result.Value;
 
-        // Strong ETag from the SHA-256 of the bytes. Every row is guaranteed
-        // to have a hash because FileService computes it inline during upload.
         var etag = new EntityTagHeaderValue($"\"{file.ContentHash}\"");
 
-        // Cache directive — ASP.NET's File() overload won't set this, so we do.
         Response.Headers.CacheControl = "private, max-age=86400, must-revalidate";
 
-        // For the inline view we still want a Content-Disposition that names
-        // the file (drives "Save As..." correctly) without flagging it as an
-        // attachment. The attachment path lets the framework set the header
-        // from fileDownloadName, which already handles RFC 5987 quoting.
         if (!asAttachment)
         {
             var disposition = new ContentDispositionHeaderValue("inline")
@@ -108,6 +102,7 @@ public sealed class FilesController(IMessageBus bus) : ControllerBase
             fileDownloadName: asAttachment ? file.FileName : null,
             lastModified: null,
             entityTag: etag,
-            enableRangeProcessing: true);
+            enableRangeProcessing: true
+        );
     }
 }

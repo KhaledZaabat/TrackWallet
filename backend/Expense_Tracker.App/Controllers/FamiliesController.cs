@@ -20,7 +20,6 @@ using Wolverine;
 
 namespace Expense_Tracker.App.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/families")]
 [ApiVersion("1.0")]
@@ -54,46 +53,47 @@ public class FamiliesController(
         );
         return result.ToActionResult(this);
     }
-    [HttpPost("select")]
+    [HttpPost("{familyId:guid}/select")]
     [ProducesResponseType(typeof(SelectFamilyResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [EndpointSummary("Selects a family and loads full context.")]
+    [EndpointSummary("Selects a family as the active context.")]
     [EndpointDescription(
-        "Sets the active family for the user session and returns comprehensive family context including user information, family details, budget history, recent transactions, and refreshed authentication tokens (JWT and refresh token)."
+        "Sets the active family for the user session, refreshes auth cookies (JWT + refresh token + CSRF) with the new family context, and subscribes the user's devices to the family's FCM topic. The response carries only the new family context — transactions, budget history, and members are loaded separately from their dedicated endpoints."
     )]
     [EndpointName("SelectFamily")]
     public async Task<ActionResult<SelectFamilyResponse>> SelectFamily(
+        [FromRoute] Guid familyId,
         [FromBody] SelectFamilyRequest request,
-        CancellationToken cancellationToken
-    )
+        CancellationToken cancellationToken)
     {
         if (!userContext.UserId.HasValue)
             return Unauthorized("User Is not Authorized");
 
         var command = new SelectFamilyCommand(
             UserId: userContext.UserId.Value,
-            FamilyId: request.FamilyId,
-            DeviceId: request.DeviceId
-        );
+            FamilyId: familyId,
+            DeviceId: request.DeviceId);
 
-        ErrorOr<SelectFamilyResponse> result = await bus.InvokeAsync<ErrorOr<SelectFamilyResponse>>(
-            command,
-            cancellationToken
-        );
+        ErrorOr<SelectFamilyCommandResult> result =
+            await bus.InvokeAsync<ErrorOr<SelectFamilyCommandResult>>(command, cancellationToken);
 
         if (result.IsError)
             return this.Problem(result.Errors);
 
+        SelectFamilyCommandResult value = result.Value;
 
-        SelectFamilyResponse value = result.Value;
-
+        // Tokens never leave the server — they ride in HttpOnly cookies.
         authCookies.WriteAccessCookie(HttpContext, value.JwtToken.Token, value.JwtToken.ExpiresAt);
         authCookies.WriteRefreshCookie(HttpContext, value.RefreshToken.Token, value.RefreshToken.ExpiresAt);
         authCookies.IssueCsrfCookie(HttpContext);
 
-        return result.ToActionResult(this);
+        return Ok(new SelectFamilyResponse(
+            UserId: value.UserId,
+            Email: value.Email,
+            FullName: value.FullName,
+            FamilyContext: value.FamilyContext));
     }
     [HttpPost]
     [ProducesResponseType(typeof(CreateFamilyResponse), StatusCodes.Status201Created)]

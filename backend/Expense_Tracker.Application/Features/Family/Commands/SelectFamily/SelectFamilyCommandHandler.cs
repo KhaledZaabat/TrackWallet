@@ -1,38 +1,33 @@
-using Expense_Tracker.Domain.Users;
-using Expense_Tracker.Domain.FamilyUserFolder;
+using ErrorOr;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Dtos;
-using Expense_Tracker.Application.Features.FamiliyHistoryBudget.Queries;
-using Expense_Tracker.Application.Features.Transactions.Queries.GetFamilyTransactions;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Contracts.Reponses.Family;
 using Expense_Tracker.Contracts.Reponses.Identity;
-using Expense_Tracker.Contracts.Reponses.Transaction;
-using Expense_Tracker.Domain.PushNotifications;
-using ErrorOr;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Wolverine;
 using Expense_Tracker.Domain.Errors;
+using Expense_Tracker.Domain.FamilyUserFolder;
+using Expense_Tracker.Domain.PushNotifications;
+using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Application.Features.Family.Commands.SelectFamily;
 
+/// <summary>
+/// Switches the caller's active family. Side-effects: subscribes the user's
+/// devices to the family FCM topic and issues new auth cookies scoped to the
+/// selected family. The response carries only the new family context — the
+/// SPA loads transactions, budget, and members from their own REST endpoints.
+/// </summary>
 public sealed class SelectFamilyCommandHandler(
     IRepository<FamilyUser> familyUsers,
-    IRepository<User> users,
     ITokenProvider tokenProvider,
     IIdentityService identityService,
-    IFileUrlResolver fileUrlResolver,
-    IMessageBus bus,
     IRepository<UserDevice> userDevices,
-    IFcmTopicService topicService
-)
+    IFcmTopicService topicService)
 {
-    public async Task<ErrorOr<SelectFamilyResponse>> Handle(
+    public async Task<ErrorOr<SelectFamilyCommandResult>> Handle(
         SelectFamilyCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Verify user exists
+        // 1. Verify user exists.
         ErrorOr<AuthenticatedUser> userResult =
             await identityService.GetUserByIdAsync(request.UserId);
 
@@ -41,82 +36,54 @@ public sealed class SelectFamilyCommandHandler(
 
         AuthenticatedUser authenticatedUser = userResult.Value;
 
-        // 2. Verify user is member of the family and get family context
+        // 2. Verify the user is a member and load the family context.
         FamilyContextDto? familyContext = await familyUsers.Query()
             .Where(fu => fu.UserId == request.UserId && fu.FamilyId == request.FamilyId)
             .Select(fu => new FamilyContextDto(
                 fu.FamilyId,
                 fu.Family.Name,
                 fu.IsParent,
-                fu.Family.CurrentBudget
-            ))
+                fu.Family.CurrentBudget))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (familyContext is null)
-            return DomainErrors.GeneralErrors.NotFound(nameof(Family));
+            return DomainErrors.GeneralErrors.NotFound("Family");
 
-        // Subscribe devices to family topic
+        // 3. Subscribe the user's devices to the family FCM topic so push
+        //    notifications scoped to the family arrive while it is selected.
         List<UserDevice> devices = await userDevices.QueryTracked()
-            .Where(x => x.UserId == request.UserId && x.IsActive)
+            .Where(d => d.UserId == request.UserId && d.IsActive)
             .ToListAsync(cancellationToken);
 
         if (devices.Count > 0)
         {
             var tokens = devices.Select(d => d.DeviceToken).ToList();
             string familyTopic = Topics.getFamilyTopic(familyContext.FamilyId);
-            await topicService.SubscribeToTopicAsync(tokens, familyTopic, cancellationToken);
 
+            await topicService.SubscribeToTopicAsync(tokens, familyTopic, cancellationToken);
             foreach (var device in devices)
-            {
                 device.SubscribeToTopic(familyTopic);
-            }
         }
 
-        // 3. Generate JWT tokens with family context
-        ErrorOr<AuthDto> tokenResult =
-            await tokenProvider.GenerateJwtTokenWithFamilyAsync(
-                authenticatedUser,
-                request.DeviceId,
-                familyContext,
-                cancellationToken);
+        // 4. Issue new auth tokens carrying the family context. The controller
+        //    writes them into HttpOnly cookies — they never appear in the body.
+        ErrorOr<AuthDto> tokenResult = await tokenProvider.GenerateJwtTokenWithFamilyAsync(
+            authenticatedUser,
+            request.DeviceId,
+            familyContext,
+            cancellationToken);
 
         if (tokenResult.IsError)
             return tokenResult.Errors;
 
         AuthDto authDto = tokenResult.Value;
 
-        // 4. Get user's profile image
-        Guid? profileFileId = await users.Query()
-            .Where(u => u.Id == request.UserId)
-            .Select(u => u.ProfileImageFileId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        string? profileImageUrl = fileUrlResolver.GetUrl(profileFileId);
-
-        // 5. Get budget history for the family (last month by default)
-        ErrorOr<List<BudgetHistoryItem>> budgetHistoryResult =
-            await bus.InvokeAsync<ErrorOr<List<BudgetHistoryItem>>>(
-                new GetFamilyBudgetHistoryQuery(request.FamilyId, Months: 1),
-                cancellationToken);
-
-        if (budgetHistoryResult.IsError)
-            return budgetHistoryResult.Errors;
-
-        List<BudgetHistoryItem> budgetHistory = budgetHistoryResult.Value;
-
-    
-
-
-        // 8. Build response
-        SelectFamilyResponse response = new(
+        return new SelectFamilyCommandResult(
             UserId: authDto.UserId,
             Email: authDto.Email,
             FullName: authDto.FullName,
             JwtToken: authDto.JwtToken,
             RefreshToken: authDto.RefreshToken,
-            FamilyContext: familyContext
-        );
-
-        return response;
+            FamilyContext: familyContext);
     }
 }
