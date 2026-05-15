@@ -292,6 +292,12 @@ public static class DomainErrors
                 description ?? "Failed to reset password."
             );
 
+        public static Error InvalidToken(string? description = null) =>
+            Error.Validation(
+                "Identity.InvalidToken",
+                description ?? "The verification link is invalid or has expired."
+            );
+
         public static Error OperationFailed(string? description = null) =>
             Error.Failure("Identity.OperationFailed", description ?? "Identity operation failed.");
 

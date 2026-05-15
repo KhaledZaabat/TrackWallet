@@ -39,7 +39,7 @@ public static class ServiceRegistration
         services
             .AddAssemblyScanningConfiguration()
             .AddInfrastructure(configuration)
-            .RegisterOtpSettings()
+            .RegisterEmailLinks()
             .AddAssemblyScanningConfiguration()
             .AddIdentityConfiguration()
             .AddJwtConfiguration(configuration)
@@ -97,6 +97,10 @@ public static class ServiceRegistration
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+
+      
+        services.Configure<DataProtectionTokenProviderOptions>(o =>
+            o.TokenLifespan = TimeSpan.FromMinutes(15));
 
         return services;
     }
@@ -408,15 +412,14 @@ public static class ServiceRegistration
         return services;
     }
 
-    private static IServiceCollection RegisterOtpSettings(this IServiceCollection services)
+    private static IServiceCollection RegisterEmailLinks(this IServiceCollection services)
     {
         services
-            .AddOptions<OtpSettings>()
-            .BindConfiguration(OtpSettings.SectionName)
+            .AddOptions<EmailLinkOptions>()
+            .BindConfiguration(EmailLinkOptions.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddSingleton(sp => sp.GetRequiredService<IOptions<OtpSettings>>().Value);
         return services;
     }
 

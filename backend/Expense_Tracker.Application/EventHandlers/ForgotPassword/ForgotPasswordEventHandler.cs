@@ -1,50 +1,58 @@
-using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
 
 namespace Expense_Tracker.Application.EventHandlers.ForgotPassword;
 
-public sealed class ForgotPasswordEventHandler(IOtpService _otpService, IEmailTemplateLoader _templateLoader, IEmailBodyBuilder _bodyBuilder, INotificationService _notification, OtpSettings otpSettings)
+/// <summary>
+/// Sends the password-reset magic link. The token comes from
+/// <see cref="Microsoft.AspNetCore.Identity.UserManager{TUser}.GeneratePasswordResetTokenAsync"/>
+/// — bound to the user's SecurityStamp, so a successful password change rotates
+/// the stamp and immediately invalidates every other unused reset token in the
+/// wild.
+/// </summary>
+public sealed class ForgotPasswordEventHandler(
+    IIdentityService identityService,
+    IEmailLinkService emailLinks,
+    IEmailTemplateLoader templateLoader,
+    IEmailBodyBuilder bodyBuilder,
+    INotificationService notification)
 {
+    private const int TokenLifespanMinutes = 15;
 
-    public async Task Handle(ForgotPasswordEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(ForgotPasswordEvent evt, CancellationToken ct)
     {
+        string email = evt.Email?.ToLowerInvariant().Trim() ?? string.Empty;
+        string fullName = evt.UserName ?? string.Empty;
 
-        string email = notification.Email ?? string.Empty;
-        string fullName = notification.UserName ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(email)) return;
 
-        if (string.IsNullOrWhiteSpace(email))
-            return;
-        await SendOtpEmailAsync(email, fullName, cancellationToken);
-
+        await SendResetEmailAsync(email, fullName, ct);
     }
 
-    private async Task SendOtpEmailAsync(
-        string email,
-        string userName,
-        CancellationToken cancellationToken)
+    private async Task SendResetEmailAsync(string email, string userName, CancellationToken ct)
     {
-        string key = $"reset:{email}";
-        string otp = _otpService.Generate(key, digits: 4);
+        var tokenResult = await identityService.GeneratePasswordResetTokenAsync(email);
+        if (tokenResult.IsError) return;
 
-        string template = await _templateLoader.LoadTemplateAsync(
-            EmailTemplates.ForgotPasswordOtp,
-            cancellationToken);
+        string link = emailLinks.BuildResetPasswordLink(email, tokenResult.Value);
 
-        string body = _bodyBuilder.Build(template, new Dictionary<string, string>
+        string template = await templateLoader.LoadTemplateAsync(
+            EmailTemplates.ResetPasswordTemplate, ct);
+
+        string body = bodyBuilder.Build(template, new Dictionary<string, string>
         {
             ["UserName"] = userName,
             ["Email"] = email,
-            ["OTP"] = otp,
-            ["Duration"] = otpSettings.ExpirationInSeconds.ToString()
+            ["ResetLink"] = link,
+            ["ExpiresInMinutes"] = TokenLifespanMinutes.ToString(),
+            ["Year"] = DateTime.UtcNow.Year.ToString(),
         });
 
-        await _notification.SendEmailAsync(
+        await notification.SendEmailAsync(
             to: email,
-            subject: "Reset Your Expense Tracker Account Password",
+            subject: "Reset your Expense Tracker password",
             htmBody: body,
-            cancellationToken: cancellationToken
-        );
+            cancellationToken: ct);
     }
 }

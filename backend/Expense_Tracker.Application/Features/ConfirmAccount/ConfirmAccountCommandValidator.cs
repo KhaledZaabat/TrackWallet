@@ -1,27 +1,24 @@
-using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Constans;
 using FluentValidation;
 
 namespace Expense_Tracker.Application.Features.Identity.Commands.ConfirmAccount;
 
-public sealed class ConfirmAccountCommandValidator
-    : AbstractValidator<ConfirmAccountCommand>
+public sealed class ConfirmAccountCommandValidator : AbstractValidator<ConfirmAccountCommand>
 {
-    public ConfirmAccountCommandValidator(OtpSettings otpSettings)
+    // Identity tokens are HMAC-protected blobs, typically 150–250 chars.
+    // 1024 leaves comfortable headroom for any token-provider change.
+    private const int MaxTokenLength = 1024;
+
+    public ConfirmAccountCommandValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is required");
-
-        // Email rules
-        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required")
             .Matches(ValidationPatterns.Email).WithMessage(ValidationMessages.InvalidEmail)
             .MaximumLength(ValidationLimits.EmailMaxLength);
 
-        // Phone rules
-
-        RuleFor(x => x.Otp)
-                   .NotEmpty().WithMessage("OTP code is required.")
-                   .Length(otpSettings.Digits).WithMessage($"OTP code must be {otpSettings.Digits} ")
-                   .Matches(ValidationPatterns.Otp).WithMessage("OTP code must contain only digits.");
+        RuleFor(x => x.Token)
+            .NotEmpty().WithMessage("Verification token is required.")
+            .MaximumLength(MaxTokenLength)
+                .WithMessage("Verification token is invalid.");
     }
 }

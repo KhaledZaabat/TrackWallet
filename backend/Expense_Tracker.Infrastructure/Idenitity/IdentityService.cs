@@ -1,4 +1,5 @@
-﻿using ErrorOr;
+﻿using System.Text;
+using ErrorOr;
 using Expense_Tracker.Application.Constans;
 using Expense_Tracker.Application.Dtos;
 using Expense_Tracker.Application.Helpers;
@@ -6,6 +7,7 @@ using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.Errors;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Infrastructure.Idenitity;
@@ -200,83 +202,112 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
         return role;
     }
 
-    public async Task<ErrorOr<Guid>> ConfirmUserAsync(string email, CancellationToken ct)
+    public async Task<ErrorOr<string>> GenerateEmailConfirmationTokenAsync(string email)
     {
-        var identityUser =
-            await userManager.FindByEmailAsync(email)
-            ?? await userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == email, ct);
-
-        if (identityUser is null)
+        ApplicationUser? user = await userManager.FindByEmailAsync(email);
+        if (user is null)
             return DomainErrors.IdentityErrors.NotFound();
 
-        if (identityUser.Email != null && identityUser.EmailConfirmed)
-            return DomainErrors.IdentityErrors.DuplicatedConfirmation("Email already confirmed");
-
-        if (identityUser.Email != null)
-            identityUser.EmailConfirmed = true;
-
-        var updateResult = await userManager.UpdateAsync(identityUser);
-
-        if (!updateResult.Succeeded)
-        {
-            string errors = string.Join(" | ", updateResult.Errors.Select(e => e.Description));
-            return DomainErrors.IdentityErrors.UpdateFailed(errors);
-        }
-
-        return identityUser.Id;
+        string raw = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        return EncodeTokenForUrl(raw);
     }
 
-    public async Task<ErrorOr<Success>> ResetPasswordAsync(
-        Guid userId,
+    public async Task<ErrorOr<Guid>> ConfirmEmailWithTokenAsync(
+        string email,
+        string token,
+        CancellationToken ct
+    )
+    {
+        ApplicationUser? user = await userManager.FindByEmailAsync(email);
+        if (user is null)
+            return DomainErrors.IdentityErrors.NotFound();
+
+        if (user.EmailConfirmed)
+            return DomainErrors.IdentityErrors.DuplicatedConfirmation("Email already confirmed");
+
+        if (!TryDecodeTokenFromUrl(token, out string decoded))
+            return DomainErrors.IdentityErrors.InvalidToken();
+
+        IdentityResult result = await userManager.ConfirmEmailAsync(user, decoded);
+        if (!result.Succeeded)
+        {
+            return DomainErrors.IdentityErrors.InvalidToken();
+        }
+
+        return user.Id;
+    }
+
+    public async Task<ErrorOr<string>> GeneratePasswordResetTokenAsync(string email)
+    {
+        ApplicationUser? user = await userManager.FindByEmailAsync(email);
+        if (user is null)
+            return DomainErrors.IdentityErrors.NotFound();
+
+        string raw = await userManager.GeneratePasswordResetTokenAsync(user);
+        return EncodeTokenForUrl(raw);
+    }
+
+    public async Task<ErrorOr<Success>> ResetPasswordWithTokenAsync(
+        string email,
+        string token,
         string newPassword,
         CancellationToken cancellationToken
     )
     {
-        ApplicationUser? user = await userManager.FindByIdAsync(userId.ToString());
-
+        ApplicationUser? user = await userManager.FindByEmailAsync(email);
         if (user is null)
             return DomainErrors.IdentityErrors.NotFound();
 
         if (!user.EmailConfirmed && !user.PhoneNumberConfirmed)
-        {
             return DomainErrors.IdentityErrors.UnverifiedAccount(
                 "User must verify email or phone before resetting password"
             );
-        }
 
-        bool samePassword = await userManager.CheckPasswordAsync(user, newPassword);
-        if (samePassword)
-        {
-            return DomainErrors.IdentityErrors.SamePassword(
-                "New password cannot be the same as the current password"
-            );
-        }
+        if (!TryDecodeTokenFromUrl(token, out string decoded))
+            return DomainErrors.IdentityErrors.InvalidToken();
 
-        var removeResult = await userManager.RemovePasswordAsync(user);
-        if (!removeResult.Succeeded)
-        {
-            return DomainErrors.IdentityErrors.PasswordResetFailed(
-                "Failed to clear existing password"
-            );
-        }
+        IdentityResult result = await userManager.ResetPasswordAsync(user, decoded, newPassword);
 
-        var addResult = await userManager.AddPasswordAsync(user, newPassword);
-        if (!addResult.Succeeded)
-        {
-            if (
-                addResult.Errors.Any(e =>
-                    e.Code.Contains("PasswordTooShort") || e.Code.Contains("PasswordRequires")
-                )
+        if (result.Succeeded)
+            return new Success();
+
+        if (result.Errors.Any(e => e.Code == "InvalidToken"))
+            return DomainErrors.IdentityErrors.InvalidToken();
+
+        if (
+            result.Errors.Any(e =>
+                e.Code.Contains("PasswordTooShort") || e.Code.Contains("PasswordRequires")
             )
-            {
-                return DomainErrors.IdentityErrors.WeakPassword(
-                    "New password does not meet security requirements"
-                );
-            }
-
-            return DomainErrors.IdentityErrors.PasswordResetFailed("Failed to set new password");
+        )
+        {
+            return DomainErrors.IdentityErrors.WeakPassword(
+                "New password does not meet security requirements"
+            );
         }
 
-        return new Success();
+        return DomainErrors.IdentityErrors.PasswordResetFailed(
+            string.Join(" | ", result.Errors.Select(e => e.Description))
+        );
+    }
+
+   
+    private static string EncodeTokenForUrl(string token) =>
+        WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+ 
+    private static bool TryDecodeTokenFromUrl(string urlToken, out string decoded)
+    {
+        decoded = string.Empty;
+        if (string.IsNullOrEmpty(urlToken)) return false;
+
+        try
+        {
+            decoded = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(urlToken));
+            return true;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 }

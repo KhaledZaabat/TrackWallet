@@ -8,7 +8,6 @@ using Expense_Tracker.Application.Features.Identity.Commands.ForgotPassword;
 using Expense_Tracker.Application.Features.Identity.Commands.Logout;
 using Expense_Tracker.Application.Features.Identity.Commands.ResendConfirmation;
 using Expense_Tracker.Application.Features.Identity.Commands.ResetPassword;
-using Expense_Tracker.Application.Features.Identity.Commands.VerifyOtp;
 using Expense_Tracker.Application.Features.Login;
 using Expense_Tracker.Application.Features.Refresh;
 using Expense_Tracker.Application.Features.Register;
@@ -128,15 +127,17 @@ public sealed class IdentityController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Confirms a user account using OTP.")]
-    [EndpointDescription("Validates OTP for email or phone and activates the user account.")]
+    [EndpointSummary("Confirms a user account using the magic-link token.")]
+    [EndpointDescription(
+        "Validates the email-confirmation token (issued by ASP.NET Identity and emailed as a magic link) and activates the user account."
+    )]
     [EndpointName("ConfirmAccount")]
     public async Task<IActionResult> ConfirmAccount(
         [FromBody] ConfirmAccountRequest request,
         CancellationToken ct
     )
     {
-        var command = new ConfirmAccountCommand(request.Email, request.Otp);
+        var command = new ConfirmAccountCommand(request.Email, request.Token);
 
         ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
         return result.ToActionResult(this);
@@ -179,64 +180,48 @@ public sealed class IdentityController(
         return value.Response;
     }
     [AllowAnonymous]
-    [HttpPost("reset-password/otp/send")]
+    [HttpPost("forgot-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Sends OTP to email  for resetting the password.")]
-    [EndpointDescription("Generates and sends a password-reset OTP to the provided email .")]
-    [EndpointName("SendResetPasswordOtp")]
-    public async Task<IActionResult> SendResetPasswordOtp(
+    [EndpointSummary("Sends a password-reset magic link.")]
+    [EndpointDescription(
+        "Always returns 200 — the response is intentionally identical whether the email exists or not, so callers can't enumerate accounts. If a matching, confirmed account exists, a magic-link email is sent."
+    )]
+    [EndpointName("ForgotPassword")]
+    public async Task<IActionResult> ForgotPassword(
         [FromBody] ResetPasswordOtpSendRequest request,
-        CancellationToken cancellationToken
-    )
+        CancellationToken cancellationToken)
     {
         var command = new ResetPasswordOtpSendCommand(request.Email);
         ErrorOr<Success> res = await bus.InvokeAsync<ErrorOr<Success>>(command, cancellationToken);
         return res.ToActionResult(this);
     }
-    [AllowAnonymous]
-    [HttpPost("reset-password/otp/verify")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Verifies OTP for resetting the password.")]
-    [EndpointDescription("Checks whether a password-reset OTP is correct and has not expired.")]
-    [EndpointName("VerifyResetPasswordOtp")]
-    public async Task<IActionResult> VerifyResetPasswordOtp(
-        [FromBody] VerifyOtpRequest request,
-        CancellationToken cancellationToken
-    )
-    {
-        var command = new VerifyOtpCommand(request.Email, request.Otp);
-        ErrorOr<Success> res = await bus.InvokeAsync<ErrorOr<Success>>(command, cancellationToken);
-        return res.ToActionResult(this);
-    }
+
     [AllowAnonymous]
     [HttpPost("reset-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Resets the user's password.")]
-    [EndpointDescription("Allows users to set a new password once OTP verification succeeds.")]
+    [EndpointSummary("Resets the user's password using the magic-link token.")]
+    [EndpointDescription(
+        "Validates the password-reset token and applies the new password atomically. The user's SecurityStamp rotates on success, invalidating any other outstanding reset/confirmation tokens."
+    )]
     [EndpointName("ResetPassword")]
     public async Task<IActionResult> ResetPassword(
         [FromBody] ResetPasswordRequest request,
-        CancellationToken cancellationToken
-    )
+        CancellationToken cancellationToken)
     {
         string userIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-        var command = new ResetPasswordCommand(request.Email, request.NewPassword, userIpAddress);
-        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(
-            command,
-            cancellationToken
-        );
+        var command = new ResetPasswordCommand(
+            Email: request.Email,
+            Token: request.Token,
+            NewPassword: request.NewPassword,
+            UserIpAddress: userIpAddress);
+
+        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, cancellationToken);
         return result.ToActionResult(this);
     }
     [HttpPost("logout")]

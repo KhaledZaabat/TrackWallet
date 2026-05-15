@@ -9,7 +9,6 @@ public interface IIdentityService : IScopedService
 
     Task<ErrorOr<AuthenticatedUser>> AuthenticateByEmailAsync(string email, string password);
 
-    Task<ErrorOr<Guid>> ConfirmUserAsync(string email, CancellationToken ct);
     Task<ErrorOr<AuthenticatedUser>> GetUserByIdAsync(Guid userId);
 
     Task<ErrorOr<string>> GetFullNameAsync(Guid userId);
@@ -22,5 +21,35 @@ public interface IIdentityService : IScopedService
     Task<ErrorOr<Success>> IsUserConfirmedAsync(string emailOrPhone, CancellationToken ct);
     Task<ErrorOr<Success>> IsUserNotConfirmedAsync(string emailOrPhone, CancellationToken ct);
 
-    Task<ErrorOr<Success>> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken);
+    /// <summary>
+    /// Generates an email-confirmation token for the user identified by
+    /// <paramref name="email"/>. The token is HMAC-protected by ASP.NET Identity
+    /// (DataProtector + SecurityStamp), needs no server-side storage, and is
+    /// safe to embed in a URL.
+    /// </summary>
+    Task<ErrorOr<string>> GenerateEmailConfirmationTokenAsync(string email);
+
+    /// <summary>
+    /// Validates the supplied email-confirmation token and flips the user's
+    /// <c>EmailConfirmed</c> flag. Returns the user id on success.
+    /// </summary>
+    Task<ErrorOr<Guid>> ConfirmEmailWithTokenAsync(string email, string token, CancellationToken ct);
+
+    /// <summary>
+    /// Generates a password-reset token. The token is invalidated automatically
+    /// on the next sensitive change (password change, email change, etc.) via
+    /// the user's <c>SecurityStamp</c>.
+    /// </summary>
+    Task<ErrorOr<string>> GeneratePasswordResetTokenAsync(string email);
+
+    /// <summary>
+    /// Validates the supplied reset token and sets <paramref name="newPassword"/>.
+    /// On success the user's <c>SecurityStamp</c> rotates, invalidating any other
+    /// outstanding reset tokens.
+    /// </summary>
+    Task<ErrorOr<Success>> ResetPasswordWithTokenAsync(
+        string email,
+        string token,
+        string newPassword,
+        CancellationToken cancellationToken);
 }

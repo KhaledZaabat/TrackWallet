@@ -1,60 +1,62 @@
-using Expense_Tracker.Application.Common.Settings;
 using Expense_Tracker.Application.Constants;
 using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Expense_Tracker.Application.EventHandlers.ResnedConfirmation;
 
+/// <summary>
+/// Re-issues the confirmation magic link when the user requests a fresh one.
+/// The previous token is automatically invalidated by the SecurityStamp
+/// rotation that
+/// <see cref="Microsoft.AspNetCore.Identity.UserManager{TUser}.UpdateSecurityStampAsync"/>
+/// triggers — but more practically, every Identity-issued confirmation token
+/// for the same user is independent and time-limited, so users always have
+/// at most one viable link in the wild.
+/// </summary>
 public sealed class ResendConfirmationEventHandler(
-    IOtpService _otpService,
-    IEmailTemplateLoader _templateLoader,
-    IEmailBodyBuilder _bodyBuilder,
-    INotificationService _notification,
-    OtpSettings _otpSettings
-)
+    IIdentityService identityService,
+    IEmailLinkService emailLinks,
+    IEmailTemplateLoader templateLoader,
+    IEmailBodyBuilder bodyBuilder,
+    INotificationService notification)
 {
-    public async Task Handle(ResendConfirmationEvent notification, CancellationToken cancellationToken)
+    private const int TokenLifespanMinutes = 15;
+
+    public async Task Handle(ResendConfirmationEvent evt, CancellationToken ct)
     {
-        var user = notification.User;
-        if (user is null)
-            return;
+        var user = evt.User;
+        if (user is null) return;
 
-        string email = user.Email.ToLowerInvariant().Trim();
-        if (string.IsNullOrWhiteSpace(email))
-            return;
+        string email = user.Email?.ToLowerInvariant().Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(email)) return;
 
-        string userName = user.UserName.Trim();
-        await SendResendConfirmationEmailAsync(email, userName, cancellationToken);
+        await SendResendConfirmationEmailAsync(email, user.UserName.Trim(), ct);
     }
 
     private async Task SendResendConfirmationEmailAsync(
-        string email,
-        string userName,
-        CancellationToken cancellationToken)
+        string email, string userName, CancellationToken ct)
     {
-        string key = $"confirm:{email.ToLowerInvariant().Trim()}";
-        string otp = _otpService.Generate(key, digits: _otpSettings.Digits);
+        var tokenResult = await identityService.GenerateEmailConfirmationTokenAsync(email);
+        if (tokenResult.IsError) return;
 
-        string template = await _templateLoader.LoadTemplateAsync(
-            EmailTemplates.ResendConfirmationTemplate,
-            cancellationToken);
+        string link = emailLinks.BuildConfirmEmailLink(email, tokenResult.Value);
 
-        var body = _bodyBuilder.Build(template, new Dictionary<string, string>
+        string template = await templateLoader.LoadTemplateAsync(
+            EmailTemplates.ResendConfirmationTemplate, ct);
+
+        string body = bodyBuilder.Build(template, new Dictionary<string, string>
         {
             ["UserName"] = userName,
             ["Email"] = email,
-            ["OTP"] = otp,
-            ["Duration"] = _otpSettings.ExpirationInSeconds.ToString()
+            ["ConfirmLink"] = link,
+            ["ExpiresInMinutes"] = TokenLifespanMinutes.ToString(),
+            ["Year"] = DateTime.UtcNow.Year.ToString(),
         });
 
-        await _notification.SendEmailAsync(
+        await notification.SendEmailAsync(
             to: email,
-            subject: "Your New Verification Code - Expense Tracker",
+            subject: "Your new confirmation link — Expense Tracker",
             htmBody: body,
-            cancellationToken: cancellationToken
-        );
+            cancellationToken: ct);
     }
 }

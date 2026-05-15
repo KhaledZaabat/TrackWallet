@@ -1,39 +1,44 @@
 using ErrorOr;
-using Wolverine;
-
 using Expense_Tracker.Application.Dtos;
 using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
-using Expense_Tracker.Domain.Errors;
+using Wolverine;
 
 namespace Expense_Tracker.Application.Features.Identity.Commands.ResetPassword;
 
-public class ResetPasswordCommandHandler(IIdentityService _identityService, IMessageBus bus)
+/// <summary>
+/// One-shot reset: token verification and the password change happen
+/// atomically inside <see cref="IIdentityService.ResetPasswordWithTokenAsync"/>.
+/// </summary>
+public sealed class ResetPasswordCommandHandler(
+    IIdentityService identityService,
+    IMessageBus bus)
 {
-
-    public async Task<ErrorOr<Success>> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Success>> Handle(
+        ResetPasswordCommand request, CancellationToken cancellationToken)
     {
-        ErrorOr<AuthenticatedUser> userResult;
+        // Token verification + password change in one Identity round-trip.
+        ErrorOr<Success> resetResult = await identityService.ResetPasswordWithTokenAsync(
+            request.Email,
+            request.Token,
+            request.NewPassword,
+            cancellationToken);
 
-        userResult = await _identityService.FindUserByEmailAsync(request.Email);
+        if (resetResult.IsError)
+            return resetResult.Errors;
 
-        if (userResult.IsError)
-            return userResult.Errors;
+        // Pull the user just for the post-event payload (best-effort).
+        ErrorOr<AuthenticatedUser> userResult =
+            await identityService.FindUserByEmailAsync(request.Email, requireConfirmedEmail: false);
 
-        AuthenticatedUser user = userResult.Value;
-
-        ErrorOr<Success> resetResult = await _identityService.ResetPasswordAsync(user.Id, request.NewPassword, cancellationToken);
-
-        if (resetResult.IsError) return resetResult;
-
-        await bus.PublishAsync(
-            new PasswordUpdatedEvent(
-                Email: user.Email!,
-                UserName: user.UserName!,
+        if (!userResult.IsError)
+        {
+            await bus.PublishAsync(new PasswordUpdatedEvent(
+                Email: userResult.Value.Email!,
+                UserName: userResult.Value.UserName!,
                 IpAddress: request.UserIpAddress,
-                Timestamp: DateTime.UtcNow
-            )
-        );
+                Timestamp: DateTime.UtcNow));
+        }
 
         return new Success();
     }
