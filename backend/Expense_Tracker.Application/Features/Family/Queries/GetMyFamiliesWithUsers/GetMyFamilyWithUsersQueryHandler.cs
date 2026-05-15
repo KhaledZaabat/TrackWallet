@@ -14,7 +14,7 @@ public sealed class GetMyFamilyWithUsersQueryHandler(
       IRepository<Family> familyRepo,
       IRepository<FamilyUser> familyUserRepo,
       IRepository<User> userRepo,
-      [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
+      IFileUrlResolver fileUrlResolver,
       IFamilyContext familyContext,
       IUserContext userContext
   )
@@ -47,7 +47,7 @@ public sealed class GetMyFamilyWithUsersQueryHandler(
                              BirthDate: u.BirthDate,
                              IsMale: u.IsMale,
                              ProfileImageUrl: u.ProfileImageFileId.HasValue
-                                 ? fileUrlBuilder.GetUrl(u.ProfileImageFileId.Value)
+                                 ? fileUrlResolver.GetUrl(u.ProfileImageFileId.Value)
                                  : null,
                              IsParent: fu.IsParent
                          )

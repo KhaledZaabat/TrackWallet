@@ -1,11 +1,13 @@
+using System.Collections.Frozen;
 using Serilog.Core;
 using Serilog.Events;
 
 namespace Expense_Tracker.App.Logging;
+
 public sealed class AuthTokenScrubber : ILogEventEnricher
 {
     private const string RedactedMarker = "***REDACTED***";
-    private static readonly HashSet<string> ForbiddenNames = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly FrozenSet<string> ForbiddenNames = new[]
     {
         "TokenHash",
         "accessToken",
@@ -24,7 +26,7 @@ public sealed class AuthTokenScrubber : ILogEventEnricher
         "AccessCookieName",
         "RefreshCookieName",
         "CsrfCookieName",
-    };
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {

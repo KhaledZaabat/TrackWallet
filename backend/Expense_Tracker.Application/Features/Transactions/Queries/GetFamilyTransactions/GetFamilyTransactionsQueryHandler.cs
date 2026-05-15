@@ -11,7 +11,7 @@ namespace Expense_Tracker.Application.Features.Transactions.Queries.GetFamilyTra
 
 public sealed class GetFamilyTransactionsQueryHandler(
     IRepository<Transaction> transactionRepo,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder
+    IFileUrlResolver fileUrlResolver
 )
 {
     public async Task<ErrorOr<CursorPagedResponse<TransactionItem>>> Handle(
@@ -81,7 +81,7 @@ public sealed class GetFamilyTransactionsQueryHandler(
                     UserId: t.CreatedBy!.Id,
                     FullName: t.CreatedBy.FullName,
                     ProfileImageUrl: t.CreatedBy.ProfileImageFileId.HasValue
-                        ? fileUrlBuilder.GetUrl(t.CreatedBy.ProfileImageFileId.Value)
+                        ? fileUrlResolver.GetUrl(t.CreatedBy.ProfileImageFileId.Value)
                         : null
                 )
             ))

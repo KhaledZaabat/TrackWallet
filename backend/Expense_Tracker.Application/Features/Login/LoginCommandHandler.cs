@@ -19,7 +19,7 @@ public sealed class LoginCommandHandler(
     IIdentityService identityService,
     ITokenProvider tokenProvider,
     IRepository<User> users,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
+    IFileUrlResolver fileUrlResolver,
     IRepository<UserDevice> userDevices,
     IMessageBus bus,
     IUserDeviceRepository userDeviceRepository
@@ -56,7 +56,7 @@ public sealed class LoginCommandHandler(
             .Select(u => u.ProfileImageFileId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        string? profileImageUrl = fileUrlBuilder.GetUrl(profileFileId);
+        string? profileImageUrl = fileUrlResolver.GetUrl(profileFileId);
 
         ErrorOr<List<FamilyResponse>> familiesResult =
             await bus.InvokeAsync<ErrorOr<List<FamilyResponse>>>(

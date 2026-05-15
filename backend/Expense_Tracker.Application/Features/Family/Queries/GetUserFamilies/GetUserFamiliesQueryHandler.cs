@@ -10,7 +10,7 @@ namespace Expense_Tracker.Application.Features.Family.Queries.GetUserFamilies;
 
 public sealed class GetUserFamiliesQueryHandler(
     IRepository<FamilyUser> familyUserRepo,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder
+    IFileUrlResolver fileUrlResolver
 )
 {
     public async Task<ErrorOr<List<FamilyResponse>>> Handle(
@@ -45,7 +45,7 @@ public sealed class GetUserFamiliesQueryHandler(
         {
             var memberProfiles = family.Members.Select(member =>
             {
-                string? profileImageUrl = fileUrlBuilder.GetUrl(member.ProfileImageFileId);
+                string? profileImageUrl = fileUrlResolver.GetUrl(member.ProfileImageFileId);
                 return new FamilyMemberProfile(
                     UserId: member.UserId,
                     FullName: member.FullName,

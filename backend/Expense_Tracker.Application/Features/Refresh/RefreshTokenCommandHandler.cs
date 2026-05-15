@@ -16,7 +16,7 @@ public sealed class RefreshTokenCommandHandler(
     IRefreshTokenService refreshTokenService,
     ITokenProvider tokenProvider,
     IRepository<User> users,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
+    IFileUrlResolver fileUrlResolver,
     IRepository<UserDevice> userDevices,
     IMessageBus bus)
 {
@@ -52,7 +52,7 @@ public sealed class RefreshTokenCommandHandler(
             .Select(u => u.ProfileImageFileId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        string? profileImageUrl = fileUrlBuilder.GetUrl(profileFileId);
+        string? profileImageUrl = fileUrlResolver.GetUrl(profileFileId);
 
         // 4. User's families for the response body (same source the login handler uses).
         ErrorOr<List<FamilyResponse>> familiesResult =

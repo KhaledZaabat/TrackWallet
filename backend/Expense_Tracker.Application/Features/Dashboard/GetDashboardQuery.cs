@@ -25,7 +25,7 @@ public sealed class GetDashboardQueryHandler(
     IRepository<User> userRepo,
     IUserContext userContext,
     IFamilyContext myFamilyContext,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
+    IFileUrlResolver fileUrlResolver,
     IMessageBus bus
 )
 {
@@ -62,7 +62,7 @@ public sealed class GetDashboardQueryHandler(
                 u.Email,
                 u.FullName,
                 ProfileImageUrl = u.ProfileImageFileId.HasValue
-                    ? fileUrlBuilder.GetUrl(u.ProfileImageFileId.Value)
+                    ? fileUrlResolver.GetUrl(u.ProfileImageFileId.Value)
                     : null
             })
             .FirstOrDefaultAsync(cancellationToken);

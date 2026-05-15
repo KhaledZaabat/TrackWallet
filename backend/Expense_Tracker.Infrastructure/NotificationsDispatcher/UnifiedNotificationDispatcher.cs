@@ -5,11 +5,7 @@ using Hangfire;
 
 namespace Expense_Tracker.Infrastructure.NotificationsDispatcher;
 
-/// <summary>
-/// Persists the in-product notification and queues a background job that pushes
-/// it to FCM (mobile + web push). Persistence is committed before the job is
-/// queued so the dispatch worker can rely on the row existing when it runs.
-/// </summary>
+
 public sealed class UnifiedNotificationDispatcher(
     AppDbContext context,
     IBackgroundJobClient backgroundJobs)

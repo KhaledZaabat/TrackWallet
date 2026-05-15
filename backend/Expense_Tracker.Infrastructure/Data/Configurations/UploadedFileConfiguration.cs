@@ -43,6 +43,10 @@ public sealed class UploadedFileConfiguration : IEntityTypeConfiguration<Uploade
             .IsRequired();
 
 
+        builder.Property(f => f.ContentHash)
+            .IsRequired()
+            .HasMaxLength(64); // SHA-256 = 64 hex chars
+
         builder.Property(f => f.IsPrimary)
             .IsRequired();
 
@@ -50,5 +54,6 @@ public sealed class UploadedFileConfiguration : IEntityTypeConfiguration<Uploade
         builder.HasIndex(f => f.StoredFileName)
             .IsUnique();
         builder.HasIndex(f => f.Folder);
+        builder.HasIndex(f => f.ContentHash);
     }
 }

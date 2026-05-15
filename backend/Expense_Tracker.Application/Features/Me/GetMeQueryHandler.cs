@@ -4,7 +4,7 @@ using Expense_Tracker.Contracts.Reponses.Identity;
 using Expense_Tracker.Domain.Users;
 using Microsoft.Extensions.DependencyInjection;
 
-public sealed class GetMeQueryHandler(IRepository<User> users,  [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder)
+public sealed class GetMeQueryHandler(IRepository<User> users, IFileUrlResolver fileUrlResolver)
 {
     public async Task<ErrorOr<MeResult>> HandleAsync(
         GetMeQuery query,
@@ -24,7 +24,7 @@ public sealed class GetMeQueryHandler(IRepository<User> users,  [FromKeyedServic
             user.BirthDate,
             user.IsMale,
             user.ProfileImageFileId.HasValue
-                                 ? fileUrlBuilder.GetUrl(user.ProfileImageFileId.Value)
+                                 ? fileUrlResolver.GetUrl(user.ProfileImageFileId.Value)
                                  : null
         );
     }

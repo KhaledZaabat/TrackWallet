@@ -145,6 +145,9 @@ Features/
  Family/Queries/GetUserFamilies/
   GetUserFamiliesQuery.cs
   GetUserFamiliesQueryHandler.cs
+ FilesFolder/Commads/DeleteFile/
+  DeleteFileCommand.cs
+  DeleteFileCommandHandler.cs
  FilesFolder/Commads/UploadFile/
   UploadFileCommand.cs
   UploadFileCommandHandler.cs
@@ -163,15 +166,11 @@ Features/
   UploadManyFilesCommandValidator.cs
  FilesFolder/Dtos/
   FileDto.cs
-  StreamFileDto.cs
+  UploadFileRequest.cs
  FilesFolder/Queries/GetFile/
   GetFileQuery.cs
   GetFileQueryHandler.cs
   GetFileQueryValidator.cs
- FilesFolder/Queries/StreanFile/
-  StreamFileQuery.cs
-  StreamFileQueryHandler.cs
-  StreamFileQueryValidator.cs
  FilesFolder/
   Settings/FileSettings.cs
   Validators/
@@ -292,6 +291,7 @@ Interfaces/
  IFcmNotificationDispatcher.cs
  IFcmTopicService.cs
  IFileService.cs
+ IFileStorage.cs
  IIdentityService.cs
  INotificationRepository.cs
  INotificationService.cs

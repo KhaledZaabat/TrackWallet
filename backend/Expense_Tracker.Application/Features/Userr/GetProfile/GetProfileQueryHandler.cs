@@ -10,7 +10,7 @@ namespace Expense_Tracker.Application.Features.Userr.GetProfile;
 public sealed class GetProfileQueryHandler(
     IRepository<User> userRepo,
     IUserContext userContext,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder)
+    IFileUrlResolver fileUrlResolver)
 {
     public async Task<ErrorOr<UserProfileResponse>> Handle(
         GetProfileQuery query,
@@ -30,7 +30,7 @@ public sealed class GetProfileQueryHandler(
                 u.BirthDate,
                 u.IsMale,
                 u.ProfileImageFileId.HasValue
-                    ? fileUrlBuilder.GetUrl(u.ProfileImageFileId.Value)
+                    ? fileUrlResolver.GetUrl(u.ProfileImageFileId.Value)
                     : null,
                 u.NotificationPreferences.EmailNotifications,
                 u.NotificationPreferences.PushNotifications

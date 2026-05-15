@@ -1,23 +1,24 @@
-using Expense_Tracker.Contracts.Responses.Files;
 using ErrorOr;
-using Expense_Tracker.Domain.Errors;
+using Expense_Tracker.Application.Interfaces;
+using Expense_Tracker.Contracts.Responses.Files;
 
 namespace Expense_Tracker.Application.Features.FilesFolder.Commads.UploadFile;
 
-public class UploadFileCommandHandler(IFileService fileService)
+public sealed class UploadFileCommandHandler(IFileService fileService)
 {
     public async Task<ErrorOr<UploadFileResponse>> Handle(UploadFileCommand request, CancellationToken ct)
     {
-        ErrorOr<Guid> uploadResult = await fileService.UploadAsync(
-             request.EntityType,
-             request.EntityId,
-             request.folder,
-             request.File,
-             ct);
+        var result = await fileService.UploadAsync(
+            request.EntityType,
+            request.EntityId,
+            request.folder,
+            request.File,
+            isPrimary: false,
+            ct);
 
-        if (uploadResult.IsError)
-            return uploadResult.Errors;
+        if (result.IsError)
+            return result.Errors;
 
-        return new UploadFileResponse(uploadResult.Value);
+        return new UploadFileResponse(result.Value.FileId);
     }
 }

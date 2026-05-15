@@ -22,7 +22,7 @@ public sealed class SelectFamilyCommandHandler(
     IRepository<User> users,
     ITokenProvider tokenProvider,
     IIdentityService identityService,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
+    IFileUrlResolver fileUrlResolver,
     IMessageBus bus,
     IRepository<UserDevice> userDevices,
     IFcmTopicService topicService
@@ -91,7 +91,7 @@ public sealed class SelectFamilyCommandHandler(
             .Select(u => u.ProfileImageFileId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        string? profileImageUrl = fileUrlBuilder.GetUrl(profileFileId);
+        string? profileImageUrl = fileUrlResolver.GetUrl(profileFileId);
 
         // 5. Get budget history for the family (last month by default)
         ErrorOr<List<BudgetHistoryItem>> budgetHistoryResult =

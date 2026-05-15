@@ -85,6 +85,7 @@ FCM/
  FcmTopicService.cs
  NotificationRepository.cs
  UserDeviceRepository.cs
+Files/LocalFileStorage.cs
 Idenitity/
  ApplicationRole.cs
  ApplicationUser.cs
@@ -100,6 +101,8 @@ Migrations/
  20260514221747_UserNormalizedUserName.Designer.cs
  20260515135510_NotificationsModelOverhaul.cs
  20260515135510_NotificationsModelOverhaul.Designer.cs
+ 20260515144234_UploadedFileContentHash.cs
+ 20260515144234_UploadedFileContentHash.Designer.cs
  AppDbContextModelSnapshot.cs
 NotificationsDispatcher/
  NotificationDispatchJob.cs

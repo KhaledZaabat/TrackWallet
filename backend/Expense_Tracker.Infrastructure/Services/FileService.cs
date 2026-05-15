@@ -4,209 +4,209 @@ using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Domain.Errors;
 using Expense_Tracker.Domain.Files;
 using Expense_Tracker.Infrastructure.Data;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Expense_Tracker.Infrastructure.Services;
 
-public class FileService(AppDbContext db, IWebHostEnvironment env) : IFileService, IScopedService
+/// <summary>
+/// Default <see cref="IFileService"/>. Coordinates the physical
+/// <see cref="IFileStorage"/> and the <c>UploadedFiles</c> DB rows so callers
+/// see exactly one consistent unit of work.
+/// </summary>
+public sealed class FileService(
+    AppDbContext db,
+    IFileStorage storage)
+    : IFileService, IScopedService
 {
-    private readonly string _rootPath = Path.Combine(env.ContentRootPath, "AppData");
-
     
-    public async Task<ErrorOr<Guid>> UploadAsync(
+    private static readonly System.Text.RegularExpressions.Regex SafeFolderPattern =
+        new("^[A-Za-z0-9._/-]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    public Task<ErrorOr<UploadedFileInfo>> UploadAsync(
         string entityType,
         Guid entityId,
         string folder,
         IFormFile file,
+        bool isPrimary = false,
         CancellationToken ct = default)
     {
         if (file is null || file.Length == 0)
-            return DomainErrors.FileErrors.Empty();
+            return Task.FromResult<ErrorOr<UploadedFileInfo>>(DomainErrors.FileErrors.Empty());
 
-        var uploadedResult = await Save(file, entityType, entityId, folder, isPrimary: false, ct);
-
-        if (uploadedResult.IsError)
-            return uploadedResult.Errors;
-
-        var uploaded = uploadedResult.Value;
-
-        await db.UploadedFiles.AddAsync(uploaded, ct);
-        await db.SaveChangesAsync(ct);
-
-        return uploaded.Id;
+        return UploadAsync(
+            new UploadFileRequest(
+                EntityType: entityType,
+                EntityId: entityId,
+                Folder: folder,
+                OriginalFileName: file.FileName,
+                ContentType: file.ContentType,
+                Content: file.OpenReadStream(),
+                IsPrimary: isPrimary),
+            ct);
     }
 
-   
-    public async Task<ErrorOr<IEnumerable<Guid>>> UploadManyAsync(
+    public async Task<ErrorOr<UploadedFileInfo>> UploadAsync(
+        UploadFileRequest request,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (request.Content is null)
+            return DomainErrors.FileErrors.Empty();
+
+        if (string.IsNullOrWhiteSpace(request.Folder) || !SafeFolderPattern.IsMatch(request.Folder))
+            return DomainErrors.FileErrors.InvalidType("Folder name contains invalid characters.");
+
+        string originalName = Path.GetFileName(request.OriginalFileName ?? string.Empty);
+        string ext = Path.GetExtension(originalName).ToLowerInvariant();
+        string storedName = $"{Guid.CreateVersion7():N}{ext}";
+        string storageKey = BuildKey(request.Folder, storedName);
+
+     
+        long size;
+        string hash;
+
+        await using (var hashing = new HashingStream(request.Content))
+        {
+            try
+            {
+                size = await storage.SaveAsync(storageKey, hashing, ct);
+            }
+            catch (Exception ex)
+            {
+                return DomainErrors.FileErrors.UploadFailed(ex.Message);
+            }
+
+            hash = Convert.ToHexString(hashing.GetHashAndReset()).ToLowerInvariant();
+        }
+
+        ErrorOr<UploadedFile> domainResult = UploadedFile.Create(
+            entityType: request.EntityType,
+            entityId: request.EntityId,
+            folder: request.Folder,
+            fileName: string.IsNullOrWhiteSpace(originalName) ? storedName : originalName,
+            storedFileName: storedName,
+            contentType: string.IsNullOrWhiteSpace(request.ContentType) ? "application/octet-stream" : request.ContentType,
+            fileExtension: string.IsNullOrWhiteSpace(ext) ? ".bin" : ext,
+            fileSize: size,
+            contentHash: hash,
+            isPrimary: request.IsPrimary);
+
+        if (domainResult.IsError)
+        {
+         
+            await storage.DeleteAsync(storageKey, CancellationToken.None);
+            return domainResult.Errors;
+        }
+
+        UploadedFile uploaded = domainResult.Value;
+
+        try
+        {
+            await db.UploadedFiles.AddAsync(uploaded, ct);
+            await db.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            await storage.DeleteAsync(storageKey, CancellationToken.None);
+            throw;
+        }
+
+        return new UploadedFileInfo(uploaded.Id, uploaded.ContentHash, uploaded.FileSizeInBytes);
+    }
+
+    public async Task<ErrorOr<IReadOnlyList<UploadedFileInfo>>> UploadManyAsync(
         string entityType,
         Guid entityId,
         string folder,
         IFormFileCollection files,
         CancellationToken ct = default)
     {
-        var list = new List<UploadedFile>();
+        if (files is null || files.Count == 0)
+            return DomainErrors.FileErrors.Empty("No files provided.");
 
-        foreach (var file in files)
+        var results = new List<UploadedFileInfo>(files.Count);
+
+        foreach (IFormFile file in files)
         {
             if (file is null || file.Length == 0)
                 continue;
 
-            var saved = await Save(file, entityType, entityId, folder, isPrimary: false, ct);
+            ErrorOr<UploadedFileInfo> single = await UploadAsync(
+                entityType, entityId, folder, file, isPrimary: false, ct);
 
-            if (saved.IsError)
-                return saved.Errors;
+            if (single.IsError)
+                return single.Errors;
 
-            list.Add(saved.Value);
+            results.Add(single.Value);
         }
 
-        if (list.Count == 0)
-            return DomainErrors.FileErrors.UploadFailed("All files are invalid.");
+        if (results.Count == 0)
+            return DomainErrors.FileErrors.UploadFailed("All files were empty.");
 
-        await db.UploadedFiles.AddRangeAsync(list, ct);
-        await db.SaveChangesAsync(ct);
-
-        return list.Select(f => f.Id).ToList();
+        return results;
     }
 
-    public async Task<ErrorOr<Guid>> UploadImageAsync(
-        string entityType,
-        Guid entityId,
-        string folder,
-        IFormFile image,
-        bool isPrimary = false,
-        CancellationToken ct = default)
+    public async Task<ErrorOr<FileDto>> OpenAsync(Guid id, CancellationToken ct = default)
     {
-        if (image is null || image.Length == 0)
-            return DomainErrors.FileErrors.Empty();
+        UploadedFile? row = await db.UploadedFiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.Id == id, ct);
 
-        var saved = await Save(image, entityType, entityId, folder, isPrimary, ct);
-
-        if (saved.IsError)
-            return saved.Errors;
-
-        var file = saved.Value;
-
-        await db.UploadedFiles.AddAsync(file, ct);
-        await db.SaveChangesAsync(ct);
-
-        return file.Id;
-    }
-
-    public async Task<ErrorOr<FileDto>> DownloadAsync(Guid id, CancellationToken ct = default)
-    {
-        var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
-        if (file is null)
+        if (row is null)
             return DomainErrors.FileErrors.NotFound();
 
-        var path = Path.Combine(_rootPath, file.Folder, file.StoredFileName);
-
-        if (!System.IO.File.Exists(path))
+        Stream? stream = await storage.OpenReadAsync(BuildKey(row.Folder, row.StoredFileName), ct);
+        if (stream is null)
             return DomainErrors.FileErrors.NotFound();
 
-        var bytes = await System.IO.File.ReadAllBytesAsync(path, ct);
-
-        return new FileDto(bytes, file.ContentType, file.FileName);
-    }
-
-    public async Task<ErrorOr<StreamFileDto>> StreamAsync(Guid id, CancellationToken ct = default)
-    {
-        var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
-        if (file is null)
-            return DomainErrors.FileErrors.NotFound();
-
-        var path = Path.Combine(_rootPath, file.Folder, file.StoredFileName);
-
-        if (!System.IO.File.Exists(path))
-            return DomainErrors.FileErrors.NotFound();
-
-        var stream = new FileStream(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            64 * 1024,
-            useAsync: true);
-
-        return new StreamFileDto(stream, file.ContentType, file.FileName);
+        return new FileDto(
+            Stream: stream,
+            ContentType: row.ContentType,
+            FileName: row.FileName,
+            ContentHash: row.ContentHash,
+            LengthInBytes: row.FileSizeInBytes);
     }
 
     public async Task<ErrorOr<Success>> DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var file = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
-        if (file is null)
+        UploadedFile? row = await db.UploadedFiles.FirstOrDefaultAsync(f => f.Id == id, ct);
+        if (row is null)
             return DomainErrors.FileErrors.NotFound();
 
-        string path = Path.Combine(_rootPath, file.Folder, file.StoredFileName);
-
-        if (System.IO.File.Exists(path))
-            System.IO.File.Delete(path);
-
-        db.UploadedFiles.Remove(file);
+        db.UploadedFiles.Remove(row);
         await db.SaveChangesAsync(ct);
 
+    
+        await storage.DeleteAsync(BuildKey(row.Folder, row.StoredFileName), CancellationToken.None);
         return new Success();
     }
 
-    public async Task<ErrorOr<Success>> DeleteManyAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
+    public async Task<ErrorOr<int>> DeleteManyAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
     {
-        if (ids is null || !ids.Any())
+        var idList = ids?.Distinct().ToList() ?? new List<Guid>();
+        if (idList.Count == 0)
             return DomainErrors.FileErrors.InvalidType("No file IDs provided.");
 
-        var files = await db.UploadedFiles
-            .Where(f => ids.Contains(f.Id))
+        List<UploadedFile> rows = await db.UploadedFiles
+            .Where(f => idList.Contains(f.Id))
             .ToListAsync(ct);
 
-        if (files.Count == 0)
+        if (rows.Count == 0)
             return DomainErrors.FileErrors.NotFound("No files found for provided IDs.");
 
-        foreach (var file in files)
-        {
-            string path = Path.Combine(_rootPath, file.Folder, file.StoredFileName);
-
-            if (System.IO.File.Exists(path))
-            {
-                try { System.IO.File.Delete(path); }
-                catch { /* ignore */ }
-            }
-        }
-
-        db.UploadedFiles.RemoveRange(files);
+        db.UploadedFiles.RemoveRange(rows);
         await db.SaveChangesAsync(ct);
 
-        return new Success();
+        foreach (UploadedFile row in rows)
+        {
+            await storage.DeleteAsync(BuildKey(row.Folder, row.StoredFileName), CancellationToken.None);
+        }
+
+        return rows.Count;
     }
 
-    private async Task<ErrorOr<UploadedFile>> Save(
-        IFormFile file,
-        string entityType,
-        Guid entityId,
-        string folder,
-        bool isPrimary,
-        CancellationToken ct)
-    {
-        Directory.CreateDirectory(Path.Combine(_rootPath, folder));
-
-        string original = Path.GetFileName(file.FileName);
-        string ext = Path.GetExtension(original).ToLowerInvariant();
-        string stored = $"{Guid.NewGuid():N}{ext}";
-
-        string path = Path.Combine(_rootPath, folder, stored);
-
-        using (var stream = new FileStream(path, FileMode.Create))
-            await file.CopyToAsync(stream, ct);
-
-        return UploadedFile.Create(
-            entityType,
-            entityId,
-            folder,
-            original,
-            stored,
-            file.ContentType,
-            ext,
-            file.Length,
-            isPrimary
-         );
-    }
+    private static string BuildKey(string folder, string storedFileName)
+        => $"{folder.Trim('/').Replace('\\', '/')}/{storedFileName}";
 }

@@ -14,7 +14,7 @@ namespace Expense_Tracker.Application.Features.UpdateTransaction;
 public sealed class UpdateTransactionCommandHandler(
     IRepository<Transaction> transactionRepo,
     IRepository<FamilyUser> familyUserRepo,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder
+    IFileUrlResolver fileUrlResolver
 )
 {
     public async Task<ErrorOr<TransactionResponse>> Handle(
@@ -136,7 +136,7 @@ public sealed class UpdateTransactionCommandHandler(
                     UserId: t.CreatedBy!.Id,
                     FullName: t.CreatedBy.FullName,
                     ProfileImageUrl: t.CreatedBy.ProfileImageFileId.HasValue
-                        ? fileUrlBuilder.GetUrl(t.CreatedBy.ProfileImageFileId.Value)
+                        ? fileUrlResolver.GetUrl(t.CreatedBy.ProfileImageFileId.Value)
                         : null
                 )
             ))

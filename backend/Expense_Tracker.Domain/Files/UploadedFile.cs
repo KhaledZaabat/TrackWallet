@@ -17,6 +17,12 @@ public sealed class UploadedFile : Entity
     public string Folder { get; private set; } = default!;
     public long FileSizeInBytes { get; private set; }
 
+    /// <summary>
+    /// Lower-case hex SHA-256 of the file bytes. Used as the strong
+    /// <c>ETag</c> and to dedupe identical uploads.
+    /// </summary>
+    public string ContentHash { get; private set; } = default!;
+
     public bool IsPrimary { get; private set; }
 
     private UploadedFile() { }
@@ -31,6 +37,7 @@ public sealed class UploadedFile : Entity
         string contentType,
         string fileExtension,
         long fileSize,
+        string contentHash,
         bool isPrimary)
         : base(id)
     {
@@ -42,6 +49,7 @@ public sealed class UploadedFile : Entity
         ContentType = contentType;
         FileExtension = fileExtension;
         FileSizeInBytes = fileSize;
+        ContentHash = contentHash;
         IsPrimary = isPrimary;
     }
 
@@ -54,6 +62,7 @@ public sealed class UploadedFile : Entity
         string contentType,
         string fileExtension,
         long fileSize,
+        string contentHash,
         bool isPrimary = false)
     {
         if (string.IsNullOrWhiteSpace(entityType))
@@ -74,6 +83,9 @@ public sealed class UploadedFile : Entity
         if (string.IsNullOrWhiteSpace(fileExtension))
             return DomainErrors.GeneralErrors.InvalidState(nameof(UploadedFile), "FileExtension is required.");
 
+        if (string.IsNullOrWhiteSpace(contentHash))
+            return DomainErrors.GeneralErrors.InvalidState(nameof(UploadedFile), "ContentHash is required.");
+
         if (!fileExtension.StartsWith("."))
             fileExtension = "." + fileExtension.ToLowerInvariant();
 
@@ -90,6 +102,7 @@ public sealed class UploadedFile : Entity
             contentType.Trim(),
             fileExtension,
             fileSize,
+            contentHash.Trim().ToLowerInvariant(),
             isPrimary);
     }
 

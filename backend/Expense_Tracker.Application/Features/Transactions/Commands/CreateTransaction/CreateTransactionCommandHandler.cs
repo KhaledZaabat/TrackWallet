@@ -1,44 +1,47 @@
-using Family = Expense_Tracker.Domain.FamilyFolder.Family;
-using Expense_Tracker.Domain.FamilyFolder;
-using Expense_Tracker.Domain.FamilyUserFolder;
+using ErrorOr;
 using Expense_Tracker.Application.Events;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Category;
 using Expense_Tracker.Contracts.Reponses.Transaction;
 using Expense_Tracker.Domain.CategoryFolder;
+using Expense_Tracker.Domain.Errors;
+using Expense_Tracker.Domain.FamilyFolder;
+using Expense_Tracker.Domain.FamilyUserFolder;
 using Expense_Tracker.Domain.TransactionFolder;
-using ErrorOr;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Wolverine;
-using Expense_Tracker.Domain.Errors;
+using Family = Expense_Tracker.Domain.FamilyFolder.Family;
 
 namespace Expense_Tracker.Application.Features.Transactions.Commands.CreateTransaction;
 
 public sealed class CreateTransactionCommandHandler(
     IRepository<Transaction> transactionRepo,
-    IRepository<global::Expense_Tracker.Domain.FamilyFolder.Family> familyRepo,
+    IRepository<Domain.FamilyFolder.Family> familyRepo,
     IRepository<FamilyUser> familyUserRepo,
     IRepository<Category> categoryRepo,
-    [FromKeyedServices("files")] IUrlBuilder fileUrlBuilder,
+    IFileUrlResolver fileUrlResolver,
     IMessageBus bus
 )
 {
     public async Task<ErrorOr<TransactionResponse>> Handle(
         CreateTransactionCommand request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var isMember = await familyUserRepo.Query()
-            .AnyAsync(fu =>
-                fu.UserId == request.UserId &&
-                fu.FamilyId == request.FamilyId,
-                cancellationToken);
+        var isMember = await familyUserRepo
+            .Query()
+            .AnyAsync(
+                fu => fu.UserId == request.UserId && fu.FamilyId == request.FamilyId,
+                cancellationToken
+            );
 
         if (!isMember)
             return DomainErrors.GeneralErrors.NotFound("User is not a member of this family.");
 
-        var categoryExists = await categoryRepo.Query()
+        var categoryExists = await categoryRepo
+            .Query()
             .AnyAsync(c => c.Id == request.CategoryId, cancellationToken);
 
         if (!categoryExists)
@@ -60,7 +63,8 @@ public sealed class CreateTransactionCommandHandler(
 
         Transaction transaction = transactionResult.Value;
 
-        var family = await familyRepo.QueryTracked()
+        var family = await familyRepo
+            .QueryTracked()
             .FirstOrDefaultAsync(f => f.Id == request.FamilyId, cancellationToken);
 
         if (family is null)
@@ -77,7 +81,8 @@ public sealed class CreateTransactionCommandHandler(
 
         await bus.PublishAsync(new TransactionCreatedEvent(transaction));
 
-        var transactionResponse = await transactionRepo.Query()
+        var transactionResponse = await transactionRepo
+            .Query()
             .Where(t => t.Id == transaction.Id)
             .Select(t => new TransactionResponse(
                 TransactionId: t.Id,
@@ -87,15 +92,12 @@ public sealed class CreateTransactionCommandHandler(
                 TransactedOn: t.TransactedOn,
                 Notes: t.Notes,
                 CreatedAtUtc: t.CreatedAtUtc,
-                Category: new CategoryResponse(
-                    CategoryId: t.Category!.Id,
-                    Name: t.Category.Type
-                ),
+                Category: new CategoryResponse(CategoryId: t.Category!.Id, Name: t.Category.Type),
                 Creator: new CreatorResponse(
                     UserId: t.CreatedBy!.Id,
                     FullName: t.CreatedBy.FullName,
                     ProfileImageUrl: t.CreatedBy.ProfileImageFileId.HasValue
-                        ? fileUrlBuilder.GetUrl(t.CreatedBy.ProfileImageFileId.Value)
+                        ? fileUrlResolver.GetUrl(t.CreatedBy.ProfileImageFileId.Value)
                         : null
                 )
             ))
