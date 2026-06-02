@@ -1,180 +1,603 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invitation Accepted</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invitation Accepted — TrackWallet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <style>
+    /* ── DESIGN TOKENS ── */
+    :root {
+      --bg-void:    #0d0d1a;
+      --bg-panel:   #1a1a2e;
+      --bg-card:    #16213e;
+      --bg-input:   #0a0a14;
+      --color-primary:  #00d4ff;
+      --color-gold:     #ffd700;
+      --color-red:      #ff3b3b;
+      --color-green:    #39ff14;
+      --color-purple:   #bd93f9;
+      --color-amber:    #ffb800;
+      --color-gray:     #6272a4;
+      --color-text:       #e8e8ff;
+      --color-text-muted: #8892c8;
+      --border-pixel: #4a90d9;
+      --border-gold:  #f5a623;
+      --border-glow:  #7b2fbe;
+      --font-pixel: 'Press Start 2P', 'Courier New', monospace;
+      --font-rpg:   'VT323', 'Courier New', monospace;
+      --shadow-pixel:    4px 4px 0 #000;
+      --shadow-pixel-sm: 3px 3px 0 #000;
+      --shadow-pixel-lg: 6px 6px 0 #000;
+      --transition-pixel: all 80ms steps(2);
+    }
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; line-height: 1.5; scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-void);
+      color: var(--color-text);
+      font-family: var(--font-rpg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── STARFIELD ── */
+    .starfield {
+      background-color: var(--bg-void);
+      background-image:
+        radial-gradient(1px 1px at  25px   5px, #fff, transparent),
+        radial-gradient(1px 1px at  50px  25px, #fff, transparent),
+        radial-gradient(1px 1px at 125px  20px, var(--color-purple), transparent),
+        radial-gradient(1px 1px at  50px  75px, var(--color-primary), transparent),
+        radial-gradient(2px 2px at  75px  50px, #fff, transparent),
+        radial-gradient(2px 2px at 195px 130px, var(--color-gold), transparent),
+        radial-gradient(1px 1px at 165px  95px, #fff, transparent),
+        radial-gradient(1px 1px at 300px 40px, var(--color-green), transparent),
+        radial-gradient(1px 1px at 350px 180px, #fff, transparent),
+        radial-gradient(2px 2px at 420px 60px, var(--color-primary), transparent),
+        radial-gradient(1px 1px at 480px 140px, #fff, transparent),
+        radial-gradient(1px 1px at 530px 30px, var(--color-gold), transparent);
+      background-size: 200px 200px;
+    }
+
+    /* ── SCANLINES ── */
+    .scanlines { position: relative; }
+    .scanlines::after {
+      content: '';
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+        rgba(0,0,0,0.18) 3px, rgba(0,0,0,0) 4px
+      );
+      mix-blend-mode: multiply;
+      z-index: 2;
+    }
+
+    /* ── LAYOUT ── */
+    .page-wrapper {
+      padding: 48px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    /* ── MAIN CARD ── */
+    .mail-card {
+      width: 100%;
+      max-width: 580px;
+      position: relative;
+      border: 2px solid var(--border-gold);
+      background: var(--bg-card);
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.04),
+        0 0 24px rgba(245,166,35,0.25),
+        0 0 0 1px #000,
+        var(--shadow-pixel-lg);
+    }
+
+    /* corner decorations */
+    .mail-card::before, .mail-card::after,
+    .corner-bl, .corner-br {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      border-color: var(--color-gold);
+      border-style: solid;
+      border-width: 0;
+      z-index: 10;
+    }
+    .mail-card::before { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; }
+    .mail-card::after  { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; }
+    .corner-bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; }
+    .corner-br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; }
+
+    /* ── TOP ACCENT BAR ── */
+    .top-bar {
+      height: 6px;
+      background: linear-gradient(90deg,
+        var(--color-green) 0%,
+        var(--color-primary) 40%,
+        var(--color-purple) 70%,
+        var(--color-gold) 100%
+      );
+      position: relative;
+    }
+    .top-bar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg, transparent 0px, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px
+      );
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--bg-panel);
+      padding: 48px 32px 40px;
+      text-align: center;
+      border-bottom: 2px solid var(--border-pixel);
+      position: relative;
+    }
+    .hero-bg-pattern {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(57,255,20,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(57,255,20,0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+    }
+
+    .checkmark-wrap {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+    .checkmark-ring {
+      width: 88px; height: 88px;
+      border: 3px solid var(--color-green);
+      background: rgba(57,255,20,0.08);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      box-shadow:
+        0 0 0 1px #000,
+        0 0 20px rgba(57,255,20,0.4),
+        var(--shadow-pixel);
+    }
+    .checkmark-ring::before {
+      content: ''; position: absolute;
+      top: 4px; left: 4px; right: 4px; bottom: 4px;
+      border: 1px solid rgba(57,255,20,0.3);
+    }
+    .checkmark-symbol {
+      font-family: var(--font-pixel);
+      font-size: 28px;
+      color: var(--color-green);
+      text-shadow: 0 0 12px rgba(57,255,20,0.8), 2px 2px 0 #000;
+      animation: pulse-glow-green 2s ease-in-out infinite;
+    }
+    .checkmark-corner-tl, .checkmark-corner-br {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-color: var(--color-green);
+      border-style: solid;
+      border-width: 0;
+    }
+    .checkmark-corner-tl { top: -4px; left: -4px; border-top-width: 2px; border-left-width: 2px; }
+    .checkmark-corner-br { bottom: -4px; right: -4px; border-bottom-width: 2px; border-right-width: 2px; }
+
+    .hero-title {
+      font-family: var(--font-pixel);
+      font-size: 13px;
+      color: var(--color-green);
+      letter-spacing: 0.1em;
+      text-shadow: 3px 3px 0 #000, 0 0 20px rgba(57,255,20,0.5);
+      margin-bottom: 14px;
+      animation: glitch-text-green 5s infinite;
+    }
+    .hero-subtitle {
+      font-family: var(--font-rpg);
+      font-size: 22px;
+      color: var(--color-text-muted);
+      letter-spacing: 0.06em;
+    }
+    .hero-subtitle .cursor {
+      color: var(--color-primary);
+      animation: blink 0.8s steps(2) infinite;
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      font-family: var(--font-pixel);
+      font-size: 9px;
+      color: var(--color-amber);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-block: 20px 14px;
+      letter-spacing: 0.06em;
+    }
+    .section-header::before, .section-header::after {
+      content: '';
+      flex: 1; height: 2px;
+      background-image: linear-gradient(to right, var(--color-amber) 50%, transparent 50%);
+      background-size: 8px 2px;
+      background-repeat: repeat-x;
+      opacity: 0.5;
+    }
+    .section-header:first-child { margin-top: 0; }
+
+    /* ── GREETING ── */
+    .greeting-text {
+      font-family: var(--font-rpg);
+      font-size: 22px;
+      color: var(--color-text);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .greeting-text .name-highlight {
+      color: var(--color-gold);
+      text-shadow: 0 0 8px rgba(255,215,0,0.4);
+    }
+    .body-text {
+      font-family: var(--font-rpg);
+      font-size: 20px;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .body-text strong {
+      color: var(--color-text);
+      font-weight: normal;
+    }
+
+    /* ── +1 CARD ── */
+    .member-card {
+      border: 2px solid var(--border-gold);
+      background: var(--bg-panel);
+      padding: 28px 24px;
+      text-align: center;
+      position: relative;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.03),
+        0 0 16px rgba(245,166,35,0.3),
+        0 0 0 1px #000,
+        var(--shadow-pixel);
+      margin-bottom: 24px;
+    }
+    .member-card::before, .member-card::after,
+    .mc-corner-bl, .mc-corner-br {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      border-color: var(--color-gold);
+      border-style: solid;
+      border-width: 0;
+    }
+    .member-card::before { top: -2px; left: -2px; border-top-width: 2px; border-left-width: 2px; }
+    .member-card::after  { top: -2px; right: -2px; border-top-width: 2px; border-right-width: 2px; }
+    .mc-corner-bl { bottom: -2px; left: -2px; border-bottom-width: 2px; border-left-width: 2px; }
+    .mc-corner-br { bottom: -2px; right: -2px; border-bottom-width: 2px; border-right-width: 2px; }
+
+    .plus-one {
+      font-family: var(--font-pixel);
+      font-size: 36px;
+      color: var(--color-gold);
+      text-shadow: 4px 4px 0 #000, 0 0 20px rgba(255,215,0,0.6);
+      display: block;
+      margin-bottom: 10px;
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    .member-label {
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      color: var(--color-gold);
+      letter-spacing: 0.08em;
+      text-shadow: 2px 2px 0 #000;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .member-desc {
+      font-family: var(--font-rpg);
+      font-size: 19px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    .member-desc .invitee-name {
+      color: var(--color-primary);
+    }
+
+    /* HP BAR accent */
+    .hp-bar {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: #000;
+      border: 2px solid var(--border-pixel);
+      margin-top: 16px;
+    }
+    .hp-seg {
+      flex: 1; height: 10px;
+      background: rgba(255,255,255,0.06);
+    }
+    .hp-seg.filled-green { background: var(--color-green); box-shadow: inset 0 -2px 0 rgba(0,0,0,0.4); }
+
+    /* ── CTA BUTTON ── */
+    .cta-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .pixel-btn-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border: 2px solid #000;
+      box-shadow: var(--shadow-pixel);
+      background: var(--color-green);
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+      user-select: none;
+      transition: var(--transition-pixel);
+    }
+    .pixel-btn-cta:hover  { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000, 0 0 20px rgba(57,255,20,0.4); }
+    .pixel-btn-cta:active { transform: translate(2px, 2px);   box-shadow: 1px 1px 0 #000; }
+    .pixel-btn-cta .arrow { animation: nudge-right 1.5s steps(2) infinite; display: inline-block; }
+
+    /* ── WHAT'S NEXT ── */
+    .whats-next {
+      border: 2px dashed var(--color-gray);
+      background: rgba(0,0,0,0.25);
+      padding: 20px;
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .whats-next-legend {
+      font-family: var(--font-pixel);
+      font-size: 8px;
+      color: var(--color-purple);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0 8px;
+      position: absolute;
+      top: -8px;
+      left: 12px;
+      background: var(--bg-card);
+    }
+    .next-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .next-item {
+      text-align: center;
+      padding: 14px 8px;
+      border: 2px solid var(--border-pixel);
+      background: var(--bg-card);
+      position: relative;
+      box-shadow: var(--shadow-pixel-sm);
+    }
+    .next-item-icon {
+      font-size: 22px;
+      display: block;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 0 4px rgba(0,212,255,0.4));
+    }
+    .next-item-label {
+      font-family: var(--font-pixel);
+      font-size: 7px;
+      color: var(--color-primary);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.5;
+    }
+    .next-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,212,255,0.02);
+      pointer-events: none;
+    }
+
+    /* ── DIVIDER ── */
+    .divider-dash {
+      border: none; height: 2px;
+      background-image: linear-gradient(to right, var(--border-pixel) 50%, transparent 50%);
+      background-size: 8px 2px;
+      background-repeat: repeat-x;
+      margin: 28px 0 20px;
+    }
+
+    /* ── FOOTER ── */
+    .mail-footer {
+      padding: 20px 32px 28px;
+      background: rgba(0,0,0,0.3);
+      border-top: 2px solid rgba(74,144,217,0.3);
+      text-align: center;
+    }
+    .footer-text {
+      font-family: var(--font-rpg);
+      font-size: 17px;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+    }
+    .footer-link {
+      color: var(--color-green);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--color-green);
+    }
+    .footer-link:hover { color: var(--color-primary); border-color: var(--color-primary); }
+    .footer-copy {
+      font-family: var(--font-pixel);
+      font-size: 7px;
+      color: var(--color-gray);
+      letter-spacing: 0.06em;
+      margin-top: 8px;
+    }
+    .footer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-pixel);
+      font-size: 7px;
+      padding: 4px 10px;
+      border: 1px solid var(--color-gray);
+      color: var(--color-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 10px;
+    }
+    .footer-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--color-green);
+      box-shadow: 0 0 6px var(--color-green);
+      animation: blink 0.8s steps(2) infinite;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes blink {
+      0%, 49%   { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { filter: drop-shadow(0 0 4px var(--color-gold)); }
+      50%      { filter: drop-shadow(0 0 14px var(--color-gold)); }
+    }
+    @keyframes pulse-glow-green {
+      0%, 100% { text-shadow: 0 0 8px rgba(57,255,20,0.6), 2px 2px 0 #000; }
+      50%      { text-shadow: 0 0 20px rgba(57,255,20,0.9), 2px 2px 0 #000; }
+    }
+    @keyframes glitch-text-green {
+      0%, 85%, 100% { text-shadow: 3px 3px 0 #000, 0 0 20px rgba(57,255,20,0.5); transform: translate(0); }
+      87% { text-shadow: 3px 0 var(--color-red), -3px 0 var(--color-primary), 0 0 20px rgba(57,255,20,0.5); transform: translate(-2px, 1px); }
+      90% { text-shadow: -3px 0 var(--color-red), 3px 0 var(--color-primary); transform: translate(2px, -1px); }
+      93% { text-shadow: 2px 0 var(--color-amber); transform: translate(-1px, 0); }
+    }
+    @keyframes nudge-right {
+      0%, 60%, 100% { transform: translateX(0); }
+      80%           { transform: translateX(4px); }
+    }
+    @keyframes coin-spin {
+      from { transform: rotateY(0deg); }
+      to   { transform: rotateY(360deg); }
+    }
+  </style>
 </head>
-<body style="margin:0; padding:0; background-color:#f3f4f6; font-family:Arial, Helvetica, sans-serif;">
+<body class="starfield">
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
-        <tr>
-            <td align="center">
+  <div class="page-wrapper">
+    <div class="mail-card scanlines">
+      <div class="corner-bl"></div>
+      <div class="corner-br"></div>
 
-                <!-- MAIN -->
-                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
-                       style="background-color:#ffffff; border-radius:24px; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,0.15);">
+      <!-- TOP BAR -->
+      <div class="top-bar"></div>
 
-                    <!-- TOP BAR -->
-                    <tr>
-                        <td style="height:6px; background-color:#22c55e;"></td>
-                    </tr>
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-bg-pattern"></div>
+        <div class="checkmark-wrap">
+          <div class="checkmark-ring">
+            <span class="checkmark-symbol">✓</span>
+          </div>
+          <div class="checkmark-corner-tl"></div>
+          <div class="checkmark-corner-br"></div>
+        </div>
+        <div class="hero-title">INVITATION ACCEPTED</div>
+        <div class="hero-subtitle">YOUR FAMILY IS GROWING<span class="cursor">_</span></div>
+      </div>
 
-                    <!-- HERO -->
-                    <tr>
-                        <td align="center" style="padding:48px 40px; background-color:#dcfce7;">
+      <!-- CONTENT -->
+      <div class="content">
 
-                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-                                <tr>
-                                    <td width="100" height="100" align="center" valign="middle"
-                                        style="
-        width:100px;
-        height:100px;
-        background-color:#22c55e;
-        border-radius:50%;
-        color:#ffffff;
-        font-size:48px;
-        line-height:100px;
-        text-align:center;
-        font-weight:bold;
-    ">
-                                        ✓
-                                    </td>
-                                </tr>
-                            </table>
+        <div class="section-header">GREAT NEWS</div>
 
-                            <h1 style="margin:0 0 12px 0; color:#14532d; font-size:32px; font-weight:800;">
-                                Success! 🎉
-                            </h1>
+        <p class="greeting-text">
+          Hi <span class="name-highlight">{{InviterName}}</span>
+        </p>
 
-                            <p style="margin:0; color:#166534; font-size:16px; font-weight:500;">
-                                Your family is growing
-                            </p>
+        <p class="body-text">
+          <strong>{{InviteeName}}</strong> has accepted your invitation to join
+          <strong>{{FamilyName}}</strong>! Your party just got stronger.
+        </p>
 
-                        </td>
-                    </tr>
+        <!-- +1 CARD -->
+        <div class="member-card">
+          <div class="mc-corner-bl"></div>
+          <div class="mc-corner-br"></div>
+          <span class="plus-one">+1</span>
+          <span class="member-label">★ NEW FAMILY MEMBER! ★</span>
+          <p class="member-desc">
+            <span class="invitee-name">{{InviteeName}}</span> can now collaborate on
+            expenses, budgets, and goals with your family.
+          </p>
+          <!-- HP bar as a progress/celebration visual -->
+          <div class="hp-bar" title="Family HP">
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+            <div class="hp-seg filled-green"></div>
+          </div>
+        </div>
 
-                    <!-- CONTENT -->
-                    <tr>
-                        <td style="padding:40px;">
+        <!-- CTA -->
+        <div class="cta-wrap">
+          <a href="{{AppLink}}" class="pixel-btn-cta">
+            OPEN FAMILY DASHBOARD <span class="arrow">▶</span>
+          </a>
+        </div>
 
-                            <p style="margin:0 0 8px 0; color:#6b7280; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;">
-                                Great News
-                            </p>
+        <div class="divider-dash"></div>
 
-                            <p style="margin:0 0 24px 0; color:#111827; font-size:18px;">
-                                Hi <strong style="color:#22c55e;">{{InviterName}}</strong> 👋
-                            </p>
+      </div>
 
-                            <p style="margin:0 0 32px 0; color:#4b5563; font-size:15px; line-height:1.7;">
-                                <strong>{{InviteeName}}</strong> has accepted your invitation to join
-                                <strong>{{FamilyName}}</strong>!
-                            </p>
+      <!-- FOOTER -->
+      <div class="mail-footer">
+        <p class="footer-text">
+          Need help?
+          <a href="mailto:support@trackwallet.app" class="footer-link">Contact Support</a>
+        </p>
+        <p class="footer-copy">© 2025 TRACKWALLET — ALL RIGHTS RESERVED</p>
+        <div style="display:flex; justify-content:center; margin-top:10px;">
+          <span class="footer-badge">
+            <span class="dot"></span>
+            SYSTEM ONLINE
+          </span>
+        </div>
+      </div>
 
-                            <!-- SUCCESS CARD -->
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
-                                <tr>
-                                    <td align="center"
-                                        style="
-        background-color:#ecfdf5;
-        border:2px solid #22c55e;
-        border-radius:16px;
-        padding:32px;
-    ">
-
-                                        <p style="margin:0 0 12px 0; font-size:36px; font-weight:800; color:#15803d;">
-                                            +1
-                                        </p>
-
-                                        <p style="margin:0 0 8px 0; color:#15803d; font-size:18px; font-weight:700;">
-                                            New Family Member!
-                                        </p>
-
-                                        <p style="margin:0; color:#166534; font-size:14px; line-height:1.6;">
-                                            {{InviteeName}} can now collaborate on expenses, budgets, and goals with your family.
-                                        </p>
-
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- CTA -->
-                            <table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
-                                <tr>
-                                    <td style="background-color:#22c55e; border-radius:12px;">
-                                        <a href="{{AppLink}}"
-                                           style="
-       display:block;
-       padding:16px 40px;
-       color:#ffffff;
-       text-decoration:none;
-       font-size:16px;
-       font-weight:700;
-   ">
-                                            Open Family Dashboard →
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- NEXT STEPS -->
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                                   style="background-color:#f0fdf4; border-radius:12px;">
-                                <tr>
-                                    <td style="padding:24px;">
-
-                                        <p style="margin:0 0 16px 0; color:#15803d; font-size:13px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; text-align:center;">
-                                            What's Next?
-                                        </p>
-
-                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                            <tr>
-                                                <td align="center" style="padding:12px;">
-                                                    📊<br>
-                                                    <span style="font-size:12px; color:#166534;">Track Together</span>
-                                                </td>
-                                                <td align="center" style="padding:12px;">
-                                                    💬<br>
-                                                    <span style="font-size:12px; color:#166534;">Share Insights</span>
-                                                </td>
-                                                <td align="center" style="padding:12px;">
-                                                    🎯<br>
-                                                    <span style="font-size:12px; color:#166534;">Reach Goals</span>
-                                                </td>
-                                            </tr>
-                                        </table>
-
-                                    </td>
-                                </tr>
-                            </table>
-
-                        </td>
-                    </tr>
-
-                    <!-- FOOTER -->
-                    <tr>
-                        <td align="center" style="padding:32px; background-color:#f9fafb; border-top:1px solid #e5e7eb;">
-
-                            <p style="margin:0 0 12px 0; font-size:13px; color:#6b7280;">
-                                Need help?
-                                <a href="mailto:support@expensetracker.com" style="color:#22c55e; text-decoration:none; font-weight:600;">
-                                    Contact Support
-                                </a>
-                            </p>
-
-                            <p style="margin:0; font-size:12px; color:#9ca3af;">
-                                © 2025 Expense Tracker. All rights reserved.
-                            </p>
-
-                        </td>
-                    </tr>
-
-                </table>
-                <!-- END MAIN -->
-
-            </td>
-        </tr>
-    </table>
+    </div>
+  </div>
 
 </body>
 </html>
