@@ -9,7 +9,6 @@ using Expense_Tracker.Application.Features.Identity.Commands.Logout;
 using Expense_Tracker.Application.Features.Identity.Commands.ResendConfirmation;
 using Expense_Tracker.Application.Features.Identity.Commands.ResetPassword;
 using Expense_Tracker.Application.Features.Login;
-using Expense_Tracker.Application.Features.Refresh;
 using Expense_Tracker.Application.Features.Register;
 using Expense_Tracker.Application.Interfaces;
 using Expense_Tracker.Contracts.Reponses.Identity;
@@ -28,33 +27,32 @@ namespace Expense_Tracker.App.Controllers;
 [ApiVersion("1.0")]
 public sealed class IdentityController(
     IMessageBus bus,
-    IAuthCookieWriter authCookies,
-    IOptionsMonitor<AuthCookieOptions> cookieOptions
+    IAuthCookieWriter authCookies
 ) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("login")]
-    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Authenticates a user by email.")]
+    [EndpointSummary("Authenticates a user by email or username.")]
     [EndpointDescription(
-        "Validates email and password and returns a JWT + Refresh token pair as http only cookie  ."
+        "Validates credentials (email OR username with password) and writes the JWT + refresh token pair into HttpOnly cookies. The response body carries the authenticated user's profile."
     )]
-    public async Task<ActionResult<AuthResponse>> Login(
+    public async Task<ActionResult<MeResponse>> Login(
         [FromBody] LoginRequest request,
         CancellationToken ct
     )
     {
         LoginCommand command = new(
-            request.Email,
+            request.EmailOrUserName,
             request.Password,
             request.DeviceId,
             request.FcmToken
         );
 
-       ErrorOr<AuthCommandResult> result = await bus.InvokeAsync<ErrorOr<AuthCommandResult>>(
+        ErrorOr<AuthCommandResult> result = await bus.InvokeAsync<ErrorOr<AuthCommandResult>>(
             command,
             ct
         );
@@ -101,26 +99,33 @@ public sealed class IdentityController(
         ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
         return result.ToActionResult(this);
     }
-    [AllowAnonymous]
-    [HttpPost("confirm-account/otp/resend")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Resends the confirmation OTP code to email .")]
-    [EndpointDescription("Allows users to request another OTP for confirming their account.")]
-    [EndpointName("ResendConfirmationOtp")]
-    public async Task<IActionResult> ResendConfirmationOtp(
-        [FromBody] ResendConfirmationRequest request,
-        CancellationToken ct
-    )
-    {
-        var command = new ResendConfirmationCommand(request.Email);
 
-        ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
-        return result.ToActionResult(this);
-    }
+
+
+
+[AllowAnonymous]
+[HttpPost("confirm-account/email/resend")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+[EndpointSummary("Resends the account confirmation email.")]
+[EndpointDescription("Allows users to request another account confirmation email.")]
+[EndpointName("ResendConfirmationEmail")]
+public async Task<IActionResult> ResendConfirmationEmail(
+    [FromBody] ResendConfirmationRequest request,
+    CancellationToken ct
+)
+{
+    var command = new ResendConfirmationCommand(request.Email);
+
+    ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
+    return result.ToActionResult(this);
+}
+
+
+
     [AllowAnonymous]
     [HttpPost("confirm-account")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -142,43 +147,7 @@ public sealed class IdentityController(
         ErrorOr<Success> result = await bus.InvokeAsync<ErrorOr<Success>>(command, ct);
         return result.ToActionResult(this);
     }
-    [HttpPost("refresh")]
-    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [EndpointSummary("Refreshes JWT token pair.")]
-    public async Task<ActionResult<AuthResponse>> RefreshToken(
-        [FromBody] RefreshTokenRequest request,
-        CancellationToken ct
-    )
-    {
-        AuthCookieOptions cookieOpts = cookieOptions.CurrentValue;
-
-        // R15.1, R15.3 — raw refresh MUST come from the cookie; the body is ignored.
-        string? rawRefresh = HttpContext.Request.Cookies[cookieOpts.RefreshCookieName];
-        if (string.IsNullOrEmpty(rawRefresh))
-            return Unauthorized();
-
-        RefreshTokenCommand command = new(rawRefresh, request.FcmToken);
-
-        ErrorOr<AuthCommandResult> result = await bus.InvokeAsync<ErrorOr<AuthCommandResult>>(
-            command,
-            ct
-        );
-
-        if (result.IsError)
-            return this.Problem(result.Errors);
-
-        AuthCommandResult value = result.Value;
-
-        // R2.2, R3.2, R12.2 — rotate cookies and refresh CSRF on success.
-        authCookies.WriteAccessCookie(HttpContext, value.AccessToken, value.AccessExpiresAt);
-        authCookies.WriteRefreshCookie(HttpContext, value.RefreshToken, value.RefreshExpiresAt);
-        authCookies.RefreshCsrfCookie(HttpContext);
-
-        return value.Response;
-    }
+    
     [AllowAnonymous]
     [HttpPost("forgot-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -273,7 +242,7 @@ public async Task<ActionResult<MeResponse>> Me(
     MeResult value = result.Value;
 
     return new MeResponse(
-        value.Id,
+        value.UserId,
         value.Email,
         value.UserName,
         value.FullName,

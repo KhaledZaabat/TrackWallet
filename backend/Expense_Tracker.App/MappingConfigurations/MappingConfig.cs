@@ -25,8 +25,7 @@ public class MappingConfig : IRegister
             .Map(dest => dest.UserId, src => src.dto.UserId)
             .Map(dest => dest.FullName, src => src.dto.FullName)
             .Map(dest => dest.Email, src => src.dto.Email)
-            .Map(dest => dest.ProfileImageUrl, src => src.url)
-            .Map(dest => dest.Families, src => src.families);
+            .Map(dest => dest.ProfileImageUrl, src => src.url);
 
         // ===============================
         // (AuthDto, ProfileImageUrl) -> AuthResponse

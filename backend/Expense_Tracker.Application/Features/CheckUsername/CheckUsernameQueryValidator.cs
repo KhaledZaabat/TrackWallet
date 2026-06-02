@@ -8,10 +8,12 @@ public sealed class CheckUsernameQueryValidator : AbstractValidator<CheckUsernam
     public CheckUsernameQueryValidator()
     {
         RuleFor(x => x.UserName)
-            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .NotEmpty().WithMessage(ValidationMessages.UserNameRequired)
+            .MinimumLength(ValidationLimits.UserNameMinLength)
+                .WithMessage(ValidationMessages.InvalidUserName)
             .MaximumLength(ValidationLimits.UserNameMaxLength)
-                .WithMessage($"Username cannot exceed {ValidationLimits.UserNameMaxLength} characters.")
-            .Matches(@"^[a-zA-Z0-9_-]+$")
-                .WithMessage("Username can only contain letters, numbers, underscores, and hyphens.");
+                .WithMessage(ValidationMessages.InvalidUserName)
+            .Matches(ValidationPatterns.UserName)
+                .WithMessage(ValidationMessages.InvalidUserName);
     }
 }

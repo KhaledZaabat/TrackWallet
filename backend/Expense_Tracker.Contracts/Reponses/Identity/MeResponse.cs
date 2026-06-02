@@ -1,7 +1,7 @@
 namespace Expense_Tracker.Contracts.Reponses.Identity;
 
 public sealed record MeResponse(
-    Guid Id,
+    Guid UserId,
     string Email,
     string UserName,
     string FullName,

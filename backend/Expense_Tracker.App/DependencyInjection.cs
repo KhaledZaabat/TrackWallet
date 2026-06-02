@@ -31,39 +31,124 @@ namespace Expense_Tracker.App;
 
 public static class ServiceRegistration
 {
+    public const string CorsPolicyName = "AllowFrontend";
+
     public static IServiceCollection AddPresentation(
         this IServiceCollection services,
         IConfiguration configuration
     )
     {
-        services
-            .AddAssemblyScanningConfiguration()
+        services.AddHttpContextAccessor();
+
+        return services
             .AddInfrastructure(configuration)
-            .RegisterEmailLinks()
-            .AddAssemblyScanningConfiguration()
-            .AddIdentityConfiguration()
-            .AddJwtConfiguration(configuration)
-            .AddCookieAuthConfiguration()
-            .AddControllersWithVersioning()
-            .AddSwaggerDocs()
-            .AddFluentValidationPipeline()
-            .AddCorsPolicy()
+            .AddAppOptions()
+            .AddAutoRegisteredServices()
+            .AddIdentityAndAuth(configuration)
+            .AddApi()
+            .AddCors(BuildCorsPolicy)
             .AddCache()
-            .AddMessageSending(configuration)
-            .ConfigureBackGroundJobs(configuration)
+            .AddEmailSending(configuration)
+            .AddBackgroundJobs(configuration)
             .ConfigureForwardedHeaders()
-            .ConfigureMappings()
-            .ConfigureProblems()
-            .AddUserContext()
-            .AddUrlBuilders()
-            .AddFamilyContext();
+            .AddObjectMapping()
+            .AddProblemDetailsPipeline()
+            .AddRequestContexts();
+    }
+
+    // --- Infrastructure ----------------------------------------------------
+
+    private static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
+    {
+        services.AddScoped<UpdatableEntityInterceptor>();
+        services.AddScoped<CreatableEntityInterceptor>();
+        services.AddScoped<SoftDeleteEntityInterceptor>();
+
+        string? connectionString = configuration.GetConnectionString("PostgreSqlConnection");
+
+        services.AddDbContext<AppDbContext>(
+            (sp, options) =>
+                options
+                    .UseNpgsql(connectionString)
+                    .AddInterceptors(
+                        sp.GetRequiredService<CreatableEntityInterceptor>(),
+                        sp.GetRequiredService<UpdatableEntityInterceptor>(),
+                        sp.GetRequiredService<SoftDeleteEntityInterceptor>()
+                    )
+        );
+
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         return services;
     }
 
-    private static IServiceCollection AddAssemblyScanningConfiguration(
-        this IServiceCollection services
+    private static IServiceCollection AddCache(this IServiceCollection services)
+    {
+        services.AddMemoryCache();
+        return services;
+    }
+
+    private static IServiceCollection AddEmailSending(
+        this IServiceCollection services,
+        IConfiguration configuration
     )
+    {
+        services.Configure<ResendSettings>(configuration.GetSection("Resend"));
+
+        services.AddHttpClient<ResendClient>();
+        services.Configure<ResendClientOptions>(o => o.ApiToken = configuration["Resend:ApiKey"]!);
+
+        services.AddTransient<IResend, ResendClient>();
+        services.AddScoped<IEmailSender, ResendEmailSender>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddBackgroundJobs(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
+    {
+        services.AddHangfire(cfg =>
+            cfg.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(o =>
+                    o.UseNpgsqlConnection(
+                        configuration.GetConnectionString("HangfirePostgreConnection")
+                    )
+                )
+        );
+
+        services.AddHangfireServer();
+        return services;
+    }
+
+    // --- Options binding ---------------------------------------------------
+
+    private static IServiceCollection AddAppOptions(this IServiceCollection services)
+    {
+        services
+            .AddOptions<EmailLinkOptions>()
+            .BindConfiguration(EmailLinkOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services
+            .AddOptions<FileUrlOptions>()
+            .BindConfiguration(FileUrlOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        return services;
+    }
+
+    // --- DI auto-registration ---------------------------------------------
+
+    private static IServiceCollection AddAutoRegisteredServices(this IServiceCollection services)
     {
         services.Scan(scan =>
             scan.FromAssembliesOf(typeof(AppDbContext), typeof(ServiceRegistration))
@@ -81,7 +166,12 @@ public static class ServiceRegistration
         return services;
     }
 
-    private static IServiceCollection AddIdentityConfiguration(this IServiceCollection services)
+    // --- Identity, JWT, cookies --------------------------------------------
+
+    private static IServiceCollection AddIdentityAndAuth(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         services
             .AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -98,14 +188,17 @@ public static class ServiceRegistration
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
 
-      
+        // Confirmation / reset / 2FA tokens — 15 min beats Identity's 24h default.
         services.Configure<DataProtectionTokenProviderOptions>(o =>
-            o.TokenLifespan = TimeSpan.FromMinutes(15));
+            o.TokenLifespan = TimeSpan.FromMinutes(15)
+        );
 
+        services.AddJwt(configuration);
+        services.AddCookieAuth();
         return services;
     }
 
-    private static IServiceCollection AddJwtConfiguration(
+    private static IServiceCollection AddJwt(
         this IServiceCollection services,
         IConfiguration configuration
     )
@@ -135,7 +228,6 @@ public static class ServiceRegistration
                 options.ClientId =
                     configuration["Authentication:Google:ClientId"]
                     ?? throw new InvalidOperationException("Google ClientId is missing");
-
                 options.ClientSecret =
                     configuration["Authentication:Google:ClientSecret"]
                     ?? throw new InvalidOperationException("Google ClientSecret is missing");
@@ -151,7 +243,7 @@ public static class ServiceRegistration
         return services;
     }
 
-    private static IServiceCollection AddCookieAuthConfiguration(this IServiceCollection services)
+    private static IServiceCollection AddCookieAuth(this IServiceCollection services)
     {
         services
             .AddOptions<AuthCookieOptions>()
@@ -169,15 +261,16 @@ public static class ServiceRegistration
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        // R22.8 — fail fast on invalid auth cookie configuration in non-Development environments.
         services.AddHostedService<AuthCookieStartupValidator>();
-
         return services;
     }
 
-    private static IServiceCollection AddControllersWithVersioning(this IServiceCollection services)
+    // --- API surface (controllers, versioning, swagger, validation) --------
+
+    private static IServiceCollection AddApi(this IServiceCollection services)
     {
         services.AddControllers();
+        services.AddEndpointsApiExplorer();
 
         services
             .AddApiVersioning(options =>
@@ -195,13 +288,6 @@ public static class ServiceRegistration
                 options.DefaultApiVersion = new ApiVersion(1, 0);
                 options.AssumeDefaultVersionWhenUnspecified = true;
             });
-
-        return services;
-    }
-
-    public static IServiceCollection AddSwaggerDocs(this IServiceCollection services)
-    {
-        services.AddEndpointsApiExplorer();
 
         services.AddSwaggerGen(options =>
         {
@@ -223,215 +309,74 @@ public static class ServiceRegistration
             );
         });
 
-        return services;
-    }
-
-    private static IServiceCollection AddFluentValidationPipeline(this IServiceCollection services)
-    {
         services.AddValidatorsFromAssemblyContaining<IRepository<Entity>>();
 
         return services;
     }
 
-    private static IServiceCollection AddCorsPolicy(this IServiceCollection services)
-    {
-        services.AddCors(options =>
-        {
-            options.AddPolicy(
-                "AllowFrontend",
-                policy =>
-                    policy
-                        .WithOrigins(
-                            "http://localhost:3000",
-                            "https://localhost:7067",
-                            "https://localhost:4200"
-                        )
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials()
-            );
-        });
+    // --- CORS --------------------------------------------------------------
 
-        return services;
-    }
-
-    public static IServiceCollection AddInfrastructure(
-        this IServiceCollection services,
-        IConfiguration configuration
+    private static void BuildCorsPolicy(
+        Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions options
     )
     {
-        services.AddScoped<UpdatableEntityInterceptor>();
-        services.AddScoped<CreatableEntityInterceptor>();
-
-        services.AddScoped<SoftDeleteEntityInterceptor>();
-
-        //var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-        //services.AddDbContext<AppDbContext>(options =>
-        //    options.UseSqlServer(connectionString));
-
-        var connectionString = configuration.GetConnectionString("PostgreSqlConnection");
-        services.AddDbContext<AppDbContext>(
-            (sp, options) =>
-                options
-                    .UseNpgsql(connectionString)
-                    .AddInterceptors(
-                        sp.GetRequiredService<CreatableEntityInterceptor>(),
-                        sp.GetRequiredService<UpdatableEntityInterceptor>(),
-                        sp.GetRequiredService<SoftDeleteEntityInterceptor>()
+        options.AddPolicy(
+            CorsPolicyName,
+            policy =>
+                policy
+                    .WithOrigins(
+                        "http://localhost:3000",
+                        "https://localhost:7067",
+                        "https://localhost:4200"
                     )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials()
         );
-
-        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
-        return services;
     }
 
-    public static IServiceCollection AddCache(this IServiceCollection services)
-    {
-        services.AddMemoryCache();
-
-        return services;
-    }
-
-    //public static IServiceCollection AddMessageSending(
-    // this IServiceCollection services,
-    //    IConfiguration configuration)
-    //{
-    //    services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
-
-    //    services.AddScoped<IEmailSender, EmailSender>();
-
-    //    return services;
-
-    //}
-
-    public static IServiceCollection AddMessageSending(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
-    {
-        services.Configure<ResendSettings>(configuration.GetSection("Resend"));
-
-        services.AddOptions();
-        services.AddHttpClient<ResendClient>();
-
-        services.Configure<ResendClientOptions>(o =>
-        {
-            o.ApiToken = configuration["Resend:ApiKey"]!;
-        });
-
-        services.AddTransient<IResend, ResendClient>();
-
-        services.AddScoped<IEmailSender, ResendEmailSender>();
-
-        return services;
-    }
-
-    private static IServiceCollection ConfigureBackGroundJobs(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
-    {
-        services.AddHangfire(Hangfireconfiguration =>
-            Hangfireconfiguration
-                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-                .UsePostgreSqlStorage(o =>
-                    o.UseNpgsqlConnection(
-                        configuration.GetConnectionString("HangfirePostgreConnection")
-                    )
-                )
-        );
-
-        //  .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection")));
-
-        // Add the processing server as IHostedService
-        services.AddHangfireServer();
-        return services;
-    }
+    // --- Forwarded headers, mapping, problem details, contexts -------------
 
     private static IServiceCollection ConfigureForwardedHeaders(this IServiceCollection services)
     {
-        _ = services.Configure<ForwardedHeadersOptions>(static options =>
+        services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders =
                 ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 
-            // Remove default restrictions so IIS/ARR/Cloudflare/etc. are allowed
             options.KnownNetworks.Clear();
             options.KnownProxies.Clear();
-
-            // Prevent spoofed X-Forwarded-For values
-            options.ForwardLimit = 1; // only trust 1 proxy hop
+            options.ForwardLimit = 1;
         });
         return services;
     }
 
-    private static IServiceCollection ConfigureMappings(this IServiceCollection services)
+    private static IServiceCollection AddObjectMapping(this IServiceCollection services)
     {
-        var config = TypeAdapterConfig.GlobalSettings;
-
+        TypeAdapterConfig config = TypeAdapterConfig.GlobalSettings;
         config.Scan(typeof(ServiceRegistration).Assembly);
         config.Scan(typeof(IRepository<>).Assembly);
 
         services.AddSingleton(config);
         services.AddScoped<IMapper, ServiceMapper>();
-
         return services;
     }
 
-    private static IServiceCollection ConfigureProblems(this IServiceCollection services)
+    private static IServiceCollection AddProblemDetailsPipeline(this IServiceCollection services)
     {
-        services
-            .AddProblemDetails(options =>
-            {
-                options.CustomizeProblemDetails = context =>
-                {
-                    context.ProblemDetails.Instance =
-                        $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
-                };
-            })
-            .AddProblemDetails();
+        services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = context =>
+                context.ProblemDetails.Instance =
+                    $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
+        });
         return services;
     }
 
-    private static IServiceCollection AddUserContext(this IServiceCollection services)
+    private static IServiceCollection AddRequestContexts(this IServiceCollection services)
     {
-        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddScoped<IUserContext, HttpUserContext>();
-
-        return services;
-    }
-
-    private static IServiceCollection AddFamilyContext(this IServiceCollection services)
-    {
         services.AddScoped<IFamilyContext, HttpFamilyContext>();
-
-        return services;
-    }
-
-    private static IServiceCollection RegisterEmailLinks(this IServiceCollection services)
-    {
-        services
-            .AddOptions<EmailLinkOptions>()
-            .BindConfiguration(EmailLinkOptions.SectionName)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        return services;
-    }
-
-    private static IServiceCollection AddUrlBuilders(this IServiceCollection services)
-    {
-        services.AddHttpContextAccessor();
-
-        services
-            .AddOptions<FileUrlOptions>()
-            .BindConfiguration(FileUrlOptions.SectionName)
-            .ValidateOnStart();
-
         return services;
     }
 }

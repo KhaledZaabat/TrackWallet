@@ -9,7 +9,7 @@ namespace Expense_Tracker.Application.Features;
 /// token material (R1.1, R1.3, R14.3, R15.5).
 /// </summary>
 public sealed record AuthCommandResult(
-    AuthResponse Response,
+    MeResponse Response,
     string AccessToken,
     DateTimeOffset AccessExpiresAt,
     string RefreshToken,

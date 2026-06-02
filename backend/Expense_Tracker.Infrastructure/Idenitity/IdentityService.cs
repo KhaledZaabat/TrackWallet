@@ -20,28 +20,29 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
         return user != null && await userManager.IsInRoleAsync(user, role);
     }
 
-    public async Task<ErrorOr<AuthenticatedUser>> AuthenticateByEmailAsync(
-        string email,
+    public async Task<ErrorOr<AuthenticatedUser>> AuthenticateAsync(
+        string emailOrUserName,
         string password
     )
     {
-        var user = await userManager.FindByEmailAsync(email);
+        if (string.IsNullOrWhiteSpace(emailOrUserName))
+            return DomainErrors.IdentityErrors.InvalidCredentials();
+
+        ApplicationUser? user = await userManager.FindByEmailAsync(emailOrUserName);
+        user ??= await userManager.FindByNameAsync(emailOrUserName);
 
         if (user is null)
-            return DomainErrors.IdentityErrors.NotFound(
-                $"User with email {UtilityService.MaskEmail(email)} not found"
-            );
+            return DomainErrors.IdentityErrors.InvalidCredentials();
 
         if (!user.EmailConfirmed)
             return DomainErrors.IdentityErrors.EmailNotConfirmed(
-                $"Email '{UtilityService.MaskEmail(email)}' is not confirmed"
+                $"Email '{UtilityService.MaskEmail(user.Email!)}' is not confirmed"
             );
 
         if (!await userManager.CheckPasswordAsync(user, password))
             return DomainErrors.IdentityErrors.InvalidCredentials();
 
         string? role = await GetRole(user);
-
         return (user, role).Adapt<AuthenticatedUser>();
     }
 
@@ -290,15 +291,14 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
         );
     }
 
-   
     private static string EncodeTokenForUrl(string token) =>
         WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
- 
     private static bool TryDecodeTokenFromUrl(string urlToken, out string decoded)
     {
         decoded = string.Empty;
-        if (string.IsNullOrEmpty(urlToken)) return false;
+        if (string.IsNullOrEmpty(urlToken))
+            return false;
 
         try
         {

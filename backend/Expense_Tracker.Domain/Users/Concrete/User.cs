@@ -5,10 +5,11 @@ using Expense_Tracker.Domain.Files;
 using Expense_Tracker.Domain.TransactionFolder;
 using Expense_Tracker.Domain.Users.Abstraction.NotificationPreferencesFolder;
 using System.Net.Mail;
+using System.Text.RegularExpressions;
 
 namespace Expense_Tracker.Domain.Users;
 
-public sealed class User : Entity, IAuditable, ISoftDeletable
+public sealed partial class User : Entity, IAuditable, ISoftDeletable
 {
     public Guid? ProfileImageFileId { get; private set; }
     public UploadedFile? ProfileImage { get; private set; }
@@ -101,6 +102,17 @@ public sealed class User : Entity, IAuditable, ISoftDeletable
     public static string Normalize(string userName) =>
         userName?.Trim().ToUpperInvariant() ?? string.Empty;
 
+    /// <summary>
+    /// Domain-side guard for usernames. Mirrors the SPA regex
+    /// <c>/^[a-zA-Z][a-zA-Z0-9_]{2,19}$/</c> — must start with a letter,
+    /// 3–20 chars, letters / digits / underscores only.
+    /// </summary>
+    [GeneratedRegex(@"^[a-zA-Z][a-zA-Z0-9_]{2,19}$", RegexOptions.CultureInvariant)]
+    private static partial Regex UserNameRegex();
+
+    public static bool IsValidUserName(string? userName) =>
+        !string.IsNullOrWhiteSpace(userName) && UserNameRegex().IsMatch(userName.Trim());
+
     public static ErrorOr<User> Create(
         Guid id,
         string fullName,
@@ -115,11 +127,9 @@ public sealed class User : Entity, IAuditable, ISoftDeletable
         if (string.IsNullOrWhiteSpace(fullName))
             return DomainErrors.UserErrors.InvalidSubmission("Full name is required.");
 
-        if (string.IsNullOrWhiteSpace(userName))
-            return DomainErrors.UserErrors.InvalidSubmission("Username is required.");
-
-        if (userName.Length > 50)
-            return DomainErrors.UserErrors.InvalidSubmission("Username cannot exceed 50 characters.");
+        if (!IsValidUserName(userName))
+            return DomainErrors.UserErrors.InvalidSubmission(
+                "Username must start with a letter and contain only letters, numbers, or underscores (3–20 characters).");
 
         if (string.IsNullOrWhiteSpace(email))
             return DomainErrors.UserErrors.InvalidSubmission("Email is required.");
@@ -171,11 +181,9 @@ public sealed class User : Entity, IAuditable, ISoftDeletable
 
     public ErrorOr<Success> UpdateUserName(string userName)
     {
-        if (string.IsNullOrWhiteSpace(userName))
-            return DomainErrors.UserErrors.InvalidSubmission("Username cannot be empty.");
-
-        if (userName.Length > 50)
-            return DomainErrors.UserErrors.InvalidSubmission("Username cannot exceed 50 characters.");
+        if (!IsValidUserName(userName))
+            return DomainErrors.UserErrors.InvalidSubmission(
+                "Username must start with a letter and contain only letters, numbers, or underscores (3–20 characters).");
 
         UserName = userName.Trim();
         NormalizedUserName = Normalize(userName);

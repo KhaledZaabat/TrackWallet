@@ -21,9 +21,9 @@ public static class ValidationLimits
 
     //  User profile
     public const int FullNameMaxLength = 50;
-    public const int UserNameMaxLength = 50;
+    public const int UserNameMinLength = 3;
+    public const int UserNameMaxLength = 20;
     public const int NameMaxLength = 50;             // FirstName, LastName, etc.
     public const int FcmTokenMaxLength = 4096;
-    public const int IdTokenMaxLength = 4096;   // Google JWT
-
+    public const int IdTokenMaxLength = 4096;        // Google JWT
 }

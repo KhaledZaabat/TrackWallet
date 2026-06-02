@@ -18,11 +18,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.UserName)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(20);
 
         builder.Property(u => u.NormalizedUserName)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(20);
 
        
         builder.HasIndex(u => u.NormalizedUserName)

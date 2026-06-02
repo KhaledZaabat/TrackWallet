@@ -36,7 +36,7 @@ public interface IRefreshTokenService : IScopedService
     /// <summary>
     /// Persists a fresh refresh-token session for a user/device with a brand-new <c>SessionFamilyId</c>.
     /// Stores only the SHA-256 hash of <paramref name="rawToken"/>; the raw value is never written to disk.
-    /// Required for refresh rotation flow per design.md §Components → RefreshTokenService (R8.1, R8.2, R10.1, R10.2, R11.1).
+    /// Required for refresh rotation flow per design.md §Components → RefreshTokenService 
     /// </summary>
     Task<ErrorOr<Success>> AddNewSessionAsync(
         Guid userId,
@@ -54,7 +54,7 @@ public interface IRefreshTokenService : IScopedService
     /// PLUS the <c>DeviceId</c> recovered from the persisted row (so callers don't have to
     /// track DeviceId separately).
     /// Single entry point for <c>SilentRefreshMiddleware</c> and the refresh endpoint per
-    /// design.md §Components → RefreshTokenService (R8.1, R8.2, R10.1, R10.2, R11.1, R17.4).
+    /// design.md §Components → RefreshTokenService 
     /// </summary>
     Task<ErrorOr<RotationSuccess>> RotateAsync(
         string rawIncomingToken,
@@ -63,7 +63,7 @@ public interface IRefreshTokenService : IScopedService
 
     /// <summary>
     /// Revokes every active refresh-token row for <paramref name="userId"/> across all devices.
-    /// Backs the "logout everywhere" capability per design.md §Components → RefreshTokenService (R21.4).
+    /// Backs the "logout everywhere" capability per design.md §Components → RefreshTokenService 
     /// </summary>
     Task<ErrorOr<Success>> RevokeAllSessionsForUserAsync(
         Guid userId,

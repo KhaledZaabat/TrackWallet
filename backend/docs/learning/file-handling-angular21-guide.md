@@ -88,12 +88,65 @@ Why each piece:
 ## 3. Auth + cookies
 
 The backend uses HttpOnly cookie auth + a `XSRF-TOKEN` cookie / `X-XSRF-TOKEN`
-header double-submit pattern. Two non-negotiables:
+header double-submit pattern. Two non-negotiables: cookies must reach the
+server, and unsafe methods must carry the CSRF header.
 
-### 3.1 Send cookies cross-origin
+### 3.1 Pick a deployment model first
 
-If the API and SPA are on different origins, every request must use
-`withCredentials: true`. The cleanest way is an interceptor:
+How you wire CSRF depends entirely on whether the SPA and API share an
+origin. **Same-origin is strongly recommended** — it's simpler, faster, and
+unlocks Angular's built-in XSRF handling.
+
+| Setup | SPA origin | API origin | Same-origin? |
+|---|---|---|---|
+| Reverse proxy (Nginx, Caddy, IIS) | `https://app.example.com` | `https://app.example.com/api` | **Yes** |
+| API hosts the SPA bundle | `https://app.example.com` | `https://app.example.com/api` | **Yes** |
+| Separate hosts | `https://app.example.com` | `https://api.example.com` | No |
+| Dev with Angular CLI proxy | `https://localhost:4200` | `https://localhost:4200/api` (proxied) | **Yes** |
+| Dev without proxy | `https://localhost:4200` | `https://localhost:7067` | No |
+
+For dev, set up an Angular CLI proxy (`proxy.conf.json`) so the browser sees
+the same origin as production. Same code path everywhere.
+
+```json
+// proxy.conf.json
+{
+  "/api": {
+    "target": "https://localhost:7067",
+    "secure": false,
+    "changeOrigin": true
+  }
+}
+```
+
+```jsonc
+// angular.json — under projects.<app>.architect.serve.options
+{
+  "proxyConfig": "proxy.conf.json"
+}
+```
+
+### 3.2 Same-origin (preferred) — use the framework's built-in
+
+```ts
+import { provideHttpClient, withFetch, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
+
+provideHttpClient(
+  withFetch(),
+  withXsrfConfiguration({
+    cookieName: 'XSRF-TOKEN',
+    headerName: 'X-XSRF-TOKEN',
+  }),
+  withInterceptors([credentialsInterceptor, errorInterceptor]),
+)
+```
+
+That's it. Angular reads `XSRF-TOKEN` from the cookie jar and mirrors it
+into `X-XSRF-TOKEN` automatically on every mutating request. No interceptor
+to write, no edge cases to maintain.
+
+`credentialsInterceptor` is still required so cookies (auth + XSRF) actually
+reach the server:
 
 ```ts
 // core/http/credentials.interceptor.ts
@@ -103,10 +156,20 @@ export const credentialsInterceptor: HttpInterceptorFn = (req, next) =>
   next(req.clone({ withCredentials: true }));
 ```
 
-### 3.2 CSRF header for unsafe methods
+> **Why is `credentialsInterceptor` needed at all if we're same-origin?**
+> Browsers send cookies on same-origin requests by default — but only when
+> the request is plain `fetch`. Angular's `HttpClient` uses fetch under the
+> hood with `credentials: 'same-origin'` by default, which works for most
+> cases. We add `withCredentials: true` defensively so the same code keeps
+> working if the topology shifts later (e.g. you split the API to a
+> subdomain). One line, zero downside.
 
-Read the `XSRF-TOKEN` cookie and mirror it into `X-XSRF-TOKEN` on
-`POST/PUT/PATCH/DELETE`:
+### 3.3 Cross-origin — fall back to a manual interceptor
+
+The built-in `withXsrfConfiguration` deliberately **does nothing** on
+cross-origin requests, so the XSRF token isn't leaked to a third-party API.
+That's the right default — but it means you have to mirror the cookie
+yourself when the SPA and API really do live on different origins:
 
 ```ts
 // core/http/csrf.interceptor.ts
@@ -129,16 +192,24 @@ export const csrfInterceptor: HttpInterceptorFn = (req, next) => {
 };
 ```
 
-Register both:
+Register both interceptors:
 
 ```ts
 provideHttpClient(
   withFetch(),
   withInterceptors([credentialsInterceptor, csrfInterceptor, errorInterceptor]),
-),
+)
 ```
 
-> Note: Angular ships a built-in `withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' })` but it only fires for *same-origin* `mutating` requests. The interceptor above is the safer, explicit version that works cross-origin too.
+### 3.4 Quick decision
+
+- **One origin in prod and an Angular CLI proxy in dev** → §3.2. This is
+  what you should aim for.
+- **Genuinely separate origins (SPA on `app.x.io`, API on `api.x.io`)** →
+  §3.3.
+
+If you can move to same-origin, do it. The interceptor in §3.3 isn't
+buggy — it's just code you don't need.
 
 ---
 

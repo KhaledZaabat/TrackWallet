@@ -7,7 +7,14 @@ public interface IIdentityService : IScopedService
 {
     Task<bool> IsInRoleAsync(Guid userId, string role);
 
-    Task<ErrorOr<AuthenticatedUser>> AuthenticateByEmailAsync(string email, string password);
+    /// <summary>
+    /// Authenticates a user by email or username + password. Resolves the
+    /// identity by email first; falls back to username lookup if the input
+    /// is not a registered email. Same downstream checks
+    /// (email-confirmed, password match) regardless of which identifier
+    /// was used.
+    /// </summary>
+    Task<ErrorOr<AuthenticatedUser>> AuthenticateAsync(string emailOrUserName, string password);
 
     Task<ErrorOr<AuthenticatedUser>> GetUserByIdAsync(Guid userId);
 

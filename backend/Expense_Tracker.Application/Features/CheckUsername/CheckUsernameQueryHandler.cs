@@ -13,7 +13,10 @@ public sealed partial class CheckUsernameQueryHandler(
     IMemoryCache cache
 )
 {
-    [GeneratedRegex(@"^[a-zA-Z0-9._-]{3,50}$", RegexOptions.CultureInvariant)]
+    // Mirrors the SPA regex /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/ — letter-leading,
+    // 3-20 chars, letters/digits/underscores only. Compiled at build time
+    // by the source generator so the runtime cost is zero.
+    [GeneratedRegex(@"^[a-zA-Z][a-zA-Z0-9_]{2,19}$", RegexOptions.CultureInvariant)]
     private static partial Regex UsernamePatternGenerated();
 
     private static readonly Regex UsernamePattern = UsernamePatternGenerated();
