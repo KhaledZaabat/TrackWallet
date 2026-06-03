@@ -27,7 +27,7 @@ public sealed class EmailLinkOptions
 
     /// <summary>Path for the confirmation-link landing page.</summary>
     [Required]
-    public string ConfirmEmailPath { get; init; } = "/auth/confirm";
+    public string ConfirmEmailPath { get; init; } = "/confirm-email";
 
     /// <summary>Path for the password-reset landing page.</summary>
     [Required]
