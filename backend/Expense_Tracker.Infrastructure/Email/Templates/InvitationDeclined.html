@@ -1,559 +1,267 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
   <title>Invitation Declined — TrackWallet</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
   <style>
-    /* ── DESIGN TOKENS ── */
-    :root {
-      --bg-void:    #0d0d1a;
-      --bg-panel:   #1a1a2e;
-      --bg-card:    #16213e;
-      --bg-input:   #0a0a14;
-      --color-primary:  #00d4ff;
-      --color-gold:     #ffd700;
-      --color-red:      #ff3b3b;
-      --color-green:    #39ff14;
-      --color-purple:   #bd93f9;
-      --color-amber:    #ffb800;
-      --color-gray:     #6272a4;
-      --color-text:       #e8e8ff;
-      --color-text-muted: #8892c8;
-      --border-pixel: #4a90d9;
-      --border-gold:  #f5a623;
-      --border-glow:  #7b2fbe;
-      --font-pixel: 'Press Start 2P', 'Courier New', monospace;
-      --font-rpg:   'VT323', 'Courier New', monospace;
-      --shadow-pixel:    4px 4px 0 #000;
-      --shadow-pixel-sm: 3px 3px 0 #000;
-      --shadow-pixel-lg: 6px 6px 0 #000;
-      --transition-pixel: all 80ms steps(2);
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+    
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    
+    @media screen and (min-width: 600px) {
+      .starfield {
+        background-color: #0d0d1a !important;
+        background-image:
+          radial-gradient(1px 1px at 25px 5px, #ffffff, transparent),
+          radial-gradient(1px 1px at 50px 25px, #ffffff, transparent),
+          radial-gradient(1px 1px at 125px 20px, #bd93f9, transparent),
+          radial-gradient(1px 1px at 50px 75px, #ff3b3b, transparent),
+          radial-gradient(2px 2px at 75px 50px, #ffffff, transparent),
+          radial-gradient(2px 2px at 195px 130px, #bd93f9, transparent),
+          radial-gradient(1px 1px at 165px 95px, #ffffff, transparent),
+          radial-gradient(1px 1px at 300px 40px, #ff3b3b, transparent) !important;
+        background-size: 200px 200px !important;
+      }
+      .font-pixel-web {
+        font-family: 'Press Start 2P', 'Courier New', Courier, monospace !important;
+      }
+      .font-rpg-web {
+        font-family: 'VT323', 'Courier New', Courier, monospace !important;
+      }
+    }
+    
+    @media only screen and (max-width: 620px) {
+      .mail-card { width: 100% !important; max-width: 100% !important; }
+      .content-padding { padding: 24px 16px !important; }
     }
 
-    /* ── RESET ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 16px; line-height: 1.5; }
-    body {
-      min-height: 100vh;
-      background-color: var(--bg-void);
-      color: var(--color-text);
-      font-family: var(--font-rpg);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── STARFIELD ── */
-    .starfield {
-      background-color: var(--bg-void);
-      background-image:
-        radial-gradient(1px 1px at  25px   5px, #fff, transparent),
-        radial-gradient(1px 1px at  50px  25px, #fff, transparent),
-        radial-gradient(1px 1px at 125px  20px, var(--color-purple), transparent),
-        radial-gradient(1px 1px at  50px  75px, var(--color-red), transparent),
-        radial-gradient(2px 2px at  75px  50px, #fff, transparent),
-        radial-gradient(2px 2px at 195px 130px, var(--color-purple), transparent),
-        radial-gradient(1px 1px at 165px  95px, #fff, transparent),
-        radial-gradient(1px 1px at 300px  40px, var(--color-red), transparent),
-        radial-gradient(1px 1px at 350px 180px, #fff, transparent),
-        radial-gradient(2px 2px at 420px  60px, var(--color-purple), transparent),
-        radial-gradient(1px 1px at 480px 140px, #fff, transparent),
-        radial-gradient(1px 1px at 530px  30px, var(--color-red), transparent);
-      background-size: 200px 200px;
-    }
-
-    /* ── SCANLINES ── */
-    .scanlines { position: relative; }
-    .scanlines::after {
-      content: '';
-      pointer-events: none;
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
-        rgba(0,0,0,0.18) 3px, rgba(0,0,0,0) 4px
-      );
-      mix-blend-mode: multiply;
-      z-index: 2;
-    }
-
-    /* ── LAYOUT ── */
-    .page-wrapper {
-      padding: 48px 20px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-
-    /* ── MAIN CARD ── */
-    .mail-card {
-      width: 100%;
-      max-width: 580px;
-      position: relative;
-      border: 2px solid var(--border-glow);
-      background: var(--bg-card);
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.04),
-        0 0 24px rgba(123,47,190,0.25),
-        0 0 48px rgba(255,59,59,0.07),
-        0 0 0 1px #000,
-        var(--shadow-pixel-lg);
-    }
-
-    /* corner decorations — red top-left, purple elsewhere */
-    .mail-card::before, .mail-card::after,
-    .corner-bl, .corner-br {
-      content: '';
+    .mail-card-wrapper { position: relative; }
+    .corner-decor {
       position: absolute;
       width: 16px; height: 16px;
       border-style: solid;
       border-width: 0;
       z-index: 10;
-    }
-    .mail-card::before { top: -2px; left: -2px;   border-color: var(--color-red);    border-top-width: 3px; border-left-width: 3px; }
-    .mail-card::after  { top: -2px; right: -2px;  border-color: var(--color-purple); border-top-width: 3px; border-right-width: 3px; }
-    .corner-bl { bottom: -2px; left: -2px;  border-color: var(--color-purple); border-bottom-width: 3px; border-left-width: 3px; }
-    .corner-br { bottom: -2px; right: -2px; border-color: var(--color-red);    border-bottom-width: 3px; border-right-width: 3px; }
-
-    /* ── TOP BAR ── */
-    .top-bar {
-      height: 6px;
-      background: linear-gradient(90deg,
-        var(--color-red)    0%,
-        var(--color-purple) 45%,
-        #9d4edd             75%,
-        var(--color-red)    100%
-      );
-      position: relative;
-    }
-    .top-bar::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        90deg, transparent 0px, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px
-      );
-    }
-
-    /* ── HERO ── */
-    .hero {
-      background: var(--bg-panel);
-      padding: 48px 32px 40px;
-      text-align: center;
-      border-bottom: 2px solid rgba(123,47,190,0.35);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-bg-pattern {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(189,147,249,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(189,147,249,0.04) 1px, transparent 1px);
-      background-size: 28px 28px;
       pointer-events: none;
     }
-    /* faded vignette glow */
-    .hero-vignette {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 100%, rgba(123,47,190,0.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    /* ── ICON ── */
-    .icon-wrap {
-      position: relative;
-      display: inline-block;
-      margin-bottom: 24px;
-    }
-    .icon-ring {
-      width: 88px; height: 88px;
-      border: 3px solid var(--color-purple);
-      background: rgba(189,147,249,0.07);
-      display: flex; align-items: center; justify-content: center;
-      position: relative;
-      box-shadow:
-        0 0 0 1px #000,
-        0 0 20px rgba(189,147,249,0.4),
-        0 0 40px rgba(255,59,59,0.1),
-        var(--shadow-pixel);
-    }
-    .icon-ring::before {
-      content: '';
-      position: absolute;
-      top: 4px; left: 4px; right: 4px; bottom: 4px;
-      border: 1px solid rgba(189,147,249,0.2);
-    }
-    /* second outer ring — distance effect */
-    .icon-ring::after {
-      content: '';
-      position: absolute;
-      top: -8px; left: -8px; right: -8px; bottom: -8px;
-      border: 1px solid rgba(189,147,249,0.1);
-    }
-    .icon-symbol {
-      font-family: var(--font-pixel);
-      font-size: 26px;
-      color: var(--color-red);
-      text-shadow: 0 0 12px rgba(255,59,59,0.7), 2px 2px 0 #000;
-      animation: pulse-glow-red 3s ease-in-out infinite;
-    }
-    .icon-corner-tl, .icon-corner-br {
-      position: absolute;
-      width: 10px; height: 10px;
-      border-color: var(--color-purple);
-      border-style: solid;
-      border-width: 0;
-    }
-    .icon-corner-tl { top: -4px; left: -4px; border-top-width: 2px; border-left-width: 2px; }
-    .icon-corner-br { bottom: -4px; right: -4px; border-bottom-width: 2px; border-right-width: 2px; }
-
-    .hero-title {
-      font-family: var(--font-pixel);
-      font-size: 11px;
-      color: var(--color-purple);
-      letter-spacing: 0.09em;
-      text-shadow: 3px 3px 0 #000, 0 0 20px rgba(189,147,249,0.5);
-      margin-bottom: 14px;
-      animation: glitch-text-purple 5s infinite;
-    }
-    .hero-subtitle {
-      font-family: var(--font-rpg);
-      font-size: 21px;
-      color: var(--color-text-muted);
-      letter-spacing: 0.05em;
-    }
-    .hero-subtitle .cursor {
-      color: var(--color-red);
-      animation: blink 0.8s steps(2) infinite;
-    }
-
-    /* ── CONTENT ── */
-    .content {
-      padding: 28px 32px 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── SECTION HEADER ── */
-    .section-header {
-      font-family: var(--font-pixel);
-      font-size: 9px;
-      color: var(--color-amber);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-block: 20px 14px;
-      letter-spacing: 0.06em;
-    }
-    .section-header::before, .section-header::after {
-      content: '';
-      flex: 1; height: 2px;
-      background-image: linear-gradient(to right, var(--color-amber) 50%, transparent 50%);
-      background-size: 8px 2px;
-      background-repeat: repeat-x;
-      opacity: 0.5;
-    }
-    .section-header:first-child { margin-top: 0; }
-
-    /* ── TEXT ── */
-    .greeting-text {
-      font-family: var(--font-rpg);
-      font-size: 22px;
-      color: var(--color-text);
-      margin-bottom: 10px;
-      line-height: 1.5;
-    }
-    .name-highlight-red {
-      color: var(--color-red);
-      text-shadow: 0 0 8px rgba(255,59,59,0.35);
-    }
-    .body-text {
-      font-family: var(--font-rpg);
-      font-size: 20px;
-      color: var(--color-text-muted);
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-    .body-text strong {
-      color: var(--color-text);
-      font-weight: normal;
-    }
-
-    /* ── -1 DECLINE CARD ── */
-    .decline-card {
-      border: 2px solid var(--border-glow);
-      background: var(--bg-panel);
-      padding: 28px 24px;
-      text-align: center;
-      position: relative;
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.03),
-        0 0 18px rgba(123,47,190,0.2),
-        0 0 0 1px #000,
-        var(--shadow-pixel);
-      margin-bottom: 24px;
-    }
-    .dc-corner-tl, .dc-corner-tr, .dc-corner-bl, .dc-corner-br {
-      position: absolute;
-      width: 12px; height: 12px;
-      border-color: var(--color-purple);
-      border-style: solid;
-      border-width: 0;
-    }
-    .dc-corner-tl { top: -2px; left: -2px; border-top-width: 2px; border-left-width: 2px; }
-    .dc-corner-tr { top: -2px; right: -2px; border-top-width: 2px; border-right-width: 2px; }
-    .dc-corner-bl { bottom: -2px; left: -2px; border-bottom-width: 2px; border-left-width: 2px; }
-    .dc-corner-br { bottom: -2px; right: -2px; border-bottom-width: 2px; border-right-width: 2px; }
-
-    .minus-one {
-      font-family: var(--font-pixel);
-      font-size: 36px;
-      color: var(--color-red);
-      text-shadow: 4px 4px 0 #000, 0 0 18px rgba(255,59,59,0.55);
-      display: block;
-      margin-bottom: 10px;
-      animation: pulse-glow-red 2.5s ease-in-out infinite;
-    }
-    .decline-label {
-      font-family: var(--font-pixel);
-      font-size: 10px;
-      color: var(--color-purple);
-      letter-spacing: 0.08em;
-      text-shadow: 2px 2px 0 #000;
-      margin-bottom: 10px;
-      display: block;
-    }
-    .decline-desc {
-      font-family: var(--font-rpg);
-      font-size: 19px;
-      color: var(--color-text-muted);
-      line-height: 1.5;
-      padding-bottom: 14px;
-    }
-
-    /* HP bar — showing low state */
-    .hp-bar {
-      display: flex;
-      gap: 2px;
-      padding: 3px;
-      background: #000;
-      border: 2px solid var(--border-pixel);
-      margin-top: 12px;
-    }
-    .hp-seg {
-      flex: 1; height: 10px;
-      background: rgba(255,255,255,0.06);
-    }
-    .hp-seg.filled-purple { background: var(--color-purple); box-shadow: inset 0 -2px 0 rgba(0,0,0,0.4); }
-    .hp-seg.filled-red    { background: var(--color-red);    box-shadow: inset 0 -2px 0 rgba(0,0,0,0.4); }
-
-    /* ── CTA BUTTON ── */
-    .cta-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 8px;
-    }
-    .pixel-btn-cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-family: var(--font-pixel);
-      font-size: 10px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 14px 28px;
-      border: 2px solid #000;
-      box-shadow: var(--shadow-pixel);
-      background: var(--color-purple);
-      color: #000;
-      text-decoration: none;
-      cursor: pointer;
-      user-select: none;
-      transition: var(--transition-pixel);
-    }
-    .pixel-btn-cta:hover  { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000, 0 0 20px rgba(189,147,249,0.5); }
-    .pixel-btn-cta:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
-    .pixel-btn-cta .arrow { animation: nudge-right 1.5s steps(2) infinite; display: inline-block; }
-
-    /* ── DIVIDER ── */
-    .divider-dash {
-      border: none; height: 2px;
-      background-image: linear-gradient(to right, rgba(189,147,249,0.4) 50%, transparent 50%);
-      background-size: 8px 2px;
-      background-repeat: repeat-x;
-      margin: 24px 0 20px;
-    }
-
-    /* ── FOOTER ── */
-    .mail-footer {
-      padding: 20px 32px 28px;
-      background: rgba(0,0,0,0.3);
-      border-top: 2px solid rgba(123,47,190,0.2);
-      text-align: center;
-    }
-    .footer-text {
-      font-family: var(--font-rpg);
-      font-size: 17px;
-      color: var(--color-text-muted);
-      margin-bottom: 6px;
-    }
-    .footer-link {
-      color: var(--color-red);
-      text-decoration: none;
-      border-bottom: 1px dotted var(--color-red);
-    }
-    .footer-link:hover { color: var(--color-purple); border-color: var(--color-purple); }
-    .footer-copy {
-      font-family: var(--font-pixel);
-      font-size: 7px;
-      color: var(--color-gray);
-      letter-spacing: 0.06em;
-      margin-top: 8px;
-    }
-    .footer-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-pixel);
-      font-size: 7px;
-      padding: 4px 10px;
-      border: 1px solid rgba(189,147,249,0.3);
-      color: var(--color-gray);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 10px;
-    }
-    .footer-badge .dot {
-      width: 6px; height: 6px;
-      background: var(--color-purple);
-      box-shadow: 0 0 6px var(--color-purple);
-    }
-
-    /* ── ANIMATIONS ── */
+    .corner-tl { top: -2px; left: -2px; border-color: #ff3b3b; border-top-width: 3px; border-left-width: 3px; }
+    .corner-tr { top: -2px; right: -2px; border-color: #bd93f9; border-top-width: 3px; border-right-width: 3px; }
+    .corner-bl { bottom: -2px; left: -2px; border-color: #bd93f9; border-bottom-width: 3px; border-left-width: 3px; }
+    .corner-br { bottom: -2px; right: -2px; border-color: #ff3b3b; border-bottom-width: 3px; border-right-width: 3px; }
+    
     @keyframes blink {
-      0%, 49%   { opacity: 1; }
+      0%, 49% { opacity: 1; }
       50%, 100% { opacity: 0; }
     }
-    @keyframes pulse-glow-red {
-      0%, 100% { filter: drop-shadow(0 0 4px rgba(255,59,59,0.5)); }
-      50%      { filter: drop-shadow(0 0 14px rgba(255,59,59,0.9)); }
-    }
-    @keyframes glitch-text-purple {
-      0%, 87%, 100% { text-shadow: 3px 3px 0 #000, 0 0 20px rgba(189,147,249,0.5); transform: translate(0); }
-      89% { text-shadow: 3px 0 var(--color-red), -3px 0 var(--color-primary); transform: translate(-2px, 1px); }
-      92% { text-shadow: -3px 0 var(--color-red), 3px 0 var(--color-primary); transform: translate(2px, -1px); }
-      95% { text-shadow: 2px 0 var(--color-purple); transform: translate(-1px, 0); }
-    }
-    @keyframes nudge-right {
-      0%, 60%, 100% { transform: translateX(0); }
-      80%           { transform: translateX(4px); }
-    }
+    .blink { animation: blink 0.8s steps(2) infinite; }
   </style>
 </head>
-<body class="starfield">
+<body class="starfield" style="margin: 0; padding: 0; background-color: #0d0d1a;">
 
-  <div class="page-wrapper">
-    <div class="mail-card scanlines">
-      <div class="corner-bl"></div>
-      <div class="corner-br"></div>
+  <!-- Outer wrapper -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; background-color: #0d0d1a; padding: 32px 0;">
+    <tr>
+      <td align="center" valign="top" style="padding: 0 16px;">
 
-      <!-- TOP BAR -->
-      <div class="top-bar"></div>
+        <!-- Mail Card -->
+        <table role="presentation" class="mail-card mail-card-wrapper" width="580" cellpadding="0" cellspacing="0" border="0"
+               style="width: 580px; max-width: 580px; background-color: #16213e; border: 2px solid #7b2fbe; box-shadow: 4px 4px 0px #000000; border-collapse: separate;">
+          
+          <!-- Progressive enhancement corners (will render in supported clients) -->
+          <!--[if !mso]><!-->
+          <div class="corner-decor corner-tl"></div>
+          <div class="corner-decor corner-tr"></div>
+          <div class="corner-decor corner-bl"></div>
+          <div class="corner-decor corner-br"></div>
+          <!--<![endif]-->
 
-      <!-- HERO -->
-      <div class="hero">
-        <div class="hero-bg-pattern"></div>
-        <div class="hero-vignette"></div>
+          <!-- TOP ACCENT BAR -->
+          <tr>
+            <td style="height: 6px; line-height: 6px; font-size: 1px;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="height: 6px; line-height: 6px; font-size: 1px;">
+                <tr>
+                  <td width="25%" bgcolor="#ff3b3b" style="background-color: #ff3b3b; height: 6px;"></td>
+                  <td width="25%" bgcolor="#bd93f9" style="background-color: #bd93f9; height: 6px;"></td>
+                  <td width="25%" bgcolor="#ff3b3b" style="background-color: #ff3b3b; height: 6px;"></td>
+                  <td width="25%" bgcolor="#bd93f9" style="background-color: #bd93f9; height: 6px;"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-        <div class="icon-wrap">
-          <div class="icon-ring">
-            <span class="icon-symbol">✕</span>
-          </div>
-          <div class="icon-corner-tl"></div>
-          <div class="icon-corner-br"></div>
-        </div>
+          <!-- HERO -->
+          <tr>
+            <td align="center" valign="top" bgcolor="#1a1a2e"
+                style="background-color: #1a1a2e; padding: 48px 32px 40px; border-bottom: 2px solid rgba(123, 47, 190, 0.35);">
+              
+              <!-- X Mark Ring Icon -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+                <tr>
+                  <td align="center" valign="middle"
+                      style="width: 88px; height: 88px; border: 3px solid #bd93f9; background-color: rgba(189, 147, 249, 0.07); box-shadow: 3px 3px 0px #000000; font-family: 'Press Start 2P', 'Courier New', Courier, monospace; font-size: 26px; color: #ff3b3b; font-weight: bold; line-height: 88px; text-align: center;">
+                    ✕
+                  </td>
+                </tr>
+              </table>
 
-        <div class="hero-title">INVITATION DECLINED</div>
-        <div class="hero-subtitle">UPDATE ABOUT YOUR INVITATION<span class="cursor">_</span></div>
-      </div>
+              <!-- Hero Title -->
+              <h1 class="font-pixel-web"
+                  style="margin: 0 0 14px 0; font-family: 'Courier New', Courier, monospace; font-size: 11px; font-weight: bold; color: #bd93f9; letter-spacing: 1px; text-transform: uppercase; text-shadow: 2px 2px 0px #000000; line-height: 1.3;">
+                INVITATION DECLINED
+              </h1>
 
-      <!-- CONTENT -->
-      <div class="content">
+              <!-- Hero Subtitle -->
+              <p class="font-rpg-web"
+                 style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 21px; color: #8892c8; letter-spacing: 1px; line-height: 1.2; text-transform: uppercase;">
+                UPDATE ABOUT YOUR INVITATION<span class="blink" style="color: #ff3b3b; font-weight: bold;">_</span>
+              </p>
 
-        <div class="section-header">INVITATION STATUS</div>
+            </td>
+          </tr>
 
-        <p class="greeting-text">
-          Hi <span class="name-highlight-red">{{InviterName}}</span>
-        </p>
+          <!-- CONTENT -->
+          <tr>
+            <td class="content-padding" style="padding: 32px; background-color: #16213e;">
 
-        <p class="body-text">
-          <strong>{{InviteeName}}</strong> has declined your invitation to join
-          <strong>{{FamilyName}}</strong>.
-        </p>
+              <!-- Section Header -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                <tr>
+                  <td valign="middle" style="border-bottom: 2px dashed #ffb800; opacity: 0.5;">&nbsp;</td>
+                  <td width="1" valign="middle" class="font-pixel-web"
+                      style="padding: 0 10px; font-family: 'Courier New', Courier, monospace; font-size: 9px; font-weight: bold; color: #ffb800; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;">
+                    INVITATION STATUS
+                  </td>
+                  <td valign="middle" style="border-bottom: 2px dashed #ffb800; opacity: 0.5;">&nbsp;</td>
+                </tr>
+              </table>
 
-        <!-- DECLINE CARD -->
-        <div class="decline-card">
-          <div class="dc-corner-tl"></div>
-          <div class="dc-corner-tr"></div>
-          <div class="dc-corner-bl"></div>
-          <div class="dc-corner-br"></div>
+              <!-- Greeting -->
+              <p class="font-rpg-web"
+                 style="margin: 0 0 10px 0; font-family: 'Courier New', Courier, monospace; font-size: 22px; color: #e8e8ff; line-height: 1.4;">
+                Hi <span class="font-pixel-web" style="color: #ff3b3b; font-weight: bold;">{{InviterName}}</span>
+              </p>
 
-          <span class="minus-one">-1</span>
-          <span class="decline-label">NOT THIS TIME</span>
-          <p class="decline-desc">
-            You can always send another invitation later if they change their mind.
-          </p>
+              <!-- Body Copy -->
+              <p class="font-rpg-web"
+                 style="margin: 0 0 24px 0; font-family: 'Courier New', Courier, monospace; font-size: 20px; color: #8892c8; line-height: 1.6;">
+                <strong style="color: #e8e8ff; font-weight: normal;">{{InviteeName}}</strong> has declined your invitation to join <strong style="color: #e8e8ff; font-weight: normal;">{{FamilyName}}</strong>.
+              </p>
 
-          <!-- HP bar — mostly empty, one purple segment remaining -->
-          <div class="hp-bar" title="Invitation HP">
-            <div class="hp-seg filled-red"></div>
-            <div class="hp-seg filled-purple"></div>
-            <div class="hp-seg"></div>
-            <div class="hp-seg"></div>
-            <div class="hp-seg"></div>
-            <div class="hp-seg"></div>
-            <div class="hp-seg"></div>
-            <div class="hp-seg"></div>
-            <div class="hp-seg"></div>
-            <div class="hp-seg"></div>
-          </div>
-        </div>
+              <!-- Decline Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border: 2px solid #7b2fbe; background-color: #1a1a2e; margin-bottom: 24px; box-shadow: 3px 3px 0px #000000; border-collapse: separate;">
+                <tr>
+                  <td align="center" style="padding: 28px 24px 24px 24px;">
+                    <!-- Giant -1 -->
+                    <span class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: bold; color: #ff3b3b; text-shadow: 3px 3px 0px #000000; display: block; margin-bottom: 10px;">
+                      -1
+                    </span>
+                    <!-- Label -->
+                    <span class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 10px; font-weight: bold; color: #bd93f9; letter-spacing: 1px; text-shadow: 2px 2px 0px #000000; margin-bottom: 10px; display: block; text-transform: uppercase;">
+                      NOT THIS TIME
+                    </span>
+                    <!-- Description -->
+                    <p class="font-rpg-web" style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 19px; color: #8892c8; line-height: 1.5;">
+                      You can always send another invitation later if they change their mind.
+                    </p>
+                    
+                    <!-- Depleted HP bar -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 16px;">
+                      <tr>
+                        <td>
+                          <table role="presentation" width="100%" border="0" cellspacing="2" cellpadding="0" style="background-color: #000000; border: 2px solid #4a90d9; padding: 2px;">
+                            <tr>
+                              <td height="10" bgcolor="#ff3b3b" style="background-color: #ff3b3b; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                              <td height="10" bgcolor="#bd93f9" style="background-color: #bd93f9; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                              <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                              <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                              <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                              <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                              <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                              <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                              <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                              <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-        <!-- CTA -->
-        <div class="cta-wrap">
-          <a href="{{AppLink}}" class="pixel-btn-cta">
-            MANAGE INVITATIONS <span class="arrow">▶</span>
-          </a>
-        </div>
+              <!-- CTA Button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 24px;">
+                <tr>
+                  <td align="center" bgcolor="#bd93f9"
+                      style="background-color: #bd93f9; border: 2px solid #000000; padding: 14px 28px; box-shadow: 4px 4px 0px #000000;">
+                    <a class="font-pixel-web" href="{{AppLink}}"
+                       style="font-family: 'Courier New', Courier, monospace; font-size: 10px; font-weight: bold; color: #0d0d1a; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; display: inline-block;">
+                      MANAGE INVITATIONS <span style="font-family: Arial, sans-serif;">▶</span>
+                    </a>
+                  </td>
+                </tr>
+              </table>
 
-        <div class="divider-dash"></div>
+              <!-- Dashed Divider -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 24px;">
+                <tr>
+                  <td style="border-bottom: 2px dashed #bd93f9; opacity: 0.3; font-size: 0; line-height: 0;">&nbsp;</td>
+                </tr>
+              </table>
 
-      </div>
+            </td>
+          </tr>
 
-      <!-- FOOTER -->
-      <div class="mail-footer">
-        <p class="footer-text">
-          Need help?
-          <a href="mailto:support@trackwallet.app" class="footer-link">Contact Support</a>
-        </p>
-        <p class="footer-copy">© 2025 TRACKWALLET — ALL RIGHTS RESERVED</p>
-        <div style="display:flex; justify-content:center; margin-top:10px;">
-          <span class="footer-badge">
-            <span class="dot"></span>
-            INVITATION DECLINED
-          </span>
-        </div>
-      </div>
+          <!-- FOOTER -->
+          <tr>
+            <td align="center" valign="top" class="content-padding"
+                style="padding: 20px 32px 28px; background-color: rgba(0,0,0,0.3); border-top: 2px solid rgba(123, 47, 190, 0.25);">
+              
+              <p class="font-rpg-web"
+                 style="margin: 0 0 6px 0; font-family: 'Courier New', Courier, monospace; font-size: 17px; color: #8892c8; line-height: 1.4;">
+                Need help? <a href="mailto:support@trackwallet.app" style="color: #ff3b3b; text-decoration: none; border-bottom: 1px dotted #ff3b3b;">Contact Support</a>
+              </p>
 
-    </div>
-  </div>
+              <p class="font-pixel-web"
+                 style="margin: 0 0 12px 0; font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #6272a4; letter-spacing: 1px;">
+                © 2025 TRACKWALLET — ALL RIGHTS RESERVED
+              </p>
+
+              <!-- Status Badge -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td class="font-pixel-web"
+                      style="border: 1px solid rgba(189, 147, 249, 0.3); padding: 4px 10px; font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #6272a4; text-transform: uppercase; letter-spacing: 1.5px; background-color: rgba(0,0,0,0.1);">
+                    <span style="color: #ff3b3b; margin-right: 4px; font-size: 9px; vertical-align: middle;">●</span> INVITATION DECLINED
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Mail Card -->
+
+      </td>
+    </tr>
+  </table>
+  <!-- /Outer wrapper -->
 
 </body>
 </html>

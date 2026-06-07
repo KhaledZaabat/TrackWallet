@@ -1,11 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
   <title>New Confirmation Link — TrackWallet</title>
   <!--[if mso]>
   <noscript>
@@ -17,69 +16,118 @@
   </noscript>
   <![endif]-->
   <style>
-    /* Fallback font stack & resets that must stay in <style> */
-    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+    
     body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
     img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
-    a { text-decoration: none; }
-    /* Dark mode */
-    @media (prefers-color-scheme: dark) {
-      body, .email-wrapper { background-color: #0a0c14 !important; }
+    
+    @media screen and (min-width: 600px) {
+      .starfield {
+        background-color: #0d0d1a !important;
+        background-image:
+          radial-gradient(1px 1px at 25px 5px, #ffffff, transparent),
+          radial-gradient(1px 1px at 50px 25px, #ffffff, transparent),
+          radial-gradient(1px 1px at 125px 20px, #bd93f9, transparent),
+          radial-gradient(1px 1px at 50px 75px, #00d4ff, transparent),
+          radial-gradient(2px 2px at 75px 50px, #ffffff, transparent),
+          radial-gradient(2px 2px at 195px 130px, #ffd700, transparent),
+          radial-gradient(1px 1px at 165px 95px, #ffffff, transparent),
+          radial-gradient(1px 1px at 300px 40px, #bd93f9, transparent) !important;
+        background-size: 200px 200px !important;
+      }
+      .font-pixel-web {
+        font-family: 'Press Start 2P', 'Courier New', Courier, monospace !important;
+      }
+      .font-rpg-web {
+        font-family: 'VT323', 'Courier New', Courier, monospace !important;
+      }
     }
-    /* Mobile */
+    
     @media only screen and (max-width: 620px) {
-      .card { width: 100% !important; max-width: 100% !important; }
-      .content-pad { padding: 24px 20px !important; }
-      .hero-pad { padding: 32px 20px 24px !important; }
-      .footer-pad { padding: 18px 20px 20px !important; }
-      .hero-subtitle { font-size: 20px !important; letter-spacing: 2px !important; }
-      .cta-btn { padding: 13px 24px !important; font-size: 12px !important; }
-      .expiry-seg { width: 28px !important; }
+      .mail-card { width: 100% !important; max-width: 100% !important; }
+      .content-padding { padding: 24px 16px !important; }
     }
+
+    .mail-card-wrapper { position: relative; }
+    .corner-decor {
+      position: absolute;
+      width: 16px; height: 16px;
+      border-style: solid;
+      border-width: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .corner-tl { top: -2px; left: -2px; border-color: #bd93f9; border-top-width: 3px; border-left-width: 3px; }
+    .corner-tr { top: -2px; right: -2px; border-color: #00d4ff; border-top-width: 3px; border-right-width: 3px; }
+    .corner-bl { bottom: -2px; left: -2px; border-color: #00d4ff; border-bottom-width: 3px; border-left-width: 3px; }
+    .corner-br { bottom: -2px; right: -2px; border-color: #bd93f9; border-bottom-width: 3px; border-right-width: 3px; }
+    
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .blink { animation: blink 0.8s steps(2) infinite; }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#0a0c14;font-family:'Share Tech Mono','Courier New',Courier,monospace;">
+<body class="starfield" style="margin: 0; padding: 0; background-color: #0d0d1a;">
 
   <!-- Outer wrapper -->
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-         style="width:100%;background-color:#0a0c14;padding:32px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; background-color: #0d0d1a; padding: 32px 0;">
     <tr>
-      <td align="center" valign="top" style="padding:0 16px;">
+      <td align="center" valign="top" style="padding: 0 16px;">
 
-        <!-- Card -->
-        <table role="presentation" class="card" width="600" cellpadding="0" cellspacing="0" border="0"
-               style="width:600px;max-width:600px;margin:0 auto;background-color:#0f1221;border:2px solid #1e2a4a;border-radius:4px;overflow:hidden;">
+        <!-- Mail Card -->
+        <table role="presentation" class="mail-card mail-card-wrapper" width="580" cellpadding="0" cellspacing="0" border="0"
+               style="width: 580px; max-width: 580px; background-color: #16213e; border: 2px solid #7b2fbe; box-shadow: 4px 4px 0px #000000; border-collapse: separate;">
+          
+          <!-- Progressive enhancement corners (will render in supported clients) -->
+          <!--[if !mso]><!-->
+          <div class="corner-decor corner-tl"></div>
+          <div class="corner-decor corner-tr"></div>
+          <div class="corner-decor corner-bl"></div>
+          <div class="corner-decor corner-br"></div>
+          <!--<![endif]-->
 
           <!-- TOP ACCENT BAR -->
           <tr>
-            <td style="height:4px;background:linear-gradient(90deg,#6c63ff 0%,#00e5ff 50%,#6c63ff 100%);font-size:0;line-height:0;">&nbsp;</td>
+            <td style="height: 6px; line-height: 6px; font-size: 1px;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="height: 6px; line-height: 6px; font-size: 1px;">
+                <tr>
+                  <td width="25%" bgcolor="#bd93f9" style="background-color: #bd93f9; height: 6px;"></td>
+                  <td width="25%" bgcolor="#00d4ff" style="background-color: #00d4ff; height: 6px;"></td>
+                  <td width="25%" bgcolor="#ffd700" style="background-color: #ffd700; height: 6px;"></td>
+                  <td width="25%" bgcolor="#bd93f9" style="background-color: #bd93f9; height: 6px;"></td>
+                </tr>
+              </table>
+            </td>
           </tr>
 
           <!-- HERO -->
           <tr>
-            <td class="hero-pad" align="center" valign="top"
-                style="background-color:#0d1128;background-image:repeating-linear-gradient(0deg,rgba(108,99,255,0.07) 0px,rgba(108,99,255,0.07) 1px,transparent 1px,transparent 32px),repeating-linear-gradient(90deg,rgba(108,99,255,0.07) 0px,rgba(108,99,255,0.07) 1px,transparent 1px,transparent 32px);padding:40px 32px 32px;border-bottom:2px solid #1e2a4a;">
-
-              <!-- Icon -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;">
+            <td align="center" valign="top" bgcolor="#1a1a2e"
+                style="background-color: #1a1a2e; padding: 48px 32px 40px; border-bottom: 2px solid #7b2fbe;">
+              
+              <!-- Icon Ring Wrapper (Purple theme with @ inside) -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
                 <tr>
                   <td align="center" valign="middle"
-                      style="width:72px;height:72px;border:3px solid #6c63ff;border-radius:50%;background-color:#12163a;box-shadow:0 0 20px rgba(108,99,255,0.35),inset 0 0 12px rgba(108,99,255,0.15);font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:30px;color:#6c63ff;text-align:center;">
+                      style="width: 88px; height: 88px; border: 3px solid #bd93f9; background-color: rgba(189, 147, 249, 0.07); box-shadow: 3px 3px 0px #000000; font-family: 'Press Start 2P', 'Courier New', Courier, monospace; font-size: 32px; color: #bd93f9; font-weight: bold; line-height: 88px; text-align: center;">
                     @
                   </td>
                 </tr>
               </table>
 
-              <!-- Hero label -->
-              <p style="margin:0 0 8px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:11px;font-weight:700;letter-spacing:4px;color:#6c63ff;text-transform:uppercase;">
+              <!-- Hero Title -->
+              <h1 class="font-pixel-web"
+                  style="margin: 0 0 14px 0; font-family: 'Courier New', Courier, monospace; font-size: 11px; font-weight: bold; color: #bd93f9; letter-spacing: 1.5px; text-transform: uppercase; text-shadow: 2px 2px 0px #000000; line-height: 1.3;">
                 NEW LINK DISPATCHED
-              </p>
+              </h1>
 
-              <!-- Hero title -->
-              <p class="hero-subtitle"
-                 style="margin:0;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:26px;font-weight:700;letter-spacing:3px;color:#e8ecff;text-shadow:0 0 24px rgba(108,99,255,0.5);">
-                CONFIRM YOUR EMAIL_
+              <!-- Hero Subtitle -->
+              <p class="font-rpg-web"
+                 style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 22px; color: #8892c8; letter-spacing: 1px; line-height: 1.2; text-transform: uppercase;">
+                CONFIRM YOUR EMAIL<span class="blink" style="color: #bd93f9; font-weight: bold;">_</span>
               </p>
 
             </td>
@@ -87,67 +135,71 @@
 
           <!-- CONTENT -->
           <tr>
-            <td class="content-pad" style="padding:32px 40px;background-color:#0f1221;">
+            <td class="content-padding" style="padding: 32px; background-color: #16213e;">
 
-              <!-- Section header -->
-              <p style="margin:0 0 20px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:9px;font-weight:700;letter-spacing:4px;color:#6c63ff;border-left:3px solid #6c63ff;padding-left:10px;text-transform:uppercase;">
-                QUEST: VERIFY EMAIL
-              </p>
+              <!-- Section Header -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                <tr>
+                  <td valign="middle" style="border-bottom: 2px dashed #bd93f9; opacity: 0.5;">&nbsp;</td>
+                  <td width="1" valign="middle" class="font-pixel-web"
+                      style="padding: 0 10px; font-family: 'Courier New', Courier, monospace; font-size: 9px; font-weight: bold; color: #bd93f9; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;">
+                    QUEST: VERIFY EMAIL
+                  </td>
+                  <td valign="middle" style="border-bottom: 2px dashed #bd93f9; opacity: 0.5;">&nbsp;</td>
+                </tr>
+              </table>
 
               <!-- Greeting -->
-              <p style="margin:0 0 8px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:14px;color:#c8ceec;">
-                Hi <span style="color:#00e5ff;font-weight:700;">{{UserName}}</span>
+              <p class="font-rpg-web"
+                 style="margin: 0 0 10px 0; font-family: 'Courier New', Courier, monospace; font-size: 22px; color: #e8e8ff; line-height: 1.4;">
+                Hi <span class="font-pixel-web" style="color: #00d4ff; font-weight: bold;">{{UserName}}</span>
               </p>
 
-              <!-- Body copy -->
-              <p style="margin:0 0 28px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:13px;line-height:1.7;color:#8892b0;">
-                You requested a fresh confirmation link. Hit the button below to verify your email and activate your
-                <strong style="color:#c8ceec;">TrackWallet</strong> account.
+              <!-- Body Copy -->
+              <p class="font-rpg-web"
+                 style="margin: 0 0 24px 0; font-family: 'Courier New', Courier, monospace; font-size: 20px; color: #8892c8; line-height: 1.6;">
+                You requested a fresh confirmation link. Hit the button below to verify your email and activate your <strong style="color: #e8e8ff; font-weight: normal;">TrackWallet</strong> account.
               </p>
 
               <!-- CTA Button -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 24px;">
                 <tr>
-                  <td align="center">
-                    <a href="{{ConfirmLink}}" class="cta-btn"
-                       style="display:inline-block;background-color:#6c63ff;color:#ffffff;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:13px;font-weight:700;letter-spacing:2px;text-decoration:none;padding:14px 36px;border-radius:2px;box-shadow:4px 4px 0 #3d35cc,0 0 24px rgba(108,99,255,0.4);text-transform:uppercase;">
-                      CONFIRM MY EMAIL ▶
+                  <td align="center" bgcolor="#bd93f9"
+                      style="background-color: #bd93f9; border: 2px solid #000000; padding: 16px 32px; box-shadow: 4px 4px 0px #000000;">
+                    <a class="font-pixel-web" href="{{ConfirmLink}}"
+                       style="font-family: 'Courier New', Courier, monospace; font-size: 10px; font-weight: bold; color: #0d0d1a; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; display: inline-block;">
+                      CONFIRM MY EMAIL <span style="font-family: Arial, sans-serif;">▶</span>
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <!-- Terminal box -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                     style="background-color:#080b18;border:1px solid #1e2a4a;border-radius:4px;margin-bottom:24px;overflow:hidden;">
-                <!-- Terminal header -->
+              <!-- Terminal Fallback Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border: 2px solid rgba(189, 147, 249, 0.45); background-color: #0a0a14; margin-bottom: 24px; box-shadow: 3px 3px 0px #000000; border-collapse: separate;">
                 <tr>
-                  <td style="background-color:#111529;padding:8px 14px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:#4a5280;border-bottom:1px solid #1e2a4a;">
-                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:#ff5f57;margin-right:4px;vertical-align:middle;"></span><!--
-                    --><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:#febc2e;margin-right:4px;vertical-align:middle;"></span><!--
-                    --><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:#28c840;margin-right:10px;vertical-align:middle;"></span>
-                    BUTTON NOT WORKING? PASTE LINK INTO BROWSER
+                  <td style="background-color: rgba(189, 147, 249, 0.06); border-bottom: 1px solid rgba(189, 147, 249, 0.25); padding: 8px 14px; font-family: 'Courier New', Courier, monospace; font-size: 10px; font-weight: bold; color: #8892c8; letter-spacing: 1px;">
+                    <span style="color: #ff3b3b; font-size: 9px; vertical-align: middle;">●</span> <span style="color: #ffb800; font-size: 9px; vertical-align: middle;">●</span> <span style="color: #39ff14; font-size: 9px; vertical-align: middle;">●</span> &nbsp; BUTTON NOT WORKING? PASTE LINK INTO BROWSER
                   </td>
                 </tr>
-                <!-- Terminal body -->
                 <tr>
-                  <td style="padding:12px 14px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:11px;word-break:break-all;">
-                    <span style="color:#6c63ff;margin-right:8px;">&gt;</span><a href="{{ConfirmLink}}"
-                       style="color:#00e5ff;text-decoration:none;word-break:break-all;">{{ConfirmLink}}</a>
+                  <td style="padding: 14px 16px; font-family: 'Courier New', Courier, monospace; font-size: 18px; word-break: break-all;">
+                    <span class="blink" style="color: #bd93f9; font-weight: bold; margin-right: 8px; font-family: 'Courier New', Courier, monospace; font-size: 11px;">&gt;</span>
+                    <a class="font-rpg-web" href="{{ConfirmLink}}" style="color: #00d4ff; text-decoration: none; border-bottom: 1px dotted rgba(189, 147, 249, 0.5);">{{ConfirmLink}}</a>
                   </td>
                 </tr>
               </table>
 
-              <!-- Expiry bar -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">
+              <!-- Expiry Timer Bar -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
                 <tr>
-                  <td style="padding-bottom:8px;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <td style="padding-bottom: 6px;">
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
                       <tr>
-                        <td style="font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:#4a5280;">
+                        <td class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #8892c8; letter-spacing: 1px;">
                           LINK EXPIRY
                         </td>
-                        <td align="right" style="font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:#febc2e;font-weight:700;">
+                        <td align="right" class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 8px; font-weight: bold; color: #ffb800; letter-spacing: 1px;">
                           {{ExpiresInMinutes}} MIN REMAINING
                         </td>
                       </tr>
@@ -156,69 +208,66 @@
                 </tr>
                 <tr>
                   <td>
-                    <!-- Expiry segments (7 active / 3 inactive) -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <!-- progress segments 7 active / 3 inactive -->
+                    <table role="presentation" width="100%" border="0" cellspacing="2" cellpadding="0" style="background-color: #000000; border: 2px solid #ffb800; padding: 2px;">
                       <tr>
-                        <td style="width:42px;height:8px;background-color:#6c63ff;border-radius:1px;margin-right:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#6c63ff;border-radius:1px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#6c63ff;border-radius:1px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#6c63ff;border-radius:1px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#6c63ff;border-radius:1px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#6c63ff;border-radius:1px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#6c63ff;border-radius:1px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#1e2a4a;border-radius:1px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#1e2a4a;border-radius:1px;font-size:0;">&nbsp;</td>
-                        <td style="width:3px;font-size:0;">&nbsp;</td>
-                        <td style="width:42px;height:8px;background-color:#1e2a4a;border-radius:1px;font-size:0;">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                        <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                        <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
 
-              <!-- Info box -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                     style="border:1px solid #1e2a4a;border-radius:4px;margin-bottom:20px;">
+              <!-- Important Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border: 2px dashed #bd93f9; background-color: rgba(189, 147, 249, 0.04); margin-bottom: 24px; border-collapse: separate;">
                 <tr>
-                  <td style="padding:14px 16px;">
-                    <p style="margin:0 0 8px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:3px;font-weight:700;color:#00e5ff;text-transform:uppercase;">
+                  <td style="padding: 16px 18px;">
+                    <!-- Legend -->
+                    <div class="font-pixel-web"
+                         style="font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #bd93f9; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">
                       IMPORTANT
-                    </p>
-                    <p style="margin:0;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:12px;color:#8892b0;line-height:1.6;">
-                      <span style="display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;border:1px solid #00e5ff;color:#00e5ff;font-size:10px;font-weight:700;margin-right:6px;vertical-align:middle;">i</span>The previous confirmation link has been invalidated. Only this new one will work.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Warning box -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-                     style="border:1px solid #3a1a1a;background-color:#130c0c;border-radius:4px;margin-bottom:24px;">
-                <tr>
-                  <td style="padding:14px 16px;">
-                    <p style="margin:0 0 8px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:#ff6b6b;text-transform:uppercase;">
-                      <span style="display:inline-block;background-color:#ff6b6b;color:#0a0c14;font-size:10px;font-weight:700;width:16px;height:16px;line-height:16px;text-align:center;border-radius:2px;margin-right:6px;vertical-align:middle;">!</span>DIDN'T REQUEST THIS?
-                    </p>
-                    <p style="margin:0;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:12px;color:#8892b0;line-height:1.6;">
-                      Ignore this email or contact <a href="mailto:support@trackwallet.app" style="color:#ff6b6b;text-decoration:none;">support@trackwallet.app</a>.
-                      This link expires in <span style="color:#febc2e;font-weight:700;">{{ExpiresInMinutes}} minutes</span>.
+                    </div>
+                    <p class="font-rpg-web"
+                       style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 19px; color: #8892c8; line-height: 1.5;">
+                      <span class="font-pixel-web" style="display: inline-block; background-color: rgba(189, 147, 249, 0.18); border: 1px solid #bd93f9; font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #bd93f9; width: 14px; height: 14px; line-height: 14px; text-align: center; margin-right: 6px; vertical-align: middle;">i</span>
+                      The previous confirmation link has been invalidated. Only this new one will work.
                     </p>
                   </td>
                 </tr>
               </table>
 
-              <!-- Dashed divider -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <!-- Warning Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border: 2px solid #ff3b3b; background-color: rgba(255, 59, 59, 0.05); margin-bottom: 20px; border-collapse: separate; box-shadow: 3px 3px 0px #000000;">
                 <tr>
-                  <td style="border-top:1px dashed #1e2a4a;font-size:0;line-height:0;">&nbsp;</td>
+                  <td style="padding: 16px;">
+                    <div class="font-pixel-web"
+                         style="font-family: 'Courier New', Courier, monospace; font-size: 8px; font-weight: bold; color: #ff3b3b; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                      <span class="blink" style="display: inline-block; background-color: #ff3b3b; color: #0d0d1a; font-size: 8px; font-weight: bold; width: 16px; height: 16px; line-height: 16px; text-align: center; margin-right: 6px; vertical-align: middle;">!</span>
+                      WASN'T YOU?
+                    </div>
+                    <p class="font-rpg-web"
+                       style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 19px; color: #8892c8; line-height: 1.5;">
+                      Ignore this email or contact <a href="mailto:support@trackwallet.app" style="color: #ff3b3b; text-decoration: none; border-bottom: 1px dashed #ff3b3b;">support@trackwallet.app</a>. This link expires in <span style="color: #ffb800; font-weight: normal;">{{ExpiresInMinutes}} minutes</span>.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Dashed Divider -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 28px;">
+                <tr>
+                  <td style="border-bottom: 2px dashed #bd93f9; opacity: 0.3; font-size: 0; line-height: 0;">&nbsp;</td>
                 </tr>
               </table>
 
@@ -227,22 +276,25 @@
 
           <!-- FOOTER -->
           <tr>
-            <td class="footer-pad" align="center"
-                style="background-color:#080b18;border-top:2px solid #1e2a4a;padding:20px 40px 24px;">
-
-              <p style="margin:0 0 6px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:11px;color:#4a5280;">
-                Need help? <a href="mailto:support@trackwallet.app" style="color:#6c63ff;text-decoration:none;">Contact Support</a>
+            <td align="center" valign="top" class="content-padding"
+                style="padding: 20px 32px 28px; background-color: rgba(0,0,0,0.3); border-top: 2px solid rgba(189, 147, 249, 0.18);">
+              
+              <p class="font-rpg-web"
+                 style="margin: 0 0 6px 0; font-family: 'Courier New', Courier, monospace; font-size: 17px; color: #8892c8; line-height: 1.4;">
+                Need help? <a href="mailto:support@trackwallet.app" style="color: #bd93f9; text-decoration: none; border-bottom: 1px dotted #bd93f9;">Contact Support</a>
               </p>
 
-              <p style="margin:0 0 12px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:#2a3050;text-transform:uppercase;">
+              <p class="font-pixel-web"
+                 style="margin: 0 0 12px 0; font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #6272a4; letter-spacing: 1px;">
                 © {{Year}} TRACKWALLET — ALL RIGHTS RESERVED
               </p>
 
-              <!-- Status badge -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+              <!-- Status Badge -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
                 <tr>
-                  <td style="background-color:#0a1a12;border:1px solid #1a3a26;border-radius:20px;padding:4px 12px;font-family:'Share Tech Mono','Courier New',Courier,monospace;font-size:9px;letter-spacing:2px;color:#28c840;">
-                    <span style="display:inline-block;width:6px;height:6px;background-color:#28c840;border-radius:50%;margin-right:6px;vertical-align:middle;"></span>SYSTEM ONLINE
+                  <td class="font-pixel-web"
+                      style="border: 1px solid #6272a4; padding: 4px 10px; font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #6272a4; text-transform: uppercase; letter-spacing: 1.5px; background-color: rgba(0,0,0,0.1);">
+                    <span style="color: #39ff14; margin-right: 4px; font-size: 9px; vertical-align: middle;">●</span> SYSTEM ONLINE
                   </td>
                 </tr>
               </table>
@@ -251,7 +303,7 @@
           </tr>
 
         </table>
-        <!-- /Card -->
+        <!-- /Mail Card -->
 
       </td>
     </tr>

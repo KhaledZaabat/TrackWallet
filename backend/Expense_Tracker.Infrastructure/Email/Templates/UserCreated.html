@@ -1,797 +1,337 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
   <title>Welcome to TrackWallet — Confirm Your Email</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
   <style>
-    /* ── DESIGN TOKENS ── */
-    :root {
-      --bg-void:    #0d0d1a;
-      --bg-panel:   #1a1a2e;
-      --bg-card:    #16213e;
-      --bg-input:   #0a0a14;
-      --color-primary:  #00d4ff;
-      --color-gold:     #ffd700;
-      --color-red:      #ff3b3b;
-      --color-green:    #39ff14;
-      --color-purple:   #bd93f9;
-      --color-amber:    #ffb800;
-      --color-gray:     #6272a4;
-      --color-text:       #e8e8ff;
-      --color-text-muted: #8892c8;
-      --font-pixel: 'Press Start 2P', 'Courier New', monospace;
-      --font-rpg:   'VT323', 'Courier New', monospace;
-      --shadow-pixel:    4px 4px 0 #000;
-      --shadow-pixel-sm: 3px 3px 0 #000;
-      --shadow-pixel-lg: 6px 6px 0 #000;
-      --transition-pixel: all 80ms steps(2);
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+    
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    
+    @media screen and (min-width: 600px) {
+      .starfield {
+        background-color: #0d0d1a !important;
+        background-image:
+          radial-gradient(1px 1px at 25px 5px, #ffffff, transparent),
+          radial-gradient(1px 1px at 50px 25px, #ffffff, transparent),
+          radial-gradient(1px 1px at 125px 20px, #bd93f9, transparent),
+          radial-gradient(1px 1px at 50px 75px, #39ff14, transparent),
+          radial-gradient(2px 2px at 75px 50px, #ffffff, transparent),
+          radial-gradient(2px 2px at 195px 130px, #ffd700, transparent),
+          radial-gradient(1px 1px at 165px 95px, #ffffff, transparent),
+          radial-gradient(1px 1px at 300px 40px, #39ff14, transparent) !important;
+        background-size: 200px 200px !important;
+      }
+      .font-pixel-web {
+        font-family: 'Press Start 2P', 'Courier New', Courier, monospace !important;
+      }
+      .font-rpg-web {
+        font-family: 'VT323', 'Courier New', Courier, monospace !important;
+      }
+    }
+    
+    @media only screen and (max-width: 620px) {
+      .mail-card { width: 100% !important; max-width: 100% !important; }
+      .content-padding { padding: 24px 16px !important; }
     }
 
-    /* ── RESET ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 16px; line-height: 1.5; scroll-behavior: smooth; }
-    body {
-      min-height: 100vh;
-      background-color: var(--bg-void);
-      color: var(--color-text);
-      font-family: var(--font-rpg);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── STARFIELD ── */
-    .starfield {
-      background-color: var(--bg-void);
-      background-image:
-        radial-gradient(1px 1px at  25px   5px, #fff, transparent),
-        radial-gradient(1px 1px at  50px  25px, #fff, transparent),
-        radial-gradient(1px 1px at 125px  20px, var(--color-purple), transparent),
-        radial-gradient(1px 1px at  50px  75px, var(--color-primary), transparent),
-        radial-gradient(2px 2px at  75px  50px, #fff, transparent),
-        radial-gradient(2px 2px at 195px 130px, var(--color-gold), transparent),
-        radial-gradient(1px 1px at 165px  95px, #fff, transparent),
-        radial-gradient(1px 1px at 300px  40px, var(--color-green), transparent),
-        radial-gradient(1px 1px at 350px 180px, #fff, transparent),
-        radial-gradient(2px 2px at 420px  60px, var(--color-primary), transparent),
-        radial-gradient(1px 1px at 480px 140px, #fff, transparent),
-        radial-gradient(1px 1px at 530px  30px, var(--color-gold), transparent);
-      background-size: 200px 200px;
-    }
-
-    /* ── SCANLINES ── */
-    .scanlines { position: relative; }
-    .scanlines::after {
-      content: '';
-      pointer-events: none;
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
-        rgba(0,0,0,0.18) 3px, rgba(0,0,0,0) 4px
-      );
-      mix-blend-mode: multiply;
-      z-index: 2;
-    }
-
-    /* ── LAYOUT ── */
-    .page-wrapper {
-      padding: 48px 20px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-
-    /* ── MAIN CARD — green theme ── */
-    .mail-card {
-      width: 100%;
-      max-width: 580px;
-      position: relative;
-      border: 2px solid var(--color-green);
-      background: var(--bg-card);
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.04),
-        0 0 30px rgba(57, 255, 20, 0.14),
-        0 0 0 1px #000,
-        var(--shadow-pixel-lg);
-    }
-
-    /* Corner decorations — green theme */
-    .mail-card::before, .mail-card::after,
-    .corner-bl, .corner-br {
-      content: '';
+    .mail-card-wrapper { position: relative; }
+    .corner-decor {
       position: absolute;
       width: 16px; height: 16px;
-      border-color: var(--color-green);
       border-style: solid;
       border-width: 0;
       z-index: 10;
-    }
-    .mail-card::before { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; }
-    .mail-card::after  { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; }
-    .corner-bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; }
-    .corner-br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; }
-
-    /* ── TOP ACCENT BAR ── */
-    .top-bar {
-      height: 6px;
-      background: linear-gradient(90deg,
-        var(--color-green)   0%,
-        var(--color-primary) 35%,
-        var(--color-gold)    65%,
-        var(--color-green)   100%
-      );
-      position: relative;
-    }
-    .top-bar::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        90deg, transparent 0px, transparent 3px,
-        rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 4px
-      );
-    }
-
-    /* ── HERO ── */
-    .hero {
-      background: var(--bg-panel);
-      padding: 48px 32px 40px;
-      text-align: center;
-      border-bottom: 2px solid var(--color-green);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-bg-pattern {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(57, 255, 20, 0.022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(57, 255, 20, 0.022) 1px, transparent 1px);
-      background-size: 24px 24px;
       pointer-events: none;
     }
-
-    /* ── ICON RING ── */
-    .icon-wrap {
-      position: relative;
-      display: inline-block;
-      margin-bottom: 24px;
-    }
-    .icon-ring {
-      width: 88px; height: 88px;
-      border: 3px solid var(--color-green);
-      background: rgba(57, 255, 20, 0.07);
-      display: flex; align-items: center; justify-content: center;
-      position: relative;
-      box-shadow:
-        0 0 0 1px #000,
-        0 0 20px rgba(57, 255, 20, 0.4),
-        var(--shadow-pixel);
-      animation: pulse-ring-green 3s ease-in-out infinite;
-    }
-    .icon-ring::before {
-      content: '';
-      position: absolute;
-      top: 4px; left: 4px; right: 4px; bottom: 4px;
-      border: 1px solid rgba(57, 255, 20, 0.2);
-      z-index: 1;
-      pointer-events: none;
-    }
-    .icon-coin {
-      fill: var(--color-green);
-      animation: coin-pulse 2s ease-in-out infinite;
-      image-rendering: pixelated;
-      shape-rendering: crispEdges;
-      position: relative;
-      z-index: 2;
-    }
-    .icon-corner-tl, .icon-corner-br {
-      position: absolute;
-      width: 10px; height: 10px;
-      border-color: var(--color-green);
-      border-style: solid;
-      border-width: 0;
-    }
-    .icon-corner-tl { top: -4px; left: -4px; border-top-width: 2px; border-left-width: 2px; }
-    .icon-corner-br { bottom: -4px; right: -4px; border-bottom-width: 2px; border-right-width: 2px; }
-
-    .hero-title {
-      font-family: var(--font-pixel);
-      font-size: 11px;
-      color: var(--color-green);
-      letter-spacing: 0.1em;
-      text-shadow: 3px 3px 0 #000, 0 0 20px rgba(57, 255, 20, 0.5);
-      margin-bottom: 14px;
-      animation: glitch-text-green 5s infinite;
-    }
-    .hero-subtitle {
-      font-family: var(--font-rpg);
-      font-size: 22px;
-      color: var(--color-text-muted);
-      letter-spacing: 0.06em;
-    }
-    .hero-subtitle .cursor {
-      color: var(--color-green);
-      animation: blink 0.8s steps(2) infinite;
-    }
-
-    /* ── CONTENT ── */
-    .content {
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    /* ── SECTION HEADER ── */
-    .section-header {
-      font-family: var(--font-pixel);
-      font-size: 9px;
-      color: var(--color-amber);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-block: 20px 14px;
-      letter-spacing: 0.06em;
-    }
-    .section-header::before, .section-header::after {
-      content: '';
-      flex: 1; height: 2px;
-      background-image: linear-gradient(to right, var(--color-amber) 50%, transparent 50%);
-      background-size: 8px 2px;
-      background-repeat: repeat-x;
-      opacity: 0.5;
-    }
-    .section-header:first-child { margin-top: 0; }
-
-    /* ── TYPOGRAPHY ── */
-    .greeting-text {
-      font-family: var(--font-rpg);
-      font-size: 22px;
-      color: var(--color-text);
-      margin-bottom: 10px;
-      line-height: 1.5;
-    }
-    .name-highlight {
-      color: var(--color-gold);
-      text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-    }
-    .body-text {
-      font-family: var(--font-rpg);
-      font-size: 20px;
-      color: var(--color-text-muted);
-      line-height: 1.6;
-      margin-bottom: 14px;
-    }
-    .body-text strong { color: var(--color-text); font-weight: normal; }
-
-    /* ── ACCOUNT BADGE — green ── */
-    .account-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-pixel);
-      font-size: 7px;
-      color: var(--color-green);
-      background: rgba(57, 255, 20, 0.05);
-      border: 1px solid rgba(57, 255, 20, 0.25);
-      padding: 6px 12px;
-      margin-bottom: 20px;
-      letter-spacing: 0.05em;
-      box-shadow: 0 0 8px rgba(57, 255, 20, 0.06), inset 0 0 0 1px rgba(57,255,20,0.04);
-    }
-    .account-badge .badge-label { color: var(--color-text-muted); }
-    .account-badge .badge-dot {
-      width: 5px; height: 5px;
-      background: var(--color-green);
-      box-shadow: 0 0 5px var(--color-green);
-      flex-shrink: 0;
-      animation: blink 1.2s steps(2) infinite;
-    }
-
-    /* ── UNLOCK BOX (rewards upon confirmation) ── */
-    .unlock-box {
-      border: 2px dashed var(--color-green);
-      background: rgba(57, 255, 20, 0.04);
-      padding: 16px 16px 14px;
-      position: relative;
-      margin-bottom: 22px;
-    }
-    .unlock-legend {
-      font-family: var(--font-pixel);
-      font-size: 7px;
-      color: var(--color-green);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0 8px;
-      position: absolute;
-      top: -8px; left: 12px;
-      background: var(--bg-card);
-    }
-    .unlock-list {
-      list-style: none;
-      margin-top: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .unlock-list li {
-      font-family: var(--font-rpg);
-      font-size: 19px;
-      color: var(--color-text-muted);
-      line-height: 1.4;
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-    .unlock-plus {
-      font-family: var(--font-pixel);
-      font-size: 8px;
-      color: var(--color-green);
-      flex-shrink: 0;
-      text-shadow: 0 0 6px rgba(57, 255, 20, 0.6);
-    }
-
-    /* ── PRIMARY CTA — green ── */
-    .cta-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    .pixel-btn-cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-family: var(--font-pixel);
-      font-size: 10px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 16px 32px;
-      border: 2px solid #000;
-      box-shadow: var(--shadow-pixel);
-      background: var(--color-green);
-      color: #000;
-      text-decoration: none;
-      cursor: pointer;
-      user-select: none;
-      transition: var(--transition-pixel);
-    }
-    .pixel-btn-cta:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0 #000, 0 0 22px rgba(57, 255, 20, 0.5);
-    }
-    .pixel-btn-cta:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
-    .pixel-btn-cta .arrow { animation: nudge-right 1.5s steps(2) infinite; display: inline-block; }
-
-    /* ── TERMINAL FALLBACK ── */
-    .terminal-box {
-      border: 2px solid rgba(57, 255, 20, 0.45);
-      background: var(--bg-input);
-      position: relative;
-      margin-bottom: 20px;
-      box-shadow:
-        inset 0 0 0 2px rgba(255,255,255,0.02),
-        0 0 8px rgba(57, 255, 20, 0.1),
-        0 0 0 1px #000,
-        var(--shadow-pixel-sm);
-    }
-    .terminal-header {
-      background: rgba(57, 255, 20, 0.06);
-      border-bottom: 1px solid rgba(57, 255, 20, 0.25);
-      padding: 8px 14px;
-      font-family: var(--font-pixel);
-      font-size: 7px;
-      color: var(--color-text-muted);
-      letter-spacing: 0.08em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .term-dots { display: flex; gap: 4px; flex-shrink: 0; }
-    .term-dot  { width: 6px; height: 6px; }
-    .term-dot-r { background: var(--color-red); }
-    .term-dot-a { background: var(--color-amber); }
-    .term-dot-g { background: var(--color-green); }
-
-    .terminal-body {
-      padding: 14px 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-    .term-prompt {
-      font-family: var(--font-pixel);
-      font-size: 10px;
-      color: var(--color-green);
-      flex-shrink: 0;
-      line-height: 1.45;
-      animation: blink 0.8s steps(2) infinite;
-    }
-    .term-link {
-      font-family: var(--font-rpg);
-      font-size: 18px;
-      color: var(--color-green);
-      text-decoration: none;
-      word-break: break-all;
-      border-bottom: 1px dotted rgba(57, 255, 20, 0.5);
-      line-height: 1.45;
-    }
-    .term-link:hover { color: var(--color-gold); border-color: var(--color-gold); }
-
-    /* ── EXPIRY TIMER BAR ── */
-    .expiry-wrap { margin-bottom: 14px; }
-    .expiry-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: var(--font-pixel);
-      font-size: 7px;
-      color: var(--color-text-muted);
-      letter-spacing: 0.06em;
-      margin-bottom: 4px;
-    }
-    .expiry-value { color: var(--color-amber); font-size: 8px; }
-    .expiry-bar {
-      display: flex;
-      gap: 2px;
-      padding: 3px;
-      background: #000;
-      border: 2px solid var(--color-amber);
-    }
-    .expiry-seg { flex: 1; height: 10px; background: rgba(255,255,255,0.06); }
-    .expiry-seg.active {
-      background: var(--color-amber);
-      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.4), 0 0 3px rgba(255,184,0,0.3);
-    }
-
-    /* ── WARNING BOX ── */
-    .warn-box {
-      border: 2px solid var(--color-red);
-      background: rgba(255, 59, 59, 0.05);
-      padding: 16px;
-      position: relative;
-      margin-bottom: 24px;
-      box-shadow:
-        0 0 10px rgba(255, 59, 59, 0.2),
-        0 0 0 1px #000,
-        var(--shadow-pixel-sm);
-    }
-    .warn-box::before, .warn-box::after,
-    .wc-corner-bl, .wc-corner-br {
-      content: '';
-      position: absolute;
-      width: 8px; height: 8px;
-      border-color: var(--color-red);
-      border-style: solid;
-      border-width: 0;
-    }
-    .warn-box::before { top: -2px; left: -2px; border-top-width: 2px; border-left-width: 2px; }
-    .warn-box::after  { top: -2px; right: -2px; border-top-width: 2px; border-right-width: 2px; }
-    .wc-corner-bl { bottom: -2px; left: -2px; border-bottom-width: 2px; border-left-width: 2px; }
-    .wc-corner-br { bottom: -2px; right: -2px; border-bottom-width: 2px; border-right-width: 2px; }
-
-    .warn-header {
-      font-family: var(--font-pixel);
-      font-size: 8px;
-      color: var(--color-red);
-      letter-spacing: 0.06em;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .warn-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 16px; height: 16px;
-      background: var(--color-red);
-      border: 1px solid rgba(0,0,0,0.4);
-      font-family: var(--font-pixel);
-      font-size: 8px;
-      color: #000;
-      flex-shrink: 0;
-      line-height: 1;
-      animation: blink 0.8s steps(2) infinite;
-    }
-    .warn-text {
-      font-family: var(--font-rpg);
-      font-size: 19px;
-      color: var(--color-text-muted);
-      line-height: 1.5;
-    }
-    .warn-text a {
-      color: var(--color-red);
-      text-decoration: none;
-      border-bottom: 1px dashed var(--color-red);
-    }
-    .warn-text a:hover { color: var(--color-amber); border-color: var(--color-amber); }
-    .warn-highlight { color: var(--color-amber); }
-
-    /* ── DIVIDER ── */
-    .divider-dash {
-      border: none; height: 2px;
-      background-image: linear-gradient(to right, var(--color-green) 50%, transparent 50%);
-      background-size: 8px 2px;
-      background-repeat: repeat-x;
-      opacity: 0.3;
-      margin: 28px 0 20px;
-    }
-
-    /* ── FOOTER ── */
-    .mail-footer {
-      padding: 20px 32px 28px;
-      background: rgba(0,0,0,0.3);
-      border-top: 2px solid rgba(57, 255, 20, 0.18);
-      text-align: center;
-    }
-    .footer-text {
-      font-family: var(--font-rpg);
-      font-size: 17px;
-      color: var(--color-text-muted);
-      margin-bottom: 6px;
-    }
-    .footer-link {
-      color: var(--color-green);
-      text-decoration: none;
-      border-bottom: 1px dotted var(--color-green);
-    }
-    .footer-link:hover { color: var(--color-gold); border-color: var(--color-gold); }
-    .footer-copy {
-      font-family: var(--font-pixel);
-      font-size: 7px;
-      color: var(--color-gray);
-      letter-spacing: 0.06em;
-      margin-top: 8px;
-    }
-    .footer-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-pixel);
-      font-size: 7px;
-      padding: 4px 10px;
-      border: 1px solid var(--color-gray);
-      color: var(--color-gray);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 10px;
-    }
-    .footer-badge .dot {
-      width: 6px; height: 6px;
-      background: var(--color-green);
-      box-shadow: 0 0 6px var(--color-green);
-      animation: blink 0.8s steps(2) infinite;
-    }
-
-    /* ── ANIMATIONS ── */
+    .corner-tl { top: -2px; left: -2px; border-color: #39ff14; border-top-width: 3px; border-left-width: 3px; }
+    .corner-tr { top: -2px; right: -2px; border-color: #00d4ff; border-top-width: 3px; border-right-width: 3px; }
+    .corner-bl { bottom: -2px; left: -2px; border-color: #00d4ff; border-bottom-width: 3px; border-left-width: 3px; }
+    .corner-br { bottom: -2px; right: -2px; border-color: #39ff14; border-bottom-width: 3px; border-right-width: 3px; }
+    
     @keyframes blink {
-      0%, 49%   { opacity: 1; }
+      0%, 49% { opacity: 1; }
       50%, 100% { opacity: 0; }
     }
-    @keyframes pulse-ring-green {
-      0%, 100% { box-shadow: 0 0 0 1px #000, 0 0 16px rgba(57,255,20,0.3), var(--shadow-pixel); }
-      50%      { box-shadow: 0 0 0 1px #000, 0 0 30px rgba(57,255,20,0.65), var(--shadow-pixel); }
-    }
-    @keyframes coin-pulse {
-      0%, 100% { filter: drop-shadow(0 0 5px rgba(57,255,20,0.55)); }
-      50%      { filter: drop-shadow(0 0 16px rgba(57,255,20,0.95)); }
-    }
-    @keyframes glitch-text-green {
-      0%, 85%, 100% {
-        text-shadow: 3px 3px 0 #000, 0 0 20px rgba(57,255,20,0.5);
-        transform: translate(0);
-      }
-      87% {
-        text-shadow: 3px 0 var(--color-primary), -3px 0 var(--color-red);
-        transform: translate(-2px, 1px);
-      }
-      90% {
-        text-shadow: -3px 0 var(--color-primary), 3px 0 var(--color-red);
-        transform: translate(2px, -1px);
-      }
-      93% {
-        text-shadow: 2px 0 var(--color-gold);
-        transform: translate(-1px, 0);
-      }
-    }
-    @keyframes nudge-right {
-      0%, 60%, 100% { transform: translateX(0); }
-      80%           { transform: translateX(4px); }
-    }
+    .blink { animation: blink 0.8s steps(2) infinite; }
   </style>
 </head>
-<body class="starfield">
+<body class="starfield" style="margin: 0; padding: 0; background-color: #0d0d1a;">
 
-  <div class="page-wrapper">
-    <div class="mail-card scanlines">
-      <div class="corner-bl"></div>
-      <div class="corner-br"></div>
+  <!-- Outer wrapper -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; background-color: #0d0d1a; padding: 32px 0;">
+    <tr>
+      <td align="center" valign="top" style="padding: 0 16px;">
 
-      <!-- TOP BAR -->
-      <div class="top-bar"></div>
+        <!-- Mail Card -->
+        <table role="presentation" class="mail-card mail-card-wrapper" width="580" cellpadding="0" cellspacing="0" border="0"
+               style="width: 580px; max-width: 580px; background-color: #16213e; border: 2px solid #39ff14; box-shadow: 4px 4px 0px #000000; border-collapse: separate;">
+          
+          <!-- Progressive enhancement corners (will render in supported clients) -->
+          <!--[if !mso]><!-->
+          <div class="corner-decor corner-tl"></div>
+          <div class="corner-decor corner-tr"></div>
+          <div class="corner-decor corner-bl"></div>
+          <div class="corner-decor corner-br"></div>
+          <!--<![endif]-->
 
-      <!-- HERO -->
-      <div class="hero">
-        <div class="hero-bg-pattern"></div>
+          <!-- TOP ACCENT BAR -->
+          <tr>
+            <td style="height: 6px; line-height: 6px; font-size: 1px;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="height: 6px; line-height: 6px; font-size: 1px;">
+                <tr>
+                  <td width="25%" bgcolor="#39ff14" style="background-color: #39ff14; height: 6px;"></td>
+                  <td width="25%" bgcolor="#00d4ff" style="background-color: #00d4ff; height: 6px;"></td>
+                  <td width="25%" bgcolor="#ffd700" style="background-color: #ffd700; height: 6px;"></td>
+                  <td width="25%" bgcolor="#39ff14" style="background-color: #39ff14; height: 6px;"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-        <div class="icon-wrap">
-          <div class="icon-ring">
-            <!--
-              Pixel-art coin — 20x20 grid.
-              Round body with a $ sign as a dark cutout.
-              No emojis, no raster images.
-            -->
-            <svg class="icon-coin"
-                 viewBox="0 0 20 20"
-                 width="46" height="46"
-                 xmlns="http://www.w3.org/2000/svg">
+          <!-- HERO -->
+          <tr>
+            <td align="center" valign="top" bgcolor="#1a1a2e"
+                style="background-color: #1a1a2e; padding: 48px 32px 40px; border-bottom: 2px solid #39ff14;">
+              
+              <!-- Icon Ring Wrapper (Coin placeholder inside circle) -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 20px;">
+                <tr>
+                  <td align="center" valign="middle"
+                      style="width: 88px; height: 88px; border: 3px solid #39ff14; background-color: rgba(57, 255, 20, 0.07); box-shadow: 3px 3px 0px #000000; font-family: 'Press Start 2P', 'Courier New', Courier, monospace; font-size: 32px; color: #39ff14; font-weight: bold; line-height: 88px; text-align: center;">
+                    $
+                  </td>
+                </tr>
+              </table>
 
-              <!-- ── Coin body (pixel-circle approximation) ── -->
-              <rect x="6"  y="0"  width="8"  height="1"/>
-              <rect x="4"  y="1"  width="12" height="1"/>
-              <rect x="2"  y="2"  width="16" height="2"/>
-              <rect x="1"  y="4"  width="18" height="12"/>
-              <rect x="2"  y="16" width="16" height="2"/>
-              <rect x="4"  y="18" width="12" height="1"/>
-              <rect x="6"  y="19" width="8"  height="1"/>
+              <!-- Hero Title -->
+              <h1 class="font-pixel-web"
+                  style="margin: 0 0 14px 0; font-family: 'Courier New', Courier, monospace; font-size: 11px; font-weight: bold; color: #39ff14; letter-spacing: 1.5px; text-transform: uppercase; text-shadow: 2px 2px 0px #000000; line-height: 1.3;">
+                WELCOME ABOARD
+              </h1>
 
-              <!-- ── Coin highlight (top-left shine) ── -->
-              <rect x="5"  y="2"  width="9"  height="1" fill="rgba(255,255,255,0.28)"/>
-              <rect x="2"  y="4"  width="1"  height="6" fill="rgba(255,255,255,0.15)"/>
+              <!-- Hero Subtitle -->
+              <p class="font-rpg-web"
+                 style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 22px; color: #8892c8; letter-spacing: 1px; line-height: 1.2; text-transform: uppercase;">
+                CONFIRM YOUR EMAIL<span class="blink" style="color: #39ff14; font-weight: bold;">_</span>
+              </p>
 
-              <!-- ── $ sign as dark cutout ──
-                   Vertical bar + upper-C arc + middle bar + lower-D arc
-              -->
-              <!-- vertical stem (full height of inner area) -->
-              <rect x="9"  y="2"  width="2"  height="16" fill="var(--bg-panel)"/>
-              <!-- upper horizontal of $ -->
-              <rect x="7"  y="5"  width="6"  height="2"  fill="var(--bg-panel)"/>
-              <!-- upper-left ear (C top) -->
-              <rect x="6"  y="7"  width="2"  height="2"  fill="var(--bg-panel)"/>
-              <!-- center horizontal bar -->
-              <rect x="6"  y="9"  width="8"  height="2"  fill="var(--bg-panel)"/>
-              <!-- lower-right ear (D bottom) -->
-              <rect x="12" y="11" width="2"  height="2"  fill="var(--bg-panel)"/>
-              <!-- lower horizontal of $ -->
-              <rect x="7"  y="13" width="6"  height="2"  fill="var(--bg-panel)"/>
-            </svg>
-          </div>
-          <div class="icon-corner-tl"></div>
-          <div class="icon-corner-br"></div>
-        </div>
+            </td>
+          </tr>
 
-        <div class="hero-title">WELCOME ABOARD</div>
-        <div class="hero-subtitle">CONFIRM YOUR EMAIL<span class="cursor">_</span></div>
-      </div>
+          <!-- CONTENT -->
+          <tr>
+            <td class="content-padding" style="padding: 32px; background-color: #16213e;">
 
-      <!-- CONTENT -->
-      <div class="content">
+              <!-- Section Header -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                <tr>
+                  <td valign="middle" style="border-bottom: 2px dashed #ffb800; opacity: 0.5;">&nbsp;</td>
+                  <td width="1" valign="middle" class="font-pixel-web"
+                      style="padding: 0 10px; font-family: 'Courier New', Courier, monospace; font-size: 9px; font-weight: bold; color: #ffb800; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;">
+                    QUEST: ACTIVATE ACCOUNT
+                  </td>
+                  <td valign="middle" style="border-bottom: 2px dashed #ffb800; opacity: 0.5;">&nbsp;</td>
+                </tr>
+              </table>
 
-        <div class="section-header">QUEST: ACTIVATE ACCOUNT</div>
+              <!-- Greeting -->
+              <p class="font-rpg-web"
+                 style="margin: 0 0 10px 0; font-family: 'Courier New', Courier, monospace; font-size: 22px; color: #e8e8ff; line-height: 1.4;">
+                Hi <span class="font-pixel-web" style="color: #ffd700; font-weight: bold;">{{UserName}}</span>
+              </p>
 
-        <p class="greeting-text">
-          Hi <span class="name-highlight">{{UserName}}</span>
-        </p>
-        <p class="body-text">
-          Thanks for signing up for <strong>TrackWallet</strong>.
-          Confirm your email address to activate your account
-          and unlock everything below.
-        </p>
+              <!-- Body Copy -->
+              <p class="font-rpg-web"
+                 style="margin: 0 0 20px 0; font-family: 'Courier New', Courier, monospace; font-size: 20px; color: #8892c8; line-height: 1.6;">
+                Thanks for signing up for <strong style="color: #e8e8ff; font-weight: normal;">TrackWallet</strong>. Confirm your email address to activate your account and unlock everything below.
+              </p>
 
-        <!-- Account target badge -->
-        <div class="account-badge">
-          <span class="badge-dot"></span>
-          <span class="badge-label">ACCOUNT:</span>
-          {{Email}}
-        </div>
+              <!-- Account Badge -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-bottom: 24px; box-shadow: 2px 2px 0px #000000; border-collapse: separate;">
+                <tr>
+                  <td class="font-pixel-web"
+                      style="border: 2px solid #39ff14; background-color: #0a0a14; padding: 12px 16px; font-family: 'Courier New', Courier, monospace; font-size: 11px; font-weight: bold; color: #39ff14; letter-spacing: 0.5px; line-height: 1.4;">
+                    <span class="blink" style="color: #39ff14; margin-right: 8px; font-size: 11px; vertical-align: middle;">●</span>
+                    <span style="color: #8892c8;">ACCOUNT:</span>&nbsp;<span style="color: #ffd700; word-break: break-all;">{{Email}}</span>
+                  </td>
+                </tr>
+              </table>
 
-        <!-- REWARDS UPON CONFIRMATION -->
-        <div class="unlock-box">
-          <span class="unlock-legend">REWARDS UPON CONFIRMATION</span>
-          <ul class="unlock-list">
-            <li>
-              <span class="unlock-plus">+</span>
-              Track unlimited income and expenses across categories
-            </li>
-            <li>
-              <span class="unlock-plus">+</span>
-              Set spending budgets and receive overspend alerts
-            </li>
-            <li>
-              <span class="unlock-plus">+</span>
-              View monthly reports and financial insights
-            </li>
-          </ul>
-        </div>
+              <!-- Rewards Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border: 2px dashed #39ff14; background-color: rgba(57, 255, 20, 0.04); margin-bottom: 24px; border-collapse: separate;">
+                <tr>
+                  <td style="padding: 16px 18px;">
+                    <!-- Legend -->
+                    <div class="font-pixel-web"
+                         style="font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #39ff14; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                      REWARDS UPON CONFIRMATION
+                    </div>
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td class="font-rpg-web" style="padding: 6px 0; font-family: 'Courier New', Courier, monospace; font-size: 19px; color: #8892c8; line-height: 1.4;">
+                          <span class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 8px; font-weight: bold; color: #39ff14; margin-right: 8px; vertical-align: middle;">+</span> Track unlimited income and expenses across categories
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="font-rpg-web" style="padding: 6px 0; font-family: 'Courier New', Courier, monospace; font-size: 19px; color: #8892c8; line-height: 1.4;">
+                          <span class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 8px; font-weight: bold; color: #39ff14; margin-right: 8px; vertical-align: middle;">+</span> Set spending budgets and receive overspend alerts
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="font-rpg-web" style="padding: 6px 0 0 0; font-family: 'Courier New', Courier, monospace; font-size: 19px; color: #8892c8; line-height: 1.4;">
+                          <span class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 8px; font-weight: bold; color: #39ff14; margin-right: 8px; vertical-align: middle;">+</span> View monthly reports and financial insights
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-        <!-- PRIMARY CTA -->
-        <div class="cta-wrap">
-          <a href="{{ConfirmLink}}" class="pixel-btn-cta">
-            CONFIRM MY EMAIL <span class="arrow">&#9654;</span>
-          </a>
-        </div>
+              <!-- CTA Button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 24px;">
+                <tr>
+                  <td align="center" bgcolor="#39ff14"
+                      style="background-color: #39ff14; border: 2px solid #000000; padding: 16px 32px; box-shadow: 4px 4px 0px #000000;">
+                    <a class="font-pixel-web" href="{{ConfirmLink}}"
+                       style="font-family: 'Courier New', Courier, monospace; font-size: 10px; font-weight: bold; color: #000000; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; display: inline-block;">
+                      CONFIRM MY EMAIL <span style="font-family: Arial, sans-serif;">▶</span>
+                    </a>
+                  </td>
+                </tr>
+              </table>
 
-        <!-- TERMINAL FALLBACK -->
-        <div class="terminal-box">
-          <div class="terminal-header">
-            <span class="term-dots">
-              <span class="term-dot term-dot-r"></span>
-              <span class="term-dot term-dot-a"></span>
-              <span class="term-dot term-dot-g"></span>
-            </span>
-            BUTTON NOT WORKING? PASTE LINK INTO BROWSER
-          </div>
-          <div class="terminal-body">
-            <span class="term-prompt">&gt;</span>
-            <a href="{{ConfirmLink}}" class="term-link">{{ConfirmLink}}</a>
-          </div>
-        </div>
+              <!-- Terminal Fallback Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border: 2px solid rgba(57, 255, 20, 0.45); background-color: #0a0a14; margin-bottom: 24px; box-shadow: 3px 3px 0px #000000; border-collapse: separate;">
+                <tr>
+                  <td style="background-color: rgba(57, 255, 20, 0.06); border-bottom: 1px solid rgba(57, 255, 20, 0.25); padding: 8px 14px; font-family: 'Courier New', Courier, monospace; font-size: 10px; font-weight: bold; color: #8892c8; letter-spacing: 1px;">
+                    <span style="color: #ff3b3b; font-size: 9px; vertical-align: middle;">●</span> <span style="color: #ffb800; font-size: 9px; vertical-align: middle;">●</span> <span style="color: #39ff14; font-size: 9px; vertical-align: middle;">●</span> &nbsp; BUTTON NOT WORKING? PASTE LINK INTO BROWSER
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 14px 16px; font-family: 'Courier New', Courier, monospace; font-size: 18px; word-break: break-all;">
+                    <span class="blink" style="color: #39ff14; font-weight: bold; margin-right: 8px; font-family: 'Courier New', Courier, monospace; font-size: 11px;">&gt;</span>
+                    <a class="font-rpg-web" href="{{ConfirmLink}}" style="color: #39ff14; text-decoration: none; border-bottom: 1px dotted rgba(57, 255, 20, 0.5);">{{ConfirmLink}}</a>
+                  </td>
+                </tr>
+              </table>
 
-        <!-- EXPIRY TIMER BAR -->
-        <div class="expiry-wrap">
-          <div class="expiry-label">
-            <span>LINK EXPIRY</span>
-            <span class="expiry-value">{{ExpiresInMinutes}} MIN REMAINING</span>
-          </div>
-          <div class="expiry-bar" title="Time remaining before link expires">
-            <div class="expiry-seg active"></div>
-            <div class="expiry-seg active"></div>
-            <div class="expiry-seg active"></div>
-            <div class="expiry-seg active"></div>
-            <div class="expiry-seg active"></div>
-            <div class="expiry-seg active"></div>
-            <div class="expiry-seg active"></div>
-            <div class="expiry-seg"></div>
-            <div class="expiry-seg"></div>
-            <div class="expiry-seg"></div>
-          </div>
-        </div>
+              <!-- Expiry Timer Bar -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td style="padding-bottom: 6px;">
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #8892c8; letter-spacing: 1px;">
+                          LINK EXPIRY
+                        </td>
+                        <td align="right" class="font-pixel-web" style="font-family: 'Courier New', Courier, monospace; font-size: 8px; font-weight: bold; color: #ffb800; letter-spacing: 1px;">
+                          {{ExpiresInMinutes}} MIN REMAINING
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <!-- progress segments 7 active / 3 inactive -->
+                    <table role="presentation" width="100%" border="0" cellspacing="2" cellpadding="0" style="background-color: #000000; border: 2px solid #ffb800; padding: 2px;">
+                      <tr>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="#ffb800" style="background-color: #ffb800; border-bottom: 3px solid rgba(0,0,0,0.4);">&nbsp;</td>
+                        <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                        <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                        <td height="10" bgcolor="rgba(255,255,255,0.06)" style="background-color: rgba(255,255,255,0.06);">&nbsp;</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-        <!-- WARNING: DIDN'T SIGN UP -->
-        <div class="warn-box">
-          <div class="wc-corner-bl"></div>
-          <div class="wc-corner-br"></div>
-          <div class="warn-header">
-            <span class="warn-badge">!</span>
-            DIDN'T SIGN UP?
-          </div>
-          <p class="warn-text">
-            Ignore this email — no account will be created until
-            the link is clicked. This link expires in
-            <span class="warn-highlight">{{ExpiresInMinutes}} minutes</span>.
-            If you suspect unauthorized use, contact
-            <a href="mailto:support@trackwallet.app">support@trackwallet.app</a>.
-          </p>
-        </div>
+              <!-- Warning Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="border: 2px solid #ff3b3b; background-color: rgba(255, 59, 59, 0.05); margin-bottom: 20px; border-collapse: separate; box-shadow: 3px 3px 0px #000000;">
+                <tr>
+                  <td style="padding: 16px;">
+                    <div class="font-pixel-web"
+                         style="font-family: 'Courier New', Courier, monospace; font-size: 8px; font-weight: bold; color: #ff3b3b; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                      <span class="blink" style="display: inline-block; background-color: #ff3b3b; color: #0d0d1a; font-size: 8px; font-weight: bold; width: 16px; height: 16px; line-height: 16px; text-align: center; margin-right: 6px; vertical-align: middle;">!</span>
+                      DIDN'T SIGN UP?
+                    </div>
+                    <p class="font-rpg-web"
+                       style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 19px; color: #8892c8; line-height: 1.5;">
+                      Ignore this email — no account will be created until the link is clicked. This link expires in <span style="color: #ffb800; font-weight: normal;">{{ExpiresInMinutes}} minutes</span>. If you suspect unauthorized use, contact <a href="mailto:support@trackwallet.app" style="color: #ff3b3b; text-decoration: none; border-bottom: 1px dashed #ff3b3b;">support@trackwallet.app</a>.
+                    </p>
+                  </td>
+                </tr>
+              </table>
 
-        <div class="divider-dash"></div>
-      </div>
+              <!-- Dashed Divider -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 28px;">
+                <tr>
+                  <td style="border-bottom: 2px dashed #39ff14; opacity: 0.3; font-size: 0; line-height: 0;">&nbsp;</td>
+                </tr>
+              </table>
 
-      <!-- FOOTER -->
-      <div class="mail-footer">
-        <p class="footer-text">
-          Need help?
-          <a href="mailto:support@trackwallet.app" class="footer-link">Contact Support</a>
-        </p>
-        <p class="footer-copy">&#169; {{Year}} TRACKWALLET &#8212; ALL RIGHTS RESERVED</p>
-        <div style="display:flex; justify-content:center; margin-top:10px;">
-          <span class="footer-badge">
-            <span class="dot"></span>
-            SYSTEM ONLINE
-          </span>
-        </div>
-      </div>
+            </td>
+          </tr>
 
-    </div>
-  </div>
+          <!-- FOOTER -->
+          <tr>
+            <td align="center" valign="top" class="content-padding"
+                style="padding: 20px 32px 28px; background-color: rgba(0,0,0,0.3); border-top: 2px solid rgba(57, 255, 20, 0.18);">
+              
+              <p class="font-rpg-web"
+                 style="margin: 0 0 6px 0; font-family: 'Courier New', Courier, monospace; font-size: 17px; color: #8892c8; line-height: 1.4;">
+                Need help? <a href="mailto:support@trackwallet.app" style="color: #39ff14; text-decoration: none; border-bottom: 1px dotted #39ff14;">Contact Support</a>
+              </p>
+
+              <p class="font-pixel-web"
+                 style="margin: 0 0 12px 0; font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #6272a4; letter-spacing: 1px;">
+                © {{Year}} TRACKWALLET — ALL RIGHTS RESERVED
+              </p>
+
+              <!-- Status Badge -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td class="font-pixel-web"
+                      style="border: 1px solid #6272a4; padding: 4px 10px; font-family: 'Courier New', Courier, monospace; font-size: 7px; font-weight: bold; color: #6272a4; text-transform: uppercase; letter-spacing: 1.5px; background-color: rgba(0,0,0,0.1);">
+                    <span style="color: #39ff14; margin-right: 4px; font-size: 9px; vertical-align: middle;">●</span> SYSTEM ONLINE
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Mail Card -->
+
+      </td>
+    </tr>
+  </table>
+  <!-- /Outer wrapper -->
 
 </body>
 </html>
